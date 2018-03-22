@@ -27,7 +27,7 @@
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
 #ifndef DSP_USE_LED
-#define DSP_USE_LED                 WS2812_GRB_LED                      // set exactly one of the values above here, default is WS2812_GRB_LED
+#define DSP_USE_LED                 WS2812_RGB_LED                      // set exactly one of the values above here, default is WS2812_GRB_LED
 #endif
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@
 #if WCLOCK24H == 1
 #  define DSP_STATUS_LEDS           1                                       // 1 status LED
 #  define DSP_MINUTE_LEDS           0                                       // 0 minute LEDs
-#  define DSP_DISPLAY_LEDS          288                                     // 288 display LEDs
+#  define DSP_DISPLAY_LEDS          342                                     // 342 display LEDs
 #else // WC12H
 #  define DSP_STATUS_LEDS           0                                       // no status LED
 #  define DSP_MINUTE_LEDS           4                                       // 4 minute LEDs
