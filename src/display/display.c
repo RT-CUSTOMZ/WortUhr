@@ -636,6 +636,26 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
         uint_fast8_t y;
         uint_fast8_t x;
 
+#ifdef DSP_LED_DIRECTION_VERTICAL
+        x = n / WC_ROWS;
+        y = n % WC_ROWS;
+
+        if (x & 0x01)                                       // snake: odd column: count from bottom to top
+        {
+            n = x * WC_ROWS + (WC_ROWS - 1 - y);
+        }
+        else
+        {
+            n = x * WC_ROWS + y;
+        }
+
+        led_set_led (DSP_DISPLAY_LED_OFFSET + n, rgb);
+
+        if (refresh)
+        {
+            display_refresh_display_leds ();
+        }
+#else
         y = n / WC_COLUMNS;
 
         if (y & 0x01)                                       // snake: odd row: count from right to left
@@ -650,6 +670,7 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
         {
             display_refresh_display_leds ();
         }
+#endif
     }
 }
 

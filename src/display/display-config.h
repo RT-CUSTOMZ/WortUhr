@@ -30,6 +30,8 @@
 #define DSP_USE_LED                 WS2812_RGB_LED                      // set exactly one of the values above here, default is WS2812_GRB_LED
 #endif
 
+#define DSP_LED_DIRECTION_VERTICAL 1                                    //if you align the leds vertically instead of horizontally
+
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * configuration settings, don't change below!
  *---------------------------------------------------------------------------------------------------------------------------------------------------

@@ -24,8 +24,8 @@
 #define HOUR_COUNT          25                                  // 24 plus one to distinguish between before and after full hour
 #define MAX_MINUTE_WORDS     7                                  // how many words for minute display (no end token)
 #define MINUTE_COUNT        60
-#define WC_COLUMNS          18
-#define WC_ROWS             16
+#define WC_COLUMNS          19
+#define WC_ROWS             18
 
 struct WordIllu
 {
