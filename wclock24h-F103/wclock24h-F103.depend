@@ -2682,3 +2682,412 @@
 	"log.h"
 	"overlay.h"
 
+1522013949 source:c:\users\dennis\git\wordclock\src\adc\adc.c
+	"adc.h"
+	"adc-config.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\adc\adc.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_adc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	"stm32f4xx_adc.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\inc\stm32f10x.h
+	"core_cm3.h"
+	"system_stm32f10x.h"
+	<stdint.h>
+	"stm32f10x_conf.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\cmsis\core_cm3.h
+	<stdint.h>
+	<core_cmInstr.h>
+	<core_cmFunc.h>
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\cmsis\core_cminstr.h
+	<cmsis_iar.h>
+	<cmsis_ccs.h>
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\cmsis\core_cmfunc.h
+	<cmsis_iar.h>
+	<cmsis_ccs.h>
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\inc\system_stm32f10x.h
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\inc\stm32f10x_conf.h
+	"stm32f10x_adc.h"
+	"stm32f10x_bkp.h"
+	"stm32f10x_can.h"
+	"stm32f10x_cec.h"
+	"stm32f10x_crc.h"
+	"stm32f10x_dac.h"
+	"stm32f10x_dbgmcu.h"
+	"stm32f10x_dma.h"
+	"stm32f10x_exti.h"
+	"stm32f10x_flash.h"
+	"stm32f10x_fsmc.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_i2c.h"
+	"stm32f10x_iwdg.h"
+	"stm32f10x_pwr.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_rtc.h"
+	"stm32f10x_sdio.h"
+	"stm32f10x_spi.h"
+	"stm32f10x_tim.h"
+	"stm32f10x_usart.h"
+	"stm32f10x_wwdg.h"
+	"misc.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_adc.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_bkp.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_can.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_cec.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_crc.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_dac.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_dbgmcu.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_dma.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_exti.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_flash.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_fsmc.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_gpio.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_i2c.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_iwdg.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_pwr.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_rcc.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_rtc.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_sdio.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_spi.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_tim.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_usart.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\stm32f10x_wwdg.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\wclock24h-f103\spl\inc\misc.h
+	"stm32f10x.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\adc\adc-config.h
+
+1522013949 source:c:\users\dennis\git\wordclock\src\alarm\alarm.c
+	<stdio.h>
+	<stdlib.h>
+	"eeprom.h"
+	"eeprom-data.h"
+	"alarm.h"
+	"log.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\eeprom\eeprom.h
+	"stm32f10x.h"
+	"stm32f4xx.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\eeprom\eeprom-data.h
+	"night.h"
+	"alarm.h"
+	"display.h"
+	"weather.h"
+	"remote-ir.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\night\night.h
+	<string.h>
+	<stdint.h>
+
+1522013949 c:\users\dennis\git\wordclock\src\alarm\alarm.h
+	<string.h>
+	<stdint.h>
+
+1522013949 c:\users\dennis\git\wordclock\src\display\display.h
+	"display-config.h"
+	"tables.h"
+	"tables12h.h"
+	"apa102.h"
+	"ws2812.h"
+	"sk6812.h"
+
+1522014573 c:\users\dennis\git\wordclock\src\display\display-config.h
+
+1522015174 c:\users\dennis\git\wordclock\src\display\tables.h
+	"wclock24h-config.h"
+	<stdint.h>
+
+1522013949 c:\users\dennis\git\wordclock\src\wclock24h-config.h
+
+1522013949 c:\users\dennis\git\wordclock\src\display\tables12h.h
+	"wclock24h-config.h"
+	<stdint.h>
+
+1522013949 c:\users\dennis\git\wordclock\src\apa102\apa102.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_tim.h"
+	"stm32f10x_dma.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	"stm32f4xx_tim.h"
+	"stm32f4xx_dma.h"
+	"misc.h"
+	"apa102-config.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\apa102\apa102-config.h
+	"display-config.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\ws2812\ws2812.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_tim.h"
+	"stm32f10x_dma.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	"stm32f4xx_tim.h"
+	"stm32f4xx_dma.h"
+	"misc.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\sk6812\sk6812.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_tim.h"
+	"stm32f10x_dma.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	"stm32f4xx_tim.h"
+	"stm32f4xx_dma.h"
+	"misc.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\weather\weather.h
+	<string.h>
+	<stdint.h>
+
+1522013949 c:\users\dennis\git\wordclock\src\remote-ir\remote-ir.h
+
+1522013949 c:\users\dennis\git\wordclock\src\log\log.h
+	<stdarg.h>
+	"uart.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\uart\uart.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_usart.h"
+	"stm32f10x_rcc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_usart.h"
+	"stm32f4xx_rcc.h"
+	"misc.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\apa102\apa102.c
+	"apa102.h"
+	"apa102-config.h"
+	"io.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\io\io.h
+
+1522013949 source:c:\users\dennis\git\wordclock\src\base\base.c
+	<stdio.h>
+	"base.h"
+	"log.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\base\base.h
+	<string.h>
+	<stdint.h>
+	<time.h>
+
+1522013949 source:c:\users\dennis\git\wordclock\src\beeper\beeper.c
+	"stm32f10x.h"
+	"stm32f4xx.h"
+	"beeper.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\beeper\beeper.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\board-led\board-led.c
+	"stm32f10x.h"
+	"stm32f4xx.h"
+	"board-led.h"
+	"io.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\board-led\board-led.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\button\button.c
+	"button.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\button\button.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\dcf77\dcf77.c
+	<string.h>
+	"wclock24h-config.h"
+	"dcf77.h"
+	"eeprom.h"
+	"eeprom-data.h"
+	"log.h"
+	"board-led.h"
+	"io.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\dcf77\dcf77.h
+	<stdint.h>
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	<time.h>
+
+1522013949 source:c:\users\dennis\git\wordclock\src\delay\delay.c
+	<stdint.h>
+	"delay.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\delay\delay.h
+	"stm32f10x.h"
+	"stm32f10x_rcc.h"
+	"stm32f4xx.h"
+	"stm32f4xx_rcc.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\dfplayer\dfplayer-uart.c
+	"uart-driver.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\uart\uart-driver.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_usart.h"
+	"stm32f4xx_rcc.h"
+	"misc.h"
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_usart.h"
+	"stm32f10x_rcc.h"
+	"misc.h"
+	"uart.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\dfplayer\dfplayer.c
+	<stdio.h>
+	<stdlib.h>
+	"log.h"
+	"delay.h"
+	"eeprom.h"
+	"eeprom-data.h"
+	"dfplayer.h"
+	"uart.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\dfplayer\dfplayer.h
+	<string.h>
+	<stdint.h>
+	<time.h>
+
+1522013949 source:c:\users\dennis\git\wordclock\src\display\tables.c
+	"wclock24h-config.h"
+	"tables.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\display\tables12h.c
+	"wclock24h-config.h"
+	"tables12h.h"
+
+1522013949 source:c:\users\dennis\git\wordclock\src\ds18xx\ds18xx.c
+	"onewire.h"
+	"ds18xx.h"
+	"ds18xx-config.h"
+	"eeprom.h"
+	"eeprom-data.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\onewire\onewire.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_tim.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	"stm32f4xx_tim.h"
+	"misc.h"
+	<string.h>
+
+1522013949 c:\users\dennis\git\wordclock\src\ds18xx\ds18xx.h
+	"stm32f10x.h"
+	"stm32f4xx.h"
+	"onewire.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\ds18xx\ds18xx-config.h
+
+1522013949 source:c:\users\dennis\git\wordclock\src\eeprom\eeprom.c
+	"eeprom.h"
+	"i2c.h"
+
+1522013949 c:\users\dennis\git\wordclock\src\i2c\i2c.h
+	"stm32f10x.h"
+	"stm32f10x_gpio.h"
+	"stm32f10x_rcc.h"
+	"stm32f10x_i2c.h"
+	"stm32f4xx.h"
+	"stm32f4xx_gpio.h"
+	"stm32f4xx_rcc.h"
+	"stm32f4xx_i2c.h"
+

@@ -739,7 +739,7 @@ display_reset_led_states (void)
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-display_led_on (uint_fast8_t y, uint_fast8_t x) <-------
+display_led_on (uint_fast8_t y, uint_fast8_t x)
 {
     led.matrix[y][x] |= TARGET_STATE;
 }
