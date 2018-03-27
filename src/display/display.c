@@ -753,12 +753,23 @@ display_word_on (uint_fast8_t idx)
 {
     uint_fast8_t y = illumination[idx].row;
     uint_fast8_t x = illumination[idx].col;
-    uint_fast8_t l = illumination[idx].len;
+    int_fast8_t l = illumination[idx].len;
 
-    while (l--)
+    if(l>0)
     {
-        display_led_on (y, x);
-        x++;
+        while (l--)
+        {
+            display_led_on (y, x);
+            x++;
+        }
+    }
+    else if(l<0) //negative length is used for vertical words
+    {
+        while (l++)
+        {
+            display_led_on (y, x);
+            y++;
+        }
     }
 }
 
