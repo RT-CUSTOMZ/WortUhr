@@ -637,8 +637,8 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
         uint_fast8_t x;
 
 #ifdef DSP_LED_DIRECTION_VERTICAL
-        x = n / WC_ROWS;
-        y = n % WC_ROWS;
+        y = n / WC_COLUMNS;
+		x = n % WC_COLUMNS;
 
         if (x & 0x01)                                       // snake: odd column: count from bottom to top
         {
