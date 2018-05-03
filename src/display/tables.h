@@ -90,10 +90,10 @@ enum WordPos
     WP_END_OF_WORDS,                                            // 0 = "0_END_OF_WORDS" = ""
     WP_ES,                                                      // 1 = "1_ES" = "ES"
     WP_IT,                                                      // 2 = "2_IT" = "IT"
-    WP_JA,                                                      // 3 = "2_JA" = "JA"
-    WP_IST,                                                     // 4 = "3_IST" = "IST"
-    WP_IS,                                                      // 5 = "4_IS" = "IS"
-    WP_VIERTEL_1,                                               // 6 = "3_VIERTEL" = "VIERTEL"
+    WP_IST,                                                     // 3 = "3_IST" = "IST"
+    WP_IS,                                                      // 4 = "4_IS" = "IS"
+    WP_VIERTEL_1,                                               // 5 = "3_VIERTEL" = "VIERTEL"
+    WP_NEIN,                                                    // 6 = "4_NEIN" = "NEIN"
     WP_EIN_1,                                                   // 7 = "4_EIN" = "EIN"
     WP_EINS_1,                                                  // 8 = "5_EINS" = "EINS"
     WP_IN,                                                      // 9 = "6_IN" = "IN"
@@ -134,7 +134,7 @@ enum WordPos
     WP_TAGEN,                                                   // 44 = "35_TAGEN" = "TAGEN"
     WP_KAFFEE,                                                  // 45 = "35_KAFFEE" = "KAFFEE"
     WP_AFFE,                                                    // 46 = "35_AFFE" = "AFFE"
-    WP_NEIN,                                                    // 47 = "35_NEIN" = "NEIN"
+    WP_FEIND,                                                   // 47 = "35_FEIND" = "FEIND"
     WP_EIN_3,                                                   // 48 = "35_EIN" = "EIN"
     WP_DREIVIERTEL,                                             // 49 = "36_DREIVIERTEL" = "DREIVIERTEL"
     WP_VIERTEL_2,                                               // 50 = "37_VIERTEL" = "VIERTEL"
@@ -186,6 +186,13 @@ enum WordPos
     WP_POST,                                                    // 96 = "73_POST" = "POST"
     WP_DER,                                                     // 97 = "73_DER" = "DER"
     WP_FERTIG,                                                  // 98 = "73_FERTIG" = "FERTIG"
+    WP_TOT,                                                     // 99 = "73_TOT" = "TOT"
+    WP_TRINK,                                                   // 100 = "73_TRINK" = "TRINK"
+    WP_HAT,                                                     // 101 = "73_HAT" = "HAT"
+    WP_JA,                                                      // 102 = "73_JA" = "JA"
+    WP_SEIN,                                                    // 103 = "73_SEIN" = "SEIN"
+    WP_NIE,                                                     // 104 = "73_NIE" = "NIE"
+
     WP_COUNT,                                                   // number of words
     WP_IF_MINUTE_IS_0 = 0xFF                                    // alternate word in hours_table if minute is 0
 };
