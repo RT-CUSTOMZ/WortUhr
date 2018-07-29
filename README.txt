@@ -1,3 +1,10 @@
+# Hardware
+Im
+Das Layout dieser WortUhr ist angelehnt an das Layout welches von Frank Meyer verwendet wird.
+
+# Software
+Die Software von Frank Meyer wurde minimal angepasst. Das Layout der Matrix, sowie die Datenrichtung wurde angepasst.
+
 Documentation: http://www.mikrocontroller.net/articles/WordClock24h
 
 Version: 2.7.0
