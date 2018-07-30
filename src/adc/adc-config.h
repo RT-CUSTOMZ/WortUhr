@@ -27,12 +27,12 @@
 
 #define ADC_NUMBER          ADC1
 #define ADC_PORT            GPIOA
-#define ADC_PIN             GPIO_Pin_5
+#define ADC_PIN             GPIO_Pin_1
 #define ADC_ADC_CLOCK_CMD   RCC_APB2PeriphClockCmd
 #define ADC_ADC_CLOCK       RCC_APB2Periph_ADC1
 #define ADC_GPIO_CLOCK_CMD  RCC_APB2PeriphClockCmd
 #define ADC_GPIO_CLOCK      (RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO)
-#define ADC_CHANNEL         ADC_Channel_5
+#define ADC_CHANNEL         ADC_Channel_1
 
 #endif
 

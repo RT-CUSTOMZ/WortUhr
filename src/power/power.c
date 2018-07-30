@@ -29,7 +29,14 @@
 #define POWER_PERIPH_CLOCK_CMD  RCC_APB2PeriphClockCmd          // STM32F103 PB0
 #define POWER_PERIPH            RCC_APB2Periph_GPIOB
 #define POWER_PORT              GPIOB
-#define POWER_PIN               GPIO_Pin_0
+//#define POWER_PIN               GPIO_Pin_0
+#define POWER_PIN1              GPIO_Pin_3
+#define POWER_PIN2              GPIO_Pin_4
+#define POWER_PIN3              GPIO_Pin_12
+#define POWER_PIN4              GPIO_Pin_13
+#define POWER_PIN5              GPIO_Pin_14
+#define POWER_PIN6              GPIO_Pin_15
+#define POWER_PIN_ALL           POWER_PIN1|POWER_PIN2|POWER_PIN3|POWER_PIN4|POWER_PIN5|POWER_PIN6
 
 #else
 #error STM32 unknown
@@ -52,7 +59,7 @@ power_init (void)
     GPIO_StructInit (&gpio);
     POWER_PERIPH_CLOCK_CMD (POWER_PERIPH, ENABLE);     // enable clock for power port
 
-    gpio.GPIO_Pin   = POWER_PIN;
+    gpio.GPIO_Pin   = POWER_PIN_ALL;//POWER_PIN;
     gpio.GPIO_Speed = GPIO_Speed_2MHz;
 
 #if defined (STM32F10X)
@@ -76,7 +83,7 @@ power_on (void)
 {
     if (power.is_on != 1)
     {
-        GPIO_SET_BIT(POWER_PORT, POWER_PIN);
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN_ALL);//POWER_PIN);
         log_message ("switching power on");
         power.is_on = 1;
     }
@@ -91,7 +98,7 @@ power_off (void)
 {
     if (power.is_on != 0)
     {
-        GPIO_RESET_BIT(POWER_PORT, POWER_PIN);
+        GPIO_RESET_BIT(POWER_PORT, POWER_PIN_ALL);//POWER_PIN);
         log_message ("switching power off");
         power.is_on = 0;
     }

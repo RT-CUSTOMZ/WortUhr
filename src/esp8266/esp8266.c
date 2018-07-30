@@ -78,7 +78,7 @@ ESP8266_GLOBALS                         esp8266;
 #define ESP8266_CH_PD_PERIPH_CLOCK_CMD  RCC_APB2PeriphClockCmd
 #define ESP8266_CH_PD_PERIPH            RCC_APB2Periph_GPIOA
 #define ESP8266_CH_PD_PORT              GPIOA
-#define ESP8266_CH_PD_PIN               GPIO_Pin_1
+#define ESP8266_CH_PD_PIN               GPIO_Pin_5
 
 #define ESP8266_FLASH_PERIPH_CLOCK_CMD  RCC_APB2PeriphClockCmd
 #define ESP8266_FLASH_PERIPH            RCC_APB2Periph_GPIOA

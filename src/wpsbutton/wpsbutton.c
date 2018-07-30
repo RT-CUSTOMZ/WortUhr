@@ -23,7 +23,7 @@
 #define WPSBUTTON_PERIPH_CLOCK_CMD     RCC_APB2PeriphClockCmd
 #define WPSBUTTON_PERIPH               RCC_APB2Periph_GPIOA
 #define WPSBUTTON_PORT                 GPIOA                            // PA7
-#define WPSBUTTON_PIN                  GPIO_Pin_7
+#define WPSBUTTON_PIN                  GPIO_Pin_12
 #define WPSBUTTON_PRESSED              Bit_RESET                        // pressed if low
 
 #else

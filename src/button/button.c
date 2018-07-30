@@ -30,7 +30,7 @@
 #define BUTTON_PERIPH_CLOCK_CMD     RCC_APB2PeriphClockCmd
 #define BUTTON_PERIPH               RCC_APB2Periph_GPIOA
 #define BUTTON_PORT                 GPIOA
-#define BUTTON_PIN                  GPIO_Pin_6
+#define BUTTON_PIN                  GPIO_Pin_11
 #define BUTTON_PRESSED              Bit_RESET                           // pressed if low
 
 #else
