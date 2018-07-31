@@ -33,7 +33,7 @@ static WiFiClient           http_client;
  * firmware update parameters
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
-#define DEFAULT_UPDATE_HOST                         "uclock.de"
+#define DEFAULT_UPDATE_HOST                         "wortuhr.42volt.de"
 #define DEFAULT_UPDATE_PATH                         "update"
 
 #define ESP_WORDCLOCK_TXT                           "ESP-WordClock.txt"             // avaliable version of ESP8266 firmware
