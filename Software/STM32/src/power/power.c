@@ -18,6 +18,7 @@
 #include "power.h"
 #include "io.h"
 #include "log.h"
+#include "delay.h"
 
 #if defined (STM32F4XX)                                         // STM32F4xx Nucleo Board PC8
 #define POWER_PERIPH_CLOCK_CMD  RCC_AHB1PeriphClockCmd
@@ -41,6 +42,8 @@
 #else
 #error STM32 unknown
 #endif
+
+#define POWER_ON_DELAY          42
 
 POWER_GLOBALS                   power =
 {
@@ -83,7 +86,22 @@ power_on (void)
 {
     if (power.is_on != 1)
     {
-        GPIO_SET_BIT(POWER_PORT, POWER_PIN_ALL);//POWER_PIN);
+        //all at the same time
+        //GPIO_SET_BIT(POWER_PORT, POWER_PIN_ALL);
+
+        //step by step with delay
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN1);
+        delay_msec(POWER_ON_DELAY);
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN2);
+        delay_msec(POWER_ON_DELAY);
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN3);
+        delay_msec(POWER_ON_DELAY);
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN4);
+        delay_msec(POWER_ON_DELAY);
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN5);
+        delay_msec(POWER_ON_DELAY);
+        GPIO_SET_BIT(POWER_PORT, POWER_PIN6);
+
         log_message ("switching power on");
         power.is_on = 1;
     }
