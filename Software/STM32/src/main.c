@@ -146,7 +146,7 @@
 #include "nici.h"
 #include "main.h"
 
-#define DEFAULT_UPDATE_HOST     "uclock.de"
+#define DEFAULT_UPDATE_HOST     "wortuhr.42volt.de"
 #define DEFAULT_UPDATE_PATH     "update"
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
