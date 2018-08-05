@@ -90,6 +90,7 @@ power_on (void)
         //GPIO_SET_BIT(POWER_PORT, POWER_PIN_ALL);
 
         //step by step with delay
+        delay_init(0);
         GPIO_SET_BIT(POWER_PORT, POWER_PIN1);
         delay_msec(POWER_ON_DELAY);
         GPIO_SET_BIT(POWER_PORT, POWER_PIN2);
