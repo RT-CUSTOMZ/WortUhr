@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * stm32flash.h - flash STM32 via Bootloader API
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -642,10 +642,11 @@ static uint32_t         start_address   = 0x00000000;                   // addre
  * do_flash == true: check and flash file
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
+#define LINE_BUFSIZE    256
 static int
 stm32_flash_image (bool do_flash)
 {
-    char            linebuf[256];
+    char            linebuf[LINE_BUFSIZE];
     char            logbuf[128];
     uint32_t        i;
     int             len;
@@ -664,7 +665,8 @@ stm32_flash_image (bool do_flash)
     uint32_t        bytes_read;
     uint32_t        pages_written;
     int             eof_record_found = 0;
-    int             cnt;
+    int             idx;
+    int             ch;
     int             errors = 0;
     int             rtc = 0;
 
@@ -683,14 +685,6 @@ stm32_flash_image (bool do_flash)
 
     if (f)
     {
-#if 0 // prints wrong size, but why?
-        http_send_FS ("File size: ");
-        sprintf (logbuf, "%d", f.size());
-        http_send (logbuf);
-        http_send_FS ("<br/>");
-        http_flush ();
-#endif
-
         line            = 0;
         bytes_read      = 0;
         bytes_written   = 0;
@@ -698,19 +692,34 @@ stm32_flash_image (bool do_flash)
 
         while(f.available())
         {
-            cnt = f.readBytesUntil ('\n', linebuf, 256);
-            line++;
-            bytes_read += cnt + 2;                  // +2: \r\n, readBytesUntil() seams to ignore \r, too.
+            idx = 0;
 
-            linebuf[cnt] = '\0';
-    
-            if (cnt > 0 && linebuf[cnt - 1] == '\r')
+            while ((ch = f.read ()) != EOF)
             {
-                cnt--;
-                linebuf[cnt] = '\0';
+                if (ch != '\r')
+                {
+                    if (ch == '\n')
+                    {
+                        linebuf[idx] = '\0';
+                        break;
+                    }
+                    else if (idx < LINE_BUFSIZE - 1)
+                    {
+                        linebuf[idx] = ch;
+                        idx++;
+                    }
+                }
             }
-    
-            len = cnt;
+
+            if (idx == 0)
+            {
+                break;
+            }
+
+            line++;
+            bytes_read += idx;
+
+            len = idx;
     
             if (linebuf[0] == ':' && len >= 11)
             {
@@ -1050,8 +1059,8 @@ stm32_flash_image (bool do_flash)
 
             if (rtc == 0)
             {
-                http_send_FS ("Check successful<BR>\r\n");
-                sprintf (logbuf, "<BR>File size: %d<BR>\r\n", bytes_read);
+                http_send_FS ("<BR>Check successful<BR>\r\n");
+                sprintf (logbuf, "<BR>File size: %d<BR>\r\n", bytes_read + 2 * line);
                 http_send (logbuf);
             }
             else
@@ -1079,10 +1088,12 @@ stm32_flash_image (bool do_flash)
 static int
 stm32_bootloader (int do_unprotect)
 {
-    char        buffer[256];
-    int         i;
-    int         ch;
-    int         rtc = 0;
+    char          buffer[256];
+    int           i;
+    int           ch;
+    unsigned long time1;
+    unsigned long time2;
+    int           rtc = 0;
 
     buffer[0] = STM32_BEGIN;
 
@@ -1174,7 +1185,9 @@ stm32_bootloader (int do_unprotect)
 
     if (rtc >= 0)
     {
+        time1 = millis ();
         rtc = stm32_flash_image (false);
+        time1 = millis () - time1;
     }
 
     if (rtc >= 0)
@@ -1207,7 +1220,19 @@ stm32_bootloader (int do_unprotect)
 
     if (rtc >= 0)
     {
+        time2 = millis ();
         rtc = stm32_flash_image (true);
+        time2 = millis () - time2;
+
+        sprintf (buffer, "%lu", time1); 
+        http_send_FS ("Check time: ");
+        http_send (buffer);
+        http_send_FS (" msec<BR>");
+
+        sprintf (buffer, "%lu", time2); 
+        http_send_FS ("Flash time: ");
+        http_send (buffer);
+        http_send_FS (" msec<BR>");
     }
 
     return rtc;

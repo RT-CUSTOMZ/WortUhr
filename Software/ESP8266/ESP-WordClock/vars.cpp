@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * vars.cpp - synchronization of variables between STM32 and ESP8266
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 #define CMD_CODE_TIME_VAR                               'T'                        // command:   time variable
 
 #define CMD_CODE_DISPLAY_VAR                            'D'                        // command:   display variable
-#define PAR_CODE_DISPLAY_MODE_NAME                      'N'                        // parameter: display mode name
 #define PAR_CODE_DISPLAY_COLOR                          'C'                        // parameter: display color
 
 #define CMD_CODE_ANIMATION_VAR                          'A'                        // command:   animation variable
@@ -102,7 +101,8 @@ set_numvar (NUM_VARIABLE var, unsigned int value)
     return rtc;
 }
 
-uint8_t   dimmed_colors[MAX_BRIGHTNESS + 1];
+uint8_t   dimmed_display_colors[MAX_BRIGHTNESS + 1];
+uint8_t   dimmed_ambilight_colors[MAX_BRIGHTNESS + 1];
 
 uint_fast8_t
 get_num8_array (NUM8_ARRAY var, uint32_t idx)
@@ -111,11 +111,19 @@ get_num8_array (NUM8_ARRAY var, uint32_t idx)
 
     switch (var)
     {
-        case DISPLAY_DIMMED_COLORS:
+        case DISPLAY_DIMMED_DISPLAY_COLORS:
         {
             if (idx < MAX_BRIGHTNESS + 1)
             {
-                rtc = dimmed_colors[idx];
+                rtc = dimmed_display_colors[idx];
+            }
+            break;
+        }
+        case DISPLAY_DIMMED_AMBILIGHT_COLORS:
+        {
+            if (idx < MAX_BRIGHTNESS + 1)
+            {
+                rtc = dimmed_ambilight_colors[idx];
             }
             break;
         }
@@ -131,11 +139,22 @@ set_num8_array (NUM8_ARRAY var, uint32_t idx, uint_fast8_t value)
 
     switch (var)
     {
-        case DISPLAY_DIMMED_COLORS:
+        case DISPLAY_DIMMED_DISPLAY_COLORS:
         {
             if (idx < MAX_BRIGHTNESS + 1)
             {
-                dimmed_colors[idx] = value;
+                dimmed_display_colors[idx] = value;
+                Serial.printf ("CMD n%02x%02x%02x\r\n", (int) var, idx, value);
+                Serial.flush ();
+                rtc = 1;
+            }
+            break;
+        }
+        case DISPLAY_DIMMED_AMBILIGHT_COLORS:
+        {
+            if (idx < MAX_BRIGHTNESS + 1)
+            {
+                dimmed_ambilight_colors[idx] = value;
                 Serial.printf ("CMD n%02x%02x%02x\r\n", (int) var, idx, value);
                 Serial.flush ();
                 rtc = 1;
@@ -200,20 +219,22 @@ static char weather_lon[MAX_WEATHER_LON_LEN + 1];
 static char weather_lat[MAX_WEATHER_LAT_LEN + 1];
 static char update_host[MAX_UPDATE_HOST_LEN + 1];
 static char update_path[MAX_UPDATE_PATH_LEN + 1];
+static char date_ticker_format[MAX_DATE_TICKER_FORMAT_LEN + 1];
 
 STR_VAR strvars[MAX_STR_VARIABLES] =
 {
-    { ticker_text,      MAX_TICKER_TEXT_LEN },
-    { version,          MAX_VERSION_TEXT_LEN },
-    { eeprom_version,   MAX_EEPROM_VERSION_TEXT_LEN },
-    { esp8266_version,  MAX_ESP8266_VERSION_TEXT_LEN },
-    { timeserver_name,  MAX_TIMESERVER_NAME_LEN },
-    { weather_appid,    MAX_WEATHER_APPID_LEN },
-    { weather_city,     MAX_WEATHER_CITY_LEN },
-    { weather_lon,      MAX_WEATHER_LON_LEN },
-    { weather_lat,      MAX_WEATHER_LAT_LEN },
-    { update_host,      MAX_UPDATE_HOST_LEN },
-    { update_path,      MAX_UPDATE_PATH_LEN },
+    { ticker_text,          MAX_TICKER_TEXT_LEN },
+    { version,              MAX_VERSION_TEXT_LEN },
+    { eeprom_version,       MAX_EEPROM_VERSION_TEXT_LEN },
+    { esp8266_version,      MAX_ESP8266_VERSION_TEXT_LEN },
+    { timeserver_name,      MAX_TIMESERVER_NAME_LEN },
+    { weather_appid,        MAX_WEATHER_APPID_LEN },
+    { weather_city,         MAX_WEATHER_CITY_LEN },
+    { weather_lon,          MAX_WEATHER_LON_LEN },
+    { weather_lat,          MAX_WEATHER_LAT_LEN },
+    { update_host,          MAX_UPDATE_HOST_LEN },
+    { update_path,          MAX_UPDATE_PATH_LEN },
+    { date_ticker_format,   MAX_DATE_TICKER_FORMAT_LEN },
 };
 
 
@@ -271,37 +292,6 @@ set_tm_var (TM_VARIABLE var, TM * tm)
     {
         memcpy (&tmvars[var], tm, sizeof (TM));
         Serial.printf ("CMD T%02x%04d%02d%02d%02d%02d%02d\r\n", (int) var, tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
-        Serial.flush ();
-        rtc =  1;
-    }
-
-    return rtc;
-}
-
-DISPLAY_MODE displaymodevars[MAX_DISPLAY_MODE_VARIABLES];
-
-DISPLAY_MODE *
-get_display_mode_var (DISPLAY_MODE_VARIABLE var)
-{
-    DISPLAY_MODE *   rtc = (DISPLAY_MODE *) 0;
-
-    if (var < MAX_DISPLAY_MODE_VARIABLES)
-    {
-        rtc = &(displaymodevars[var]);
-    }
-
-    return rtc;
-}
-
-unsigned int
-set_display_mode_name (DISPLAY_MODE_VARIABLE var, char * name)
-{
-    unsigned int   rtc = 0;
-
-    if (var < MAX_DISPLAY_MODE_VARIABLES)
-    {
-        strncpy (displaymodevars[var].name, name, MAX_DISPLAY_MODE_NAME_LEN);
-        Serial.printf ("CMD DN%02x%s\r\n", (int) var, name);
         Serial.flush ();
         rtc =  1;
     }
@@ -735,13 +725,24 @@ var_set_parameter (char * parameters)
 
             switch (var_idx)
             {
-                case DISPLAY_DIMMED_COLORS:
+                case DISPLAY_DIMMED_DISPLAY_COLORS:
                 {
-                    if (n < sizeof (dimmed_colors))
+                    if (n < sizeof (dimmed_display_colors))
                     {
                         if (val <= MAX_BRIGHTNESS)
                         {
-                            dimmed_colors[n] = val;
+                            dimmed_display_colors[n] = val;
+                        }
+                    }
+                    break;
+                }
+                case DISPLAY_DIMMED_AMBILIGHT_COLORS:
+                {
+                    if (n < sizeof (dimmed_ambilight_colors))
+                    {
+                        if (val <= MAX_BRIGHTNESS)
+                        {
+                            dimmed_ambilight_colors[n] = val;
                         }
                     }
                     break;
@@ -798,15 +799,6 @@ var_set_parameter (char * parameters)
 
             switch (cmd_code)
             {
-                case PAR_CODE_DISPLAY_MODE_NAME:                            // DN: Display mode Name
-                {
-                    if (var_idx < MAX_DISPLAY_MODE_VARIABLES)
-                    {
-                        strncpy (displaymodevars[var_idx].name, parameters, MAX_DISPLAY_MODE_NAME_LEN);
-                    }
-                    break;
-                }
-
                 case PAR_CODE_DISPLAY_COLOR:                                // DC: Display Color
                 {
                     uint_fast8_t use_rgbw = get_numvar (DISPLAY_USE_RGBW_NUM_VAR);

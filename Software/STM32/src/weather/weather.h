@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * weather.h - some global definitions/declarations for functions using openweathermap.org
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,12 @@
 #define MAX_WEATHER_CITY_LEN        32
 #define MAX_WEATHER_LON_LEN          8
 #define MAX_WEATHER_LAT_LEN          8
+
+// parameters for weather_query():
+#define WEATHER_QUERY_ID_ICON       0                                       // query weather icon
+#define WEATHER_QUERY_ID_ICON_FC    1                                       // query weather forecast icon
+#define WEATHER_QUERY_ID_TEXT       2                                       // query weather text
+#define WEATHER_QUERY_ID_TEXT_FC    3                                       // query weather forecast text
 
 
 typedef struct

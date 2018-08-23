@@ -1,7 +1,9 @@
+//#include <ArduinoJson.h>
+
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * http.cpp - http server
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +22,7 @@
 #include "http.h"
 #include "httpclient.h"
 #include "stm32flash.h"
+#include "tables.h"
 
 #define WCLOCK24H   1
 
@@ -42,6 +45,7 @@ static WiFiClient           http_client;
 #define RELEASENOTE_HTML                            "releasenote.html"              // release notes
 #define WC_TXT                                      "wc.txt"                        // avaliable version of STM32 firmware
 #define WC_LIST_TXT                                 "wc-list.txt"                   // list of available STM32 firmware files
+#define WC_TABLES_LIST_TXT                          "wc-list-tables.txt"            // list of available layout table files
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * http parameters
@@ -110,6 +114,8 @@ static int      http_response_len = 0;
 #define DISPLAY_FLAGS_NONE                          0x00                    // no display flag
 #define DISPLAY_FLAGS_PERMANENT_IT_IS               0x01                    // show "ES IST" permanently
 #define DISPLAY_FLAGS_SYNC_AMBILIGHT                0x02                    // synchronize display and ambilight
+#define DISPLAY_FLAGS_SYNC_CLOCK_MARKERS            0x04                    // synchronize display and clock markers
+#define DISPLAY_FLAGS_FADE_CLOCK_SECONDS            0x08                    // fade clock seconds
 
 /*--------------------------------------------------------------------------------------------------------------------------------------
  * possible modes of ESP8266
@@ -922,7 +928,8 @@ begin_box (const char * title)
     menu_entry ("temperature", "Temperature");
     menu_entry ("weather", "Weather");
     menu_entry ("ldr", "LDR");
-    menu_entry ("brightness", "Brightness");
+    menu_entry ("dispbright", "Brightness");
+    menu_entry ("ambibright", "Ambilight Brightness");
     menu_entry ("display", "Display");
     menu_entry ("animations", "Animations");
     menu_entry ("overlays", "Overlays");
@@ -988,6 +995,14 @@ message_icon_files_missing (void)
     }
 }
 
+static void
+message_tables_file_missing (void)
+{
+    if (! tables_fname())
+    {
+        http_send_FS ("<font color=\"red\"><B>Please install the layout table file wcxx-tables-xx.txt onto <a href=\"spiffs\">SPIFFS</a></B></font><P>\r\n");
+    }
+}
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * main page
  *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1020,6 +1035,8 @@ http_main (void)
     uint_fast8_t    rtc_is_up;
     uint_fast8_t    dfplayer_is_up;
     uint_fast16_t   dfplayer_version;
+    uint_fast8_t    do_reset = 0;
+    uint_fast8_t    do_reset_eeprom = 0;
 
     sv              = get_strvar (VERSION_STR_VAR);
     version         = sv->str;
@@ -1081,6 +1098,21 @@ http_main (void)
             message = "Switching ambilight power off...";
             set_numvar (DISPLAY_AMBILIGHT_POWER_NUM_VAR, 0);
         }
+        else if (! strcmp (action, "rststm32"))
+        {
+            message = "Resetting STM32...";
+            do_reset = 1;
+        }
+        else if (! strcmp (action, "rsteeprom"))
+        {
+            do_reset_eeprom = 1;
+        }
+        else if (! strcmp (action, "rsteeprom2"))
+        {
+            message = "Resetting EEPROM, you should now restart STM32...";
+            rpc (RESET_EEPROM_RPC_VAR);
+            do_reset_eeprom = 2;
+        }
         else if (! strcmp (action, "savedatetime"))
         {
             TM tm;
@@ -1114,73 +1146,120 @@ http_main (void)
         }
     }
 
-    http_header ("WordClock", (const char *) NULL, (const char *) NULL);
+    if (do_reset)
+    {
+        http_header ("WordClock Reset", "20", "/");
+    }
+    else
+    {
+        http_header ("WordClock", (const char *) NULL, (const char *) NULL);
+    }
+
     begin_box ("WordClock");
 
-    table_header (header_cols, MAIN_HEADER_COLS);
-    table_row ("Version", version, "");
-    table_row ("ESP8266 version", esp_firmware_version, "");
-    table_row ("RTC", rtc_is_up ? "online" : "offline", "");
-    table_row ("EEPROM", eeprom_is_up ? "online" : "offline", "");
-
-    if (eeprom_is_up)
+    if (do_reset_eeprom == 1)
     {
-        table_row ("EEPROM Version", eeprom_version, "");
+        begin_form (thispage);
+        http_send_FS ("<P><B>Are you really shure to set all EEPROM values to factory settings?</B>\r\n");
+        button_field ("rsteeprom2", "YES, Reset EEPROM!");
+        end_form ();
+        end_box ();
+        http_trailer ();
+        http_flush ();
+    }
+    else if (do_reset_eeprom == 2)
+    {
+        begin_form (thispage);
+        http_send_FS ("<P><B>You should now restart STM32</B><BR>\r\n");
+        button_field ("rststm32", "Restart STM32");
+        end_form ();
+        end_box ();
+        http_trailer ();
+        http_flush ();
+    }
+    else if (do_reset)
+    {
+        http_send_FS ("<P><B>Resetting STM32, reconnecting in 20 seconds ...</B><BR>\r\n");
+        end_box ();
+        http_trailer ();
+        http_flush ();
+        delay (200);
+        stm32_reset ();
+    }
+    else
+    {
+        message_tables_file_missing ();
+    
+        table_header (header_cols, MAIN_HEADER_COLS);
+        table_row ("Version", version, "");
+        table_row ("ESP8266 version", esp_firmware_version, "");
+        table_row ("RTC", rtc_is_up ? "online" : "offline", "");
+        table_row ("EEPROM", eeprom_is_up ? "online" : "offline", "");
+
+        if (eeprom_is_up)
+        {
+            table_row ("EEPROM Version", eeprom_version, "");
+        }
+
+        table_row ("DFPlayer", dfplayer_is_up ? "online" : "offline", "");
+
+        if (dfplayer_is_up)
+        {
+            char dfplayer_version_buf[16];
+    
+            sprintf (dfplayer_version_buf, "%04x", dfplayer_version);
+            table_row ("DFPlayer Version", dfplayer_version_buf, "");
+        }
+
+        table_row ("Display power", get_numvar (DISPLAY_POWER_NUM_VAR) ? "on" : "off", "");
+        table_trailer ();
+
+        table_header (datetime_header_cols, DATETIME_HEADER_COLS);
+        table_row_inputs (thispage, "datetime", 5, ids, desc, values, maxlen, maxsize);
+        table_trailer ();
+
+        table_header (header_cols, TICKER_HEADER_COLS);
+        table_row_input (thispage, 3, "Ticker", "ticker", "", MAX_TICKER_TEXT_LEN);
+        table_trailer ();
+
+        begin_form (thispage);
+        table_header ((const char **) 0, 0);
+        begin_table_row (0);
+        button_column ("poweron", "Power On");
+        button_column ("poweroff", "Power Off");
+        end_table_row ();
+        begin_table_row (0);
+        button_column ("apoweron", "Ambilight Power On");
+        button_column ("apoweroff", "Ambilight Power Off");
+        end_table_row ();
+        begin_table_row (0);
+        button_column ("learnir", "Learn IR remote control");
+        button_column ("eepromdump", "EEPROM dump");
+        end_table_row ();
+        begin_table_row (0);
+        button_column ("rststm32", "Reset STM32");
+        button_column ("rsteeprom", "Reset EEPROM");
+        end_table_row ();
+        end_form ();
+
+        if (! strcmp (action, "eepromdump"))
+        {
+            message = "Currently not implemented";
+            // http_eeprom_dump ();
+        }
+
+        if (message)
+        {
+            http_send_FS ("<P><font color=green>");
+            http_send (message);
+            http_send_FS ("</font>\r\n");
+        }
+
+        end_box ();
+        http_trailer ();
+        http_flush ();
     }
 
-    table_row ("DFPlayer", dfplayer_is_up ? "online" : "offline", "");
-
-    if (dfplayer_is_up)
-    {
-        char dfplayer_version_buf[16];
-
-        sprintf (dfplayer_version_buf, "%04x", dfplayer_version);
-        table_row ("DFPlayer Version", dfplayer_version_buf, "");
-    }
-
-    table_row ("Display power", get_numvar (DISPLAY_POWER_NUM_VAR) ? "on" : "off", "");
-    table_trailer ();
-
-    table_header (datetime_header_cols, DATETIME_HEADER_COLS);
-    table_row_inputs (thispage, "datetime", 5, ids, desc, values, maxlen, maxsize);
-    table_trailer ();
-
-    table_header (header_cols, TICKER_HEADER_COLS);
-    table_row_input (thispage, 3, "Ticker", "ticker", "", MAX_TICKER_TEXT_LEN);
-    table_trailer ();
-
-    begin_form (thispage);
-    table_header ((const char **) 0, 0);
-    begin_table_row (0);
-    button_column ("poweron", "Power On");
-    button_column ("poweroff", "Power Off");
-    end_table_row ();
-    begin_table_row (0);
-    button_column ("apoweron", "Ambilight Power On");
-    button_column ("apoweroff", "Ambilight Power Off");
-    end_table_row ();
-    begin_table_row (0);
-    button_column ("learnir", "Learn IR remote control");
-    button_column ("eepromdump", "EEPROM dump");
-    end_table_row ();
-    end_form ();
-
-    if (! strcmp (action, "eepromdump"))
-    {
-        message = "Currently not implemented";
-        // http_eeprom_dump ();
-    }
-
-    if (message)
-    {
-        http_send_FS ("<P><font color=green>");
-        http_send (message);
-        http_send_FS ("</font>\r\n");
-    }
-
-    end_box ();
-    http_trailer ();
-    http_flush ();
 
     return rtc;
 }
@@ -1589,6 +1668,11 @@ http_weather (void)
             message = "Getting weather";
             rpc (GET_WEATHER_RPC_VAR);
         }
+        else if (! strcmp (action, "getweatherfc"))
+        {
+            message = "Getting weather forecast";
+            rpc (GET_WEATHER_FC_RPC_VAR);
+        }
     }
 
     http_header ("WordClock Weather", (const char *) NULL, (const char *) NULL);
@@ -1618,6 +1702,7 @@ http_weather (void)
 
     begin_form (thispage);
     button_field ("getweather", "Get weather");
+    button_field ("getweatherfc", "Get weather forecast");
     end_form ();
 
     if (alert_message)
@@ -1738,13 +1823,13 @@ http_ldr (void)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * brightness page
+ * display brightness page
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static uint_fast8_t
-http_brightness (void)
+http_display_brightness (void)
 {
-    const char *    thispage = "brightness";
+    const char *    thispage = "dispbright";
     const char *    header_cols[MAIN_HEADER_COLS]               = { "Brightness", "Value" };
     char            txtbuf[32];
     char            idbuf[32];
@@ -1762,7 +1847,7 @@ http_brightness (void)
         {
             idx = atoi (action + 7);
             val = atoi (http_get_param (action + 4));
-            set_num8_array (DISPLAY_DIMMED_COLORS, idx, val);
+            set_num8_array (DISPLAY_DIMMED_DISPLAY_COLORS, idx, val);
         }
     }
 
@@ -1771,9 +1856,62 @@ http_brightness (void)
 
     table_header (header_cols, MAIN_HEADER_COLS);
 
-    for (idx = 0; idx < MAX_BRIGHTNESS + 1; idx++)         // from 0 to 15
+    for (idx = 0; idx < MAX_BRIGHTNESS + 1; idx++)         // from 0 to 15 = 16 values
     {
-        val = get_num8_array (DISPLAY_DIMMED_COLORS, idx);
+        val = get_num8_array (DISPLAY_DIMMED_DISPLAY_COLORS, idx);
+
+        sprintf (txtbuf, "%2d", idx);
+        sprintf (idbuf, "dim%d", idx);
+        sprintf (valbuf, "%d", val);
+        table_row_slider (thispage, txtbuf, idbuf, valbuf, "0", "15");
+    }
+
+    table_trailer ();
+
+    end_box ();
+    http_trailer ();
+    http_flush ();
+
+    return rtc;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * ambilight brightness page
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static uint_fast8_t
+http_ambilight_brightness (void)
+{
+    const char *    thispage = "ambibright";
+    const char *    header_cols[MAIN_HEADER_COLS]               = { "Brightness", "Value" };
+    char            txtbuf[32];
+    char            idbuf[32];
+    char            valbuf[32];
+    uint_fast8_t    val;
+    char *          action;
+    int             idx;
+    uint_fast8_t    rtc                                         = 0;
+
+    action = http_get_param ("action");
+
+    if (*action)
+    {
+        if (! strncmp (action, "savedim", 7))
+        {
+            idx = atoi (action + 7);
+            val = atoi (http_get_param (action + 4));
+            set_num8_array (DISPLAY_DIMMED_AMBILIGHT_COLORS, idx, val);
+        }
+    }
+
+    http_header ("WordClock Ambilight Brightness", (const char *) NULL, (const char *) NULL);
+    begin_box ("WordClock Ambilight Brightness");
+
+    table_header (header_cols, MAIN_HEADER_COLS);
+
+    for (idx = 0; idx < MAX_BRIGHTNESS + 1; idx++)         // from 0 to 15 = 16 values
+    {
+        val = get_num8_array (DISPLAY_DIMMED_AMBILIGHT_COLORS, idx);
 
         sprintf (txtbuf, "%2d", idx);
         sprintf (idbuf, "dim%d", idx);
@@ -1881,6 +2019,7 @@ select_icons (const char * id, const char * name)
  * display page
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
+#define MAX_DISPLAY_MODE_VARIABLES  24
 static uint_fast8_t
 http_display (void)
 {
@@ -1896,7 +2035,6 @@ http_display (void)
     const char *        minval[4]       = { "0",   "0",  "0",  "0" };
     const char *        maxval[4]       = { "63", "63", "63", "63" };
     const char *        display_mode_names[MAX_DISPLAY_MODE_VARIABLES];
-    uint_fast8_t        max_display_modes;
     int                 color_animation_mode;
     uint_fast8_t        auto_brightness_active;
     uint_fast8_t        display_brightness;
@@ -1906,6 +2044,7 @@ http_display (void)
     char                blue_buf[MAX_COLOR_VALUE_LEN + 1];
     char                white_buf[MAX_COLOR_VALUE_LEN + 1];
     int                 display_mode;
+    STR_VAR *           sv;
     uint_fast8_t        idx;
     uint_fast8_t        display_flags;
     uint_fast8_t        permanent_display_of_it_is;
@@ -1913,7 +2052,6 @@ http_display (void)
     uint_fast8_t        rtc = 0;
 
     display_mode                    = get_numvar (DISPLAY_MODE_NUM_VAR);
-    max_display_modes               = get_numvar (MAX_DISPLAY_MODES_NUM_VAR);
     display_flags                   = get_numvar (DISPLAY_FLAGS_NUM_VAR);
     color_animation_mode            = get_numvar (COLOR_ANIMATION_MODE_NUM_VAR);
     display_brightness              = get_numvar (DISPLAY_BRIGHTNESS_NUM_VAR);
@@ -1924,10 +2062,9 @@ http_display (void)
 
     permanent_display_of_it_is      = (display_flags & DISPLAY_FLAGS_PERMANENT_IT_IS) ? 1 : 0;
 
-    for (idx = 0; idx < max_display_modes; idx++)
+    for (idx = 0; idx < display_modes_count; idx++)
     {
-        DISPLAY_MODE * dm = get_display_mode_var ((DISPLAY_MODE_VARIABLE) idx);
-        display_mode_names[idx] = dm->name;
+        display_mode_names[idx] = tbl_modes[idx].description;
     }
 
     action = http_get_param ("action");
@@ -1981,6 +2118,13 @@ http_display (void)
             ticker_deceleration = atoi (http_get_param ("tickerdec"));
             set_numvar (TICKER_DECELRATION_NUM_VAR, ticker_deceleration);
         }
+        else if (! strcmp (action, "savedtf"))
+        {
+            char * date_ticker_format = http_get_param ("dtf");
+
+            set_strvar (DATE_TICKER_FORMAT_VAR, date_ticker_format);
+            message = "date ticker format successfully changed.";
+        }
         else if (! strcmp (action, "testdisplay"))
         {
             message = "Testing display...";
@@ -2030,10 +2174,12 @@ http_display (void)
 
     http_header ("WordClock Display", (const char *) NULL, (const char *) NULL);
     begin_box ("WordClock Display");
+    message_tables_file_missing ();
+
     table_header (header_cols, DISPLAY_HEADER_COLS);
 
     table_row_checkbox (thispage, "ES IST", "itis", "Permanent display of \"ES IST\"", permanent_display_of_it_is);
-    table_row_select (thispage, "Display Mode", "displaymode", display_mode_names, display_mode, max_display_modes, 0);
+    table_row_select (thispage, "Display Mode", "displaymode", display_mode_names, display_mode, display_modes_count, 0);
 
     if (! auto_brightness_active)
     {
@@ -2057,6 +2203,10 @@ http_display (void)
     }
 
     table_row_input (thispage, 3, "Ticker deceleration", "tickerdec", ticker_deceleration, MAX_TICKER_DECELERATION_LEN);
+
+    sv = get_strvar (DATE_TICKER_FORMAT_VAR);
+    table_row_input (thispage, 3, "Date ticker format", "dtf", sv->str, MAX_DATE_TICKER_FORMAT_LEN);
+
     table_trailer ();
 
     begin_form (thispage);
@@ -2305,10 +2455,40 @@ http_animations (void)
  * overlays page
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
-#define N_OVERLAY_TYPES         8
+#define N_OVERLAY_TYPES         10
 #define N_DATE_CODES            7
 #define OVERLAY_MAX_FOLDER_LEN  2
 #define OVERLAY_MAX_TRACK_LEN   3
+
+const char * overlay_types[N_OVERLAY_TYPES] =
+{
+    "----",
+    "Icon",
+    "Date",
+    "Temperature",
+    "Weather Icon",
+    "Weather Ticker",
+    "Ticker",
+    "DFPlayer",
+    "Weather FC Icon",
+    "Weather FC Ticker",
+};
+
+#if 0
+const uint_fast8_t  overlay_map[N_OVERLAY_TYPES] =
+{
+    OVERLAY_TYPE_NONE,
+    OVERLAY_TYPE_ICON,
+    OVERLAY_TYPE_DATE,
+    OVERLAY_TYPE_TEMPERATURE,
+    OVERLAY_TYPE_WEATHER_ICON,
+    OVERLAY_TYPE_WEATHER_FC_ICON,
+    OVERLAY_TYPE_WEATHER,
+    OVERLAY_TYPE_WEATHER_FC,
+    OVERLAY_TYPE_TICKER,
+    OVERLAY_TYPE_MP3,
+};
+#endif
 
 static uint_fast8_t
 http_overlays (void)
@@ -2316,7 +2496,6 @@ http_overlays (void)
     const char *        thispage = "overlays";
     const char *        overlay_cols[OVERLAY_HEADER_COLS] = { "Active", "Type", "Value", "Interval<BR>(min)", "Duration<BR>(sec)",
                                                               "Date<BR>Code", "or", "MM", "DD", "Days" };
-    const char *        overlay_types[N_OVERLAY_TYPES] = { "----", "Icon", "Date", "Temperature", "Weather Icon", "Weather Ticker", "Ticker", "DFPlayer" };
     const char *        date_codes[N_DATE_CODES] = { "----", "Carnival", "Easter Sunday", "1st Advent", "2nd Advent", "3rd Advent", "4th Advent" };
     char *              action;
     const char *        message         = (const char *) 0;
@@ -2335,6 +2514,8 @@ http_overlays (void)
     {
         action = http_get_param ("oid");       // id by autosubmit
     }
+
+    n_overlays = get_numvar (OVERLAY_N_OVERLAYS_NUM_VAR);
 
     if (action)
     {
@@ -2357,8 +2538,6 @@ http_overlays (void)
             uint_fast8_t  val;
             uint_fast8_t  valmm;
             uint_fast8_t  valdd;
-
-            n_overlays = get_numvar (OVERLAY_N_OVERLAYS_NUM_VAR);
 
             if (oidx == n_overlays)
             {
@@ -2440,6 +2619,7 @@ http_overlays (void)
     http_header ("WordClock Overlays", (const char *) NULL, (const char *) NULL);
     begin_box ("WordClock Overlays");
     message_icon_files_missing ();
+    message_tables_file_missing ();
 
     n_overlays = get_numvar (OVERLAY_N_OVERLAYS_NUM_VAR);
 
@@ -2466,7 +2646,7 @@ http_overlays (void)
             }
             else if (overlays[idx].type == OVERLAY_TYPE_TICKER)
             {
-                input_column ("oname",      "", overlays[idx].text, OVERLAY_MAX_TEXT_LEN, OVERLAY_MAX_TEXT_LEN / 2);
+                input_column ("oname", "", overlays[idx].text, OVERLAY_MAX_TEXT_LEN, OVERLAY_MAX_TEXT_LEN / 2);
             }
             else if (overlays[idx].type == OVERLAY_TYPE_MP3)
             {
@@ -2504,7 +2684,7 @@ http_overlays (void)
 
             input_column ("oint",  "", overlays[idx].interval, 2, 2);
 
-            if (overlays[idx].type == OVERLAY_TYPE_ICON || overlays[idx].type == OVERLAY_TYPE_WEATHER_ICON)
+            if (overlays[idx].type == OVERLAY_TYPE_ICON || overlays[idx].type == OVERLAY_TYPE_WEATHER_ICON || overlays[idx].type == OVERLAY_TYPE_WEATHER_FC_ICON)
             {
                 input_column ("oduration",  "", overlays[idx].duration, 1, 1);
             }
@@ -2600,13 +2780,16 @@ http_ambilight (void)
     const char *        message         = (const char *) 0;
     uint_fast8_t        use_rgbw        = get_numvar (DISPLAY_USE_RGBW_NUM_VAR);
     DSP_COLORS          rgbw;
+    DSP_COLORS          rgbw_marker;
     const char *        ids[4]          = { "red", "green", "blue", "white" };
+    const char *        marker_ids[4]   = { "mred", "mgreen", "mblue", "mwhite" };
     const char *        desc[4]         = { "R", "G", "B", "W" };
     char *              rgbw_buf[4];
+    char *              rgbw_marker_buf[4];
     const char *        minval[4]       = { "0",   "0",  "0",  "0" };
     const char *        maxval[4]       = { "63", "63", "63", "63" };
     char                rbdecbuf[MAX_RAINBOW_DECELERATION_LEN + 1];
-    AMBILIGHT_MODE *     am;
+    AMBILIGHT_MODE *    am;
     uint_fast8_t        ambilight_brightness;
     uint_fast8_t        auto_brightness_active;
     char                brbuf[MAX_BRIGHTNESS_LEN + 1];
@@ -2614,6 +2797,10 @@ http_ambilight (void)
     char                green_buf[MAX_COLOR_VALUE_LEN + 1];
     char                blue_buf[MAX_COLOR_VALUE_LEN + 1];
     char                white_buf[MAX_COLOR_VALUE_LEN + 1];
+    char                marker_red_buf[MAX_COLOR_VALUE_LEN + 1];
+    char                marker_green_buf[MAX_COLOR_VALUE_LEN + 1];
+    char                marker_blue_buf[MAX_COLOR_VALUE_LEN + 1];
+    char                marker_white_buf[MAX_COLOR_VALUE_LEN + 1];
     char                ambimode_idbuf[8];
     char                ambimode_decidbuf[8];
     char                ambimode_defaultidbuf[8];
@@ -2624,6 +2811,9 @@ http_ambilight (void)
     int                 ambilight_markers = 0;
     uint_fast8_t        display_flags;
     uint_fast8_t        sync_ambilight;
+    uint_fast8_t        sync_clock_markers;
+    uint_fast8_t        fade_clock_seconds;
+    uint_fast8_t        n_colors;
     uint_fast8_t        idx;
     uint_fast8_t        rtc             = 0;
 
@@ -2642,9 +2832,12 @@ http_ambilight (void)
     ambilight_offset        = get_numvar (AMBILIGHT_OFFSET_NUM_VAR);
     display_flags           = get_numvar (DISPLAY_FLAGS_NUM_VAR);
     sync_ambilight          = (display_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT) ? 1 : 0;
+    sync_clock_markers      = (display_flags & DISPLAY_FLAGS_SYNC_CLOCK_MARKERS) ? 1 : 0;
+    fade_clock_seconds      = (display_flags & DISPLAY_FLAGS_FADE_CLOCK_SECONDS) ? 1 : 0;
     ambilight_brightness    = get_numvar (AMBILIGHT_BRIGHTNESS_NUM_VAR);
     auto_brightness_active  = get_numvar (DISPLAY_AUTOMATIC_BRIGHTNESS_ACTIVE_NUM_VAR);
     get_dsp_color_var (AMBILIGHT_DSP_COLOR_VAR, &rgbw);
+    get_dsp_color_var (AMBILIGHT_MARKER_DSP_COLOR_VAR, &rgbw_marker);
 
     action = http_get_param ("action");
 
@@ -2661,6 +2854,36 @@ http_ambilight (void)
             {
                 sync_ambilight = 0;
                 display_flags &= ~DISPLAY_FLAGS_SYNC_AMBILIGHT;
+            }
+
+            set_numvar (DISPLAY_FLAGS_NUM_VAR, display_flags);
+        }
+        else if (! strcmp (action, "savesyncmark"))
+        {
+            if (http_get_checkbox_param ("syncmark"))
+            {
+                sync_clock_markers = 1;
+                display_flags |= DISPLAY_FLAGS_SYNC_CLOCK_MARKERS;
+            }
+            else
+            {
+                sync_clock_markers = 0;
+                display_flags &= ~DISPLAY_FLAGS_SYNC_CLOCK_MARKERS;
+            }
+
+            set_numvar (DISPLAY_FLAGS_NUM_VAR, display_flags);
+        }
+        else if (! strcmp (action, "savefadeclk"))
+        {
+            if (http_get_checkbox_param ("fadeclk"))
+            {
+                fade_clock_seconds = 1;
+                display_flags |= DISPLAY_FLAGS_FADE_CLOCK_SECONDS;
+            }
+            else
+            {
+                fade_clock_seconds = 0;
+                display_flags &= ~DISPLAY_FLAGS_FADE_CLOCK_SECONDS;
             }
 
             set_numvar (DISPLAY_FLAGS_NUM_VAR, display_flags);
@@ -2686,6 +2909,23 @@ http_ambilight (void)
             }
 
             set_dsp_color_var (AMBILIGHT_DSP_COLOR_VAR, &rgbw, use_rgbw);
+        }
+        else if (! strcmp (action, "savemcolors"))
+        {
+            rgbw_marker.red     = atoi (http_get_param ("mred"));
+            rgbw_marker.green   = atoi (http_get_param ("mgreen"));
+            rgbw_marker.blue    = atoi (http_get_param ("mblue"));
+
+            if (use_rgbw)
+            {
+                rgbw_marker.white = atoi (http_get_param ("mwhite"));
+            }
+            else
+            {
+                rgbw_marker.white = 0;
+            }
+
+            set_dsp_color_var (AMBILIGHT_MARKER_DSP_COLOR_VAR, &rgbw_marker, use_rgbw);
         }
         else if (! strcmp (action, "saveambimode"))
         {
@@ -2762,24 +3002,37 @@ http_ambilight (void)
 
     sprintf (rbdecbuf,              "%d", am->deceleration);
     sprintf (brbuf,                 "%d", ambilight_brightness);
+
     sprintf (red_buf,               "%d", rgbw.red);
     sprintf (green_buf,             "%d", rgbw.green);
     sprintf (blue_buf,              "%d", rgbw.blue);
 
+    sprintf (marker_red_buf,        "%d", rgbw_marker.red);
+    sprintf (marker_green_buf,      "%d", rgbw_marker.green);
+    sprintf (marker_blue_buf,       "%d", rgbw_marker.blue);
+
     if (use_rgbw)
     {
         sprintf (white_buf, "%d", rgbw.white);
+        sprintf (marker_white_buf, "%d", rgbw_marker.white);
     }
     else
     {
         white_buf[0] = '0';
         white_buf[1] = '\0';
+        marker_white_buf[0] = '0';
+        marker_white_buf[1] = '\0';
     }
 
     rgbw_buf[0] = red_buf;
     rgbw_buf[1] = green_buf;
     rgbw_buf[2] = blue_buf;
     rgbw_buf[3] = white_buf;
+
+    rgbw_marker_buf[0] = marker_red_buf;
+    rgbw_marker_buf[1] = marker_green_buf;
+    rgbw_marker_buf[2] = marker_blue_buf;
+    rgbw_marker_buf[3] = marker_white_buf;
 
     http_header ("WordClock Ambilight", (const char *) NULL, (const char *) NULL);
     begin_box ("WordClock Ambilight");
@@ -2789,27 +3042,32 @@ http_ambilight (void)
     table_row_input (thispage, 3, "#LEDs", "ambileds", ambilight_leds, 3);
     table_row_input (thispage, 3, "Offset of second = 0", "ambioffset", ambilight_offset, 3);
 
+    if (use_rgbw)
+    {
+        n_colors = 4;
+    }
+    else
+    {
+        n_colors = 3;
+    }
+
     table_row_checkbox (thispage, "Ambilight", "syncambi", "Use display colors", sync_ambilight);
 
     if (! sync_ambilight)
     {
-        uint_fast8_t    n_colors;
-
         if (! auto_brightness_active)
         {
             table_row_slider (thispage, "Brightness (1-15)", "brightness", brbuf, "0", "15");
         }
 
-        if (use_rgbw)
-        {
-            n_colors = 4;
-        }
-        else
-        {
-            n_colors = 3;
-        }
-
         table_row_sliders (thispage, "Colors", "colors", n_colors, ids, desc, rgbw_buf, minval, maxval);
+    }
+
+    table_row_checkbox (thispage, "Marker Colors", "syncmark", "Use display colors", sync_clock_markers);
+
+    if (! sync_clock_markers)
+    {
+        table_row_sliders (thispage, "Marker Colors", "mcolors", n_colors, marker_ids, desc, rgbw_marker_buf, minval, maxval);
     }
 
     table_row_select (thispage, "Ambilight Mode", "ambimode", ambilight_mode_names, ambilight_mode, MAX_AMBILIGHT_MODE_VARIABLES, 0);
@@ -2837,7 +3095,8 @@ http_ambilight (void)
         }
     }
 
-    table_row_checkbox (thispage, "CLOCK", "markers", "Enable 5-second markers", ambilight_markers);
+    table_row_checkbox (thispage, "Clock", "markers", "Enable 5-second markers", ambilight_markers);
+    table_row_checkbox (thispage, "Clock", "fadeclk", "Fade clock seconds", fade_clock_seconds);
 
     table_trailer ();
     begin_form (thispage);
@@ -3374,6 +3633,7 @@ read_line (String& line)
 #define POST_ICON_NONE            0
 #define POST_ICON_FILE            1
 #define POST_ICON_WEATHER_FILE    2
+#define POST_TABLES_FILE          3
 
 static uint_fast8_t
 http_spiffs (int post = POST_ICON_NONE)
@@ -3386,6 +3646,7 @@ http_spiffs (int post = POST_ICON_NONE)
     char            valbuf[16];
     const char *    fname_icon = (const char *) 0;
     const char *    fname_weather  = (const char *) 0;
+    const char *    fname_tables  = (const char *) 0;
     const char *    show_fname = (const char *) 0;
     char *          update_host;
     char *          update_path;
@@ -3393,6 +3654,8 @@ http_spiffs (int post = POST_ICON_NONE)
     uint_fast16_t   hardware_configuration;
     int             download_rtc = 2;
     STR_VAR *       sv;
+    const char *    tables_filter = NULL;
+    int             len;
     uint_fast8_t    rtc = 0;
 
     action = http_get_param ("action");
@@ -3404,12 +3667,16 @@ http_spiffs (int post = POST_ICON_NONE)
         switch (hardware_configuration & HW_WC_MASK)
         {
             case HW_WC_24H:
-                fname_icon       = "wc24h-icon.txt";
-                fname_weather    = "wc24h-weather.txt";
+                fname_icon      = "wc24h-icon.txt";
+                fname_weather   = "wc24h-weather.txt";
+                fname_tables    = "wc24h-tables-local.txt";
+                tables_filter   = "wc24h-tables-"; break;
                 break;
             case HW_WC_12H:
-                fname_icon       = "wc12h-icon.txt";
-                fname_weather    = "wc12h-weather.txt";
+                fname_icon      = "wc12h-icon.txt";
+                fname_weather   = "wc12h-weather.txt";
+                fname_tables    = "wc12h-tables-local.txt";
+                tables_filter   = "wc12h-tables-";
                 break;
         }
     }
@@ -3443,11 +3710,18 @@ http_spiffs (int post = POST_ICON_NONE)
                 f = SPIFFS.open(fname_icon, "w+");
             }
         }
-        else // if (post == POST_ICON_WEATHER_FILE)
+        else if (post == POST_ICON_WEATHER_FILE)
         {
             if (fname_weather)
             {
                 f = SPIFFS.open(fname_weather, "w+");
+            }
+        }
+        else if (post == POST_TABLES_FILE)
+        {
+            if (fname_tables)
+            {
+                f = SPIFFS.open(fname_tables, "w+");
             }
         }
 
@@ -3528,6 +3802,23 @@ http_spiffs (int post = POST_ICON_NONE)
         {
             set_strvar (UPDATE_PATH_VAR, http_get_param ("uppath"));
         }
+        else if (! strcmp (action, "savedwnfil"))
+        {
+            char * fname = http_get_param ("dwnfil");
+
+            SPIFFS.begin ();
+            download_rtc = download_file (update_host, update_path, fname);
+            SPIFFS.end ();
+        }
+        else if (! strcmp (action, "dwntable"))
+        {
+            char * fname = http_get_param ("tablefile");
+
+            SPIFFS.begin ();
+            download_rtc = download_file (update_host, update_path, fname);
+            SPIFFS.end ();
+            tables_init ();                                                         // reload layout tables
+        }
         else if (! strcmp (action, "download"))
         {
             SPIFFS.begin ();
@@ -3559,6 +3850,12 @@ http_spiffs (int post = POST_ICON_NONE)
 
     http_header ("WordClock ESP8266 SPIFFS", (const char *) NULL, (const char *) NULL);
     begin_box ("WordClock ESP8266 SPIFFS");
+    message_tables_file_missing ();
+
+    if (tables_corrupt)
+    {
+        http_send_FS ("<font color=\"red\"><B>table file wcxx-tables-xx.txt is corrupt. Remove it, load it again or format SPIFFS!</B></font><P>\r\n");
+    }
 
     if (download_rtc == 0)
     {
@@ -3660,29 +3957,125 @@ http_spiffs (int post = POST_ICON_NONE)
     table_header (update_header_cols, UPDATE_HEADER_COLS);
     table_row_input (thispage, 3, "Update Host", "uphost", update_host, MAX_UPDATE_HOST_LEN);
     table_row_input (thispage, 3, "Update Path", "uppath", update_path, MAX_UPDATE_PATH_LEN);
+#if 0
+#define MAX_DOWNLOAD_FILENAME 32
+    table_row_input (thispage, 3, "Download file", "dwnfil", "", MAX_DOWNLOAD_FILENAME);
+#endif
     table_trailer ();
 
     http_send_FS ("<form method=\"GET\" action=\"/spiffs\">\r\n"
                   "    <button type=\"submit\" name=\"action\" value=\"download\">Download Icon files</button>\r\n"
                   "</form>\r\n");
 
-    http_send_FS ("<table><tr><td>");
-    http_send (fname_icon);
-    http_send_FS ("</td><td>"
-            "<form method='post' action='spiffs-icon' name='submit' enctype='multipart/form-data' style=\"display:inline\">"
-            "<input type='file' name='fileField'>"
-            "</td><td><input type='submit' name='submit' value='Upload'></td>"
-            "</form></tr>"
-            );
+    http_send_FS ("<form method=\"GET\" action=\"/spiffs\">"
+                  "<select id=\"tablefile\" name=\"tablefile\">");
 
-    http_send_FS ("<tr><td>");
-    http_send (fname_weather);
-    http_send_FS ("</td><td>"
-            "<form method='post' action='spiffs-icon-weather' name='submit' enctype='multipart/form-data' style=\"display:inline\">"
-            "<input type='file' name='fileField'>"
-            "</td><td><input type='submit' name='submit' value='Upload'></td>"
-            "</form></tr></table>"
-            );
+    len = httpclient (update_host, update_path, WC_TABLES_LIST_TXT);
+
+    if (len > 0)
+    {
+        char         fname[MAX_UPDATE_FILENAME_LEN];
+        int          ch;
+        int          l = 0;
+
+        while (len > 0)
+        {
+            ch = httpclient_read (&len);
+
+            if (ch != '\r' && ch != '\n' && ch != ' ' && ch != '\t' && l < MAX_UPDATE_FILENAME_LEN - 1)
+            {
+                fname[l++] = ch;
+            }
+            else if (ch == '\n')
+            {
+                int show_option;
+
+                fname[l] = '\0';
+                l = 0;
+
+                show_option = 1;
+
+                if (tables_filter)
+                {
+                    if (strncmp (fname, tables_filter, strlen (tables_filter)) != 0)
+                    {
+                        show_option = 0;
+                    }
+                }
+
+                if (show_option)
+                {
+                    char * p = tables_fname ();
+                    http_send_FS ("<option value=\"");
+                    http_send (fname);
+
+                    if (p && ! strcmp (fname, p))
+                    {
+                        http_send_FS ("\" selected>");
+                    }
+                    else
+                    {
+                        http_send_FS ("\">");
+                    }
+                    http_send (fname);
+                    http_send_FS ("</option>\r\n");
+                }
+            }
+        }
+
+        httpclient_stop ();
+        http_flush ();
+    }
+    else
+    {
+       Serial.print("Error in HTTP request: ");
+       Serial.println(WC_LIST_TXT);
+    }
+    http_send_FS ("</select>\r\n");
+
+    http_send_FS ("<button type=\"submit\" name=\"action\" value=\"dwntable\">Download layout table</button>"
+                  "</form>"
+                  "<P>\r\n");
+
+    http_send_FS ("<table>");
+
+    if (fname_icon)
+    {
+        http_send_FS ("<tr><td>");
+        http_send (fname_icon);
+        http_send_FS ("</td><td>"
+                "<form method='post' action='spiffs-icon' name='submit' enctype='multipart/form-data' style=\"display:inline\">"
+                "<input type='file' name='fileField'>"
+                "</td><td><input type='submit' name='submit' value='Upload'></td>"
+                "</form></tr>"
+                );
+    }
+
+    if (fname_weather)
+    {
+        http_send_FS ("<tr><td>");
+        http_send (fname_weather);
+        http_send_FS ("</td><td>"
+                "<form method='post' action='spiffs-icon-weather' name='submit' enctype='multipart/form-data' style=\"display:inline\">"
+                "<input type='file' name='fileField'>"
+                "</td><td><input type='submit' name='submit' value='Upload'></td>"
+                "</form></tr>"
+                );
+    }
+
+    if (fname_weather)
+    {
+        http_send_FS ("<tr><td>");
+        http_send (fname_tables);
+        http_send_FS ("</td><td>"
+                "<form method='post' action='spiffs-tables' name='submit' enctype='multipart/form-data' style=\"display:inline\">"
+                "<input type='file' name='fileField'>"
+                "</td><td><input type='submit' name='submit' value='Upload'></td>"
+                "</form></tr>"
+                );
+    }
+
+    http_send_FS ("</table>");
 
     if (show_fname)
     {
@@ -3856,7 +4249,7 @@ http_update (void)
         }
         else if (do_reset)
         {
-            http_send_FS ("<P><B>Resetting STM32, reconnecting in 15 seconds ...</B><BR>\r\n");
+            http_send_FS ("<P><B>Resetting STM32, reconnecting in 20 seconds ...</B><BR>\r\n");
             end_box ();
             http_trailer ();
             http_flush ();
@@ -4171,8 +4564,9 @@ sanitize_xml_string(const String& str)
 static int
 http_get_settings()
 {
-    char  buff[255];
-    int   i;
+    char          buff[255];
+    int           i;
+    uint_fast8_t  ui;
 
     http_send(FS("HTTP/1.0 200 OK\r\n\r\n"));
     http_send(FS("<settings>"));
@@ -4199,9 +4593,9 @@ http_get_settings()
     }
 
     // display modes
-    for (i = 0; i < MAX_DISPLAY_MODE_VARIABLES; i++)
+    for (ui = 0; ui < display_modes_count; ui++)
     {
-        sprintf(buff, FS("<dispmode idx=\"%d\" name=\"%s\" />"), i, sanitize_xml_string(displaymodevars[i].name).c_str());
+        sprintf(buff, FS("<dispmode idx=\"%d\" name=\"%s\" />"), ui, sanitize_xml_string(tbl_modes[ui].description).c_str());
         http_send(buff);
     }
 
@@ -4480,9 +4874,13 @@ http (const char * path, const char * const_param)
     {
         rtc = http_ldr ();
     }
-    else if (! strcmp (path, "/brightness"))
+    else if (! strcmp (path, "/dispbright"))
     {
-        rtc = http_brightness ();
+        rtc = http_display_brightness ();
+    }
+    else if (! strcmp (path, "/ambibright"))
+    {
+        rtc = http_ambilight_brightness ();
     }
     else if (! strcmp (path, "/display"))
     {
@@ -4553,6 +4951,10 @@ http_post(const String& sPath)
     else if (sPath == "/spiffs-icon-weather")
     {
         http_spiffs (POST_ICON_WEATHER_FILE);
+    }
+    else if (sPath == "/spiffs-tables")
+    {
+        http_spiffs (POST_TABLES_FILE);
     }
 }
 

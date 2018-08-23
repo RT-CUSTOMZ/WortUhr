@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * main.h - some global definitions/declarations
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 #include <time.h>
 #include "eeprom-data.h"
 
-#define VERSION                     "2.8.4"
+#define VERSION                     "2.9.4"
 
 #define MAX_EEPROM_VERSION_LEN      4
 
@@ -47,11 +47,23 @@ typedef struct
     struct tm                       tm;
     char                            update_host[EEPROM_MAX_HOSTNAME_LEN];
     char                            update_path[EEPROM_MAX_UPDATE_PATH_LEN];
+    volatile uint_fast8_t           wday;                               // current weekday, 0=Sunday
+    volatile uint_fast16_t          year;                               // current year;
+    volatile uint_fast8_t           month;                              // current month;
+    volatile uint_fast8_t           mday;                               // current day of month 1..31;
+    volatile uint_fast8_t           hour;                               // current hour
+    volatile uint_fast8_t           minute;                             // current minute
+    volatile uint_fast8_t           second;                             // current second
 } MAIN_GLOBALS;
 
 extern MAIN_GLOBALS                 gmain;
 extern volatile uint32_t            uptime;
 
 extern uint_fast8_t                 schedule_esp8266_messages (void);
+extern void                         set_overlay_idx (uint_fast8_t);
+extern void                         show_icon (const char *, uint_fast8_t);
+extern char *                       get_date (void);
+extern char *                       get_time (void);
+extern void                         main_set_ambilight_clock_wait_cycles (void);
 
 #endif

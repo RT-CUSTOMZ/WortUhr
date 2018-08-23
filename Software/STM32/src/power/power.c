@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * power.c - power routines for LED stripes
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ power_on (void)
         GPIO_SET_BIT(POWER_PORT, POWER_PIN5);
         delay_msec(POWER_ON_DELAY);
         GPIO_SET_BIT(POWER_PORT, POWER_PIN6);
-
+		
         log_message ("switching power on");
         power.is_on = 1;
     }

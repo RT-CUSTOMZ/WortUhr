@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------------------------------------------------------------------------------
  * apa102.c - APA102 driver
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * APA102 format : Start FRAME | LED1 | LED2 | LED3 | ... | LEDn | End Frame
  * Start frame:    32 x 0

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * esp8266.c - ESP8266 WLAN routines
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -227,22 +227,72 @@ esp8266_get_message (void)
                 {
                     answer_pos = 0;
 
-                    if (answer[0] == '.' && answer[1] == '\0')                      // dot as "silent ok"
+                    if (answer[0] == '.' && answer[1] == '\0')                              // dot as "silent ok"
                     {
                         rtc = ESP8266_OK;
                         break;
                     }
-                    else if (! strncmp (answer, "FILE ", 5))                        // FILE: keep silent
+                    else if (! strncmp (answer, "FILE ", 5))                                // FILE: keep silent
                     {
                         strncpy (esp8266.u.filedata, answer + 5, ESP8266_MAX_CMD_LEN);
                         rtc = ESP8266_FILEDATA;
                         break;
                     }
-                    else if (! strncmp (answer, "ICON ", 5))                        // ICON: keep silent
+                    else if (! strncmp (answer, "ICON ", 5))                                // ICON: keep silent
                     {
                         strncpy (esp8266.u.filedata, answer + 5, ESP8266_MAX_CMD_LEN);
                         rtc = ESP8266_ICONDATA;
                         break;
+                    }
+                    else if (! strncmp (answer, "TAB", 3))                                  // TABxxx: keep silent
+                    {
+                        if (! strcmp (answer, "TABLES"))                                    // TABINFO
+                        {
+                            rtc = ESP8266_TABLES;
+                            break;
+                        }
+                        else if (! strncmp (answer + 3, "INFO ", 5))                        // TABINFO
+                        {
+                            strncpy (esp8266.u.tabinfo, answer + 8, ESP8266_TABINFO_LEN);
+                            esp8266.u.tabinfo[ESP8266_TABINFO_LEN] = '\0';
+                            rtc = ESP8266_TABINFO;
+                            break;
+                        }
+                        else if (! strncmp (answer + 3, "ILLU ", 5))                        // TABILLU
+                        {
+                            strncpy (esp8266.u.tabillu, answer + 8, ESP8266_TABILLU_LEN);
+                            esp8266.u.tabillu[ESP8266_TABILLU_LEN] = '\0';
+                            rtc = ESP8266_TABILLU;
+                            break;
+                        }
+#if WCLOCK24H == 1
+                        else if (! strncmp (answer + 3, "T ", 2))                           // TABT
+                        {
+                            strncpy (esp8266.u.tabt, answer + 5, ESP8266_TABT_LEN);
+                            esp8266.u.tabt[ESP8266_TABT_LEN] = '\0';
+                            rtc = ESP8266_TABT;
+                            break;
+                        }
+#endif
+                        else if (! strncmp (answer + 3, "H ", 2))                           // TABH
+                        {
+                            strncpy (esp8266.u.tabh, answer + 5, ESP8266_TABH_LEN);
+                            esp8266.u.tabh[ESP8266_TABH_LEN] = '\0';
+                            rtc = ESP8266_TABH;
+                            break;
+                        }
+                        else if (! strncmp (answer + 3, "M ", 2))                           // TABM
+                        {
+                            strncpy (esp8266.u.tabm, answer + 5, ESP8266_TABM_LEN);
+                            esp8266.u.tabm[ESP8266_TABM_LEN] = '\0';
+                            rtc = ESP8266_TABM;
+                            break;
+                        }
+                        else
+                        {
+                            rtc = ESP8266_UNSPECIFIED;
+                            break;
+                        }
                     }
                     else
                     {
@@ -304,11 +354,24 @@ esp8266_get_message (void)
                             rtc = ESP8266_WEATHER;
                             break;
                         }
+                        else if (! strncmp (answer, "WEATHER_FC ", 11))
+                        {
+                            strncpy (esp8266.u.weather, answer + 11, ESP8266_MAX_WEATHER_LEN);
+                            rtc = ESP8266_WEATHER_FC;
+                            break;
+                        }
                         else if (! strncmp (answer, "WICON ", 6))
                         {
                             strncpy (esp8266.u.weather, answer + 6, 2);                         // copy only 2 characters ("02d" -> "02")
                             esp8266.u.weather[2] = '\0';
                             rtc = ESP8266_WEATHER_ICON;
+                            break;
+                        }
+                        else if (! strncmp (answer, "WICON_FC ", 9))
+                        {
+                            strncpy (esp8266.u.weather, answer + 9, 2);                         // copy only 2 characters ("02d" -> "02")
+                            esp8266.u.weather[2] = '\0';
+                            rtc = ESP8266_WEATHER_FC_ICON;
                             break;
                         }
                         else if (! strncmp (answer, "FIRMWARE ", 9))

@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * esp-spiffs.c - access SPIFFS filesystem of ESP8266
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,9 +167,11 @@ uint_fast8_t
 esp_diffs_read_icon (DISPLAY_ICON * dip)
 {
     static int_fast16_t     color_len;
-    static int_fast16_t     anim_len;
+    static int_fast16_t     anim_on_len;
+    static int_fast16_t     anim_off_len;
     static int_fast16_t     color_idx;
-    static int_fast16_t     anim_idx;
+    static int_fast16_t     anim_on_idx;
+    static int_fast16_t     anim_off_idx;
     static int_fast16_t     icon_len;
     char *                  p;
     uint_fast8_t            rtc = 0;
@@ -178,18 +180,20 @@ esp_diffs_read_icon (DISPLAY_ICON * dip)
     {
         p = esp8266.u.filedata;
 
-        dip->rows   = htoi (p, 2);
+        dip->rows       = htoi (p, 2);
         p += 2;
-        dip->cols   = htoi (p, 2);
+        dip->cols       = htoi (p, 2);
         p += 2;
-        color_len   = htoi (p, 4);
+        color_len       = htoi (p, 4);
         p += 4;
-        anim_len    = htoi (p, 4);
+        anim_on_len     = htoi (p, 4);
+        p += 4;
+        anim_off_len    = htoi (p, 4);
 
-        icon_len = dip->rows * dip->cols;
-
-        color_idx = 0;
-        anim_idx = 0;
+        icon_len        = dip->rows * dip->cols;
+        color_idx       = 0;
+        anim_on_idx     = 0;
+        anim_off_idx    = 0;
 
         if (dip->rows > 0 && dip->cols > 0)
         {
@@ -210,30 +214,42 @@ esp_diffs_read_icon (DISPLAY_ICON * dip)
                     dip->colors[color_idx++] = htoi (p, 2);
                 }
             }
-            else if (anim_idx < anim_len)
+            else if (anim_on_idx < anim_on_len)
             {
-                if (anim_idx < WC_ROWS * WC_COLUMNS)
+                if (anim_on_idx < WC_ROWS * WC_COLUMNS)
                 {
-                    dip->animation[anim_idx++] = htoi (p, 2);
+                    dip->animation_on[anim_on_idx++] = htoi (p, 2);
+                }
+            }
+            else if (anim_off_idx < anim_off_len)
+            {
+                if (anim_off_idx < WC_ROWS * WC_COLUMNS)
+                {
+                    dip->animation_off[anim_off_idx++] = htoi (p, 2);
                 }
             }
 
             p += 2;
         }
 
-        if (p == esp8266.u.filedata || color_len + anim_len == color_idx + anim_idx)
+        if (p == esp8266.u.filedata || color_len + anim_on_len + anim_off_len == color_idx + anim_on_idx + anim_off_idx)
         {
             while (color_idx < icon_len && color_idx < WC_ROWS * WC_COLUMNS)
             {
                 dip->colors[color_idx++] = 0;
             }
 
-            while (anim_idx < icon_len && anim_idx < WC_ROWS * WC_COLUMNS)
+            while (anim_on_idx < icon_len && anim_on_idx < WC_ROWS * WC_COLUMNS)
             {
-                dip->animation[anim_idx++] = 0;
+                dip->animation_on[anim_on_idx++] = 0;
             }
 
-            rtc = 2;
+            while (anim_off_idx < icon_len && anim_off_idx < WC_ROWS * WC_COLUMNS)
+            {
+                dip->animation_off[anim_off_idx++] = 0;
+            }
+
+            rtc = 2;                                                                // indicate end of transmission
         }
         else
         {

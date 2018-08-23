@@ -99,6 +99,7 @@
 					<Add option="-eb_lib=n" />
 					<Add option="-eb_start_files" />
 					<Add option="-Wl,--gc-sections" />
+					<Add option="-flto" />
 				</Linker>
 			</Target>
 			<Target title="WC24h-Nucleo411-Debug">
@@ -192,6 +193,7 @@
 					<Add option="-eb_lib=n" />
 					<Add option="-eb_start_files" />
 					<Add option="-Wl,--gc-sections" />
+					<Add option="-flto" />
 				</Linker>
 			</Target>
 			<Target title="WC12h-Nucleo401-Debug">
@@ -314,6 +316,7 @@
 					<Add option="-eb_lib=n" />
 					<Add option="-eb_start_files" />
 					<Add option="-Wl,--gc-sections" />
+					<Add option="-flto" />
 				</Linker>
 			</Target>
 			<Target title="WC12h-Nucleo411-Debug">
@@ -407,6 +410,7 @@
 					<Add option="-eb_lib=n" />
 					<Add option="-eb_start_files" />
 					<Add option="-Wl,--gc-sections" />
+					<Add option="-flto" />
 				</Linker>
 			</Target>
 		</Build>
@@ -425,86 +429,11 @@
 		<Unit filename="cmsis\core_cm4_simd.h" />
 		<Unit filename="cmsis\core_cmFunc.h" />
 		<Unit filename="cmsis\core_cmInstr.h" />
-		<Unit filename="inc\stm32f10x.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="inc\stm32f10x_conf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="inc\stm32f4xx.h" />
 		<Unit filename="inc\stm32f4xx_conf.h" />
-		<Unit filename="inc\system_stm32f10x.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="inc\system_stm32f4xx.h" />
 		<Unit filename="README.txt" />
 		<Unit filename="SPL\inc\misc.h" />
-		<Unit filename="SPL\inc\stm32f10x_adc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_bkp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_can.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_cec.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_crc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_dac.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_dbgmcu.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_dma.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_exti.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_flash.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_fsmc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_gpio.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_i2c.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_iwdg.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_pwr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_rcc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_rtc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_sdio.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_spi.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_tim.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_usart.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\inc\stm32f10x_wwdg.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="SPL\inc\stm32f4xx_adc.h" />
 		<Unit filename="SPL\inc\stm32f4xx_can.h" />
 		<Unit filename="SPL\inc\stm32f4xx_crc.h" />
@@ -532,94 +461,6 @@
 		<Unit filename="SPL\inc\stm32f4xx_wwdg.h" />
 		<Unit filename="SPL\src\misc.c">
 			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_adc.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_bkp.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_can.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_cec.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_crc.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_dac.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_dbgmcu.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_dma.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_exti.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_flash.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_fsmc.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_gpio.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_i2c.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_iwdg.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_pwr.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_rcc.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_rtc.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_sdio.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_spi.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_tim.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_usart.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="SPL\src\stm32f10x_wwdg.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="SPL\src\stm32f4xx_adc.c">
 			<Option compilerVar="CC" />
@@ -761,14 +602,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\display\display.h" />
-		<Unit filename="src\display\tables.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\display\tables.h" />
-		<Unit filename="src\display\tables12h.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\display\tables12h.h" />
 		<Unit filename="src\ds18xx\ds18xx-config.h" />
 		<Unit filename="src\ds18xx\ds18xx.c">
 			<Option compilerVar="CC" />
@@ -822,26 +655,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\main.h" />
-		<Unit filename="src\nic\alloc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\nic\alloc.h" />
-		<Unit filename="src\nic\base.h" />
-		<Unit filename="src\nic\console.h" />
-		<Unit filename="src\nic\funclist.h" />
-		<Unit filename="src\nic\functions.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\nic\functions.h" />
-		<Unit filename="src\nic\nic.h" />
-		<Unit filename="src\nic\nici.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\nic\nici.h" />
-		<Unit filename="src\nic\nicstrings.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\nic\nicstrings.h" />
 		<Unit filename="src\night\night.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -881,10 +694,18 @@
 		<Unit filename="src\system_stm32f4xx.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src\tables\tables.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\tables\tables.h" />
 		<Unit filename="src\tempsensor\tempsensor.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\tempsensor\tempsensor.h" />
+		<Unit filename="src\tetris\snake.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\tetris\snake.h" />
 		<Unit filename="src\tetris\tetris.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -918,58 +739,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger>
-				<target_debugging_settings target="WC12h-Nucleo401-Release" active_interface="ST-link">
-					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
-						<family_options family_id="STMicroelectronics">
-							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
-							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
-							<option opt_id="ID_RESET_TYPE" opt_value="System" />
-							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
-							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
-							<option opt_id="ID_RAM_EXEC" opt_value="0" />
-							<option opt_id="ID_VEC_TABLE" opt_value="1" />
-							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
-							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
-							<option opt_id="ID_DEV_ADDR" opt_value="" />
-							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
-						</family_options>
-					</debug_interface>
-				</target_debugging_settings>
-				<target_debugging_settings target="WC12h-Nucleo411-Debug" active_interface="ST-link">
-					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
-						<family_options family_id="STMicroelectronics">
-							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
-							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
-							<option opt_id="ID_RESET_TYPE" opt_value="System" />
-							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
-							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
-							<option opt_id="ID_RAM_EXEC" opt_value="0" />
-							<option opt_id="ID_VEC_TABLE" opt_value="1" />
-							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
-							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
-							<option opt_id="ID_DEV_ADDR" opt_value="" />
-							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
-						</family_options>
-					</debug_interface>
-				</target_debugging_settings>
-				<target_debugging_settings target="WC12h-Nucleo411-Release" active_interface="ST-link">
-					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
-						<family_options family_id="STMicroelectronics">
-							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
-							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
-							<option opt_id="ID_RESET_TYPE" opt_value="System" />
-							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
-							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
-							<option opt_id="ID_RAM_EXEC" opt_value="0" />
-							<option opt_id="ID_VEC_TABLE" opt_value="1" />
-							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
-							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
-							<option opt_id="ID_DEV_ADDR" opt_value="" />
-							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
-						</family_options>
-					</debug_interface>
-				</target_debugging_settings>
-				<target_debugging_settings target="WC24h-Nucleo411-Debug" active_interface="ST-link">
+				<target_debugging_settings target="WC24h-Nucleo401-Debug" active_interface="ST-link">
 					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
@@ -987,6 +757,23 @@
 					</debug_interface>
 				</target_debugging_settings>
 				<target_debugging_settings target="WC24h-Nucleo401-Release" active_interface="ST-link">
+					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
+						<family_options family_id="STMicroelectronics">
+							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
+							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
+							<option opt_id="ID_RESET_TYPE" opt_value="System" />
+							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
+							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
+							<option opt_id="ID_RAM_EXEC" opt_value="0" />
+							<option opt_id="ID_VEC_TABLE" opt_value="1" />
+							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
+							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
+							<option opt_id="ID_DEV_ADDR" opt_value="" />
+							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
+						</family_options>
+					</debug_interface>
+				</target_debugging_settings>
+				<target_debugging_settings target="WC24h-Nucleo411-Debug" active_interface="ST-link">
 					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
@@ -1037,7 +824,41 @@
 						</family_options>
 					</debug_interface>
 				</target_debugging_settings>
-				<target_debugging_settings target="WC24h-Nucleo401-Debug" active_interface="ST-link">
+				<target_debugging_settings target="WC12h-Nucleo401-Release" active_interface="ST-link">
+					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
+						<family_options family_id="STMicroelectronics">
+							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
+							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
+							<option opt_id="ID_RESET_TYPE" opt_value="System" />
+							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
+							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
+							<option opt_id="ID_RAM_EXEC" opt_value="0" />
+							<option opt_id="ID_VEC_TABLE" opt_value="1" />
+							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
+							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
+							<option opt_id="ID_DEV_ADDR" opt_value="" />
+							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
+						</family_options>
+					</debug_interface>
+				</target_debugging_settings>
+				<target_debugging_settings target="WC12h-Nucleo411-Debug" active_interface="ST-link">
+					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
+						<family_options family_id="STMicroelectronics">
+							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
+							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
+							<option opt_id="ID_RESET_TYPE" opt_value="System" />
+							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
+							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
+							<option opt_id="ID_RAM_EXEC" opt_value="0" />
+							<option opt_id="ID_VEC_TABLE" opt_value="1" />
+							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
+							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
+							<option opt_id="ID_DEV_ADDR" opt_value="" />
+							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
+						</family_options>
+					</debug_interface>
+				</target_debugging_settings>
+				<target_debugging_settings target="WC12h-Nucleo411-Release" active_interface="ST-link">
 					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBLOCKS}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_JTAG_SWD" opt_value="swd" />

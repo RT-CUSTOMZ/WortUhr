@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
- * base.h - extern declarations for base functions
+ * base.cpp - base functions
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-201 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -209,14 +209,17 @@ mystrnicmp (const char * s1, const char * s2, int n)
  * convert_utf8_to_iso8859 () - convert string to iso8859-1
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
+#define MAX_ISO8BUFLEN    128
 unsigned char *
-convert_utf8_to_iso8859 (unsigned char * buf)
+convert_utf8_to_iso8859 (const unsigned char * buf)
 {
-    unsigned char *         s;                          // source ptr
+    static unsigned char    iso8buf[MAX_ISO8BUFLEN];
+    const unsigned char *   s;                          // source ptr
     unsigned char *         t;                          // target ptr
+    int                     len = 0;
 
     s = buf;
-    t = buf;
+    t = iso8buf;
 
     while (*s)
     {
@@ -224,11 +227,13 @@ convert_utf8_to_iso8859 (unsigned char * buf)
         {
             s++;
             *t++ = *s++ + 0x40;
+            len++;
         }
         else if (*s == 0xC2)
         {
             s++;
             *t++ = *s++;
+            len++;
         }
         else if (*s >0xC0)                              // unknown codepages
         {
@@ -237,12 +242,18 @@ convert_utf8_to_iso8859 (unsigned char * buf)
         else
         {
             *t++ = *s++;
+            len++;
+        }
+
+        if (len == MAX_ISO8BUFLEN - 1)
+        {
+            break;
         }
     }
 
     *t = '\0';                                          // terminate target
 
-    return (buf);
+    return (iso8buf);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------

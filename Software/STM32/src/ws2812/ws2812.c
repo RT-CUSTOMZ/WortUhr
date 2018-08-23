@@ -1,14 +1,17 @@
 /*-----------------------------------------------------------------------------------------------------------------------------------------------
  * ws2812.c - WS2812 driver
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * Timings:
- *          WS2812          WS2812B         Tolerance       Common symmetric(!) values
- *   T0H    350 ns          400 ns          +/- 150 ns      470 ns
- *   T1H    700 ns          800 ns          +/- 150 ns      800 ns
- *   T0L    800 ns          850 ns          +/- 150 ns      800 ns
- *   T1L    600 ns          450 ns          +/- 150 ns      470 ns
+ *          WS2812         WS2812B         WS2812S          WS2813              Common symmetric(!) values
+ *    T0H   200ns-500ns    250ns- 550ns    250ns- 550ns     220ns - 380 ns      470 ns
+ *    T1H   550ns-850ns    650ns- 950ns    700ns-1000ns     580ns -1600 ns      800 ns
+ *    T0L   650ns-950ns    700ns-1000ns    700ns-1000ns     580ns -1600 ns      800 ns
+ *    T1L   450ns-750ns    300ns- 600ns    250ns- 550ns     220ns - 420 ns      470 ns
+ * TRESET   >50us          >50us           >50us            >280us
+ *
+ * WS2813 is not supported (timing values out of range.
  *
  * WS2812 format : (8G 8R 8B)
  *   24bit per LED  (24 * 1.25 = 30us per LED)

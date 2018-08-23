@@ -1,13 +1,13 @@
 /*-----------------------------------------------------------------------------------------------------------------------------------------------
  * sk6812.c - SK6812 RGBW driver
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * Timings:
  *          SK6812
  *   T0H    300 ns  +/- 150 ns
- *   T0L    900 ns  +/- 150 ns
  *   T1H    600 ns  +/- 150 ns
+ *   T0L    900 ns  +/- 150 ns
  *   T1L    600 ns  +/- 150 ns
  *   TRESET  80 us
  *
@@ -73,6 +73,8 @@
 #define SK6812_BIT_PER_LED          24                          // 3 * 8bit per LED, each bit costs 1.20us time
 #endif
 
+#if 0
+
 #define SK6812_TIM_PERIOD_TIME      1200                        // 1200 ns
 #define SK6812_TIM_PRESCALER        0                           // no prescaler
 #define SK6812_T0H_TIME             300                         // 300ns
@@ -80,6 +82,18 @@
 #define SK6812_T1H_TIME             600                         // 600ns
 #define SK6812_T1L_TIME             600                         // 600ns
 #define SK6812_PAUSE_TIME           80000                       // pause, should be longer than 80us
+
+#else
+
+#define SK6812_TIM_PERIOD_TIME      1400                        // 1400 ns
+#define SK6812_TIM_PRESCALER        0                           // no prescaler
+#define SK6812_T0H_TIME             400                         // 400ns
+#define SK6812_T0L_TIME             1000                        // 1000ns
+#define SK6812_T1H_TIME             700                         // 700ns
+#define SK6812_T1L_TIME             700                         // 700ns
+#define SK6812_PAUSE_TIME           100000                      // pause, should be longer than 80us
+
+#endif
 
 #define SK6812_TIM_PERIOD_FLOAT     (((SK6812_TIM_CLK / (1 + SK6812_TIM_PRESCALER)) * SK6812_TIM_PERIOD_TIME) / 1000.0 - 1.0)   //  99,8 @84MHz
 #define SK6812_TIM_PERIOD           (uint16_t) (SK6812_TIM_PERIOD_FLOAT + 0.5)                                                  // 100

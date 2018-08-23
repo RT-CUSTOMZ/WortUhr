@@ -1,8 +1,8 @@
 #if 0 // yet not used
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * i2c.h - declarations of I2C routines
+ * softi2c.h - declarations of soft I2C routines
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

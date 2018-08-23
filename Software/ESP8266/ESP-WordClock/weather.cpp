@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * weather.cpp - weather stuff
  *
- * Copyright (c) 2016 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,368 +15,221 @@
 
 WiFiClient openweather_client;
 
-typedef struct
+static int
+round_up (char * degree)
 {
-    char *  coord_lon;                              // City geo location, longitude
-    char *  coord_lat;                              // City geo location, latitude
-    char *  weather_id;                             // Weather condition id
-    char *  weather_main;                           // Group of weather parameters (Rain, Snow, Extreme etc.)
-    char *  weather_description;                    // Weather condition within the group
-    char *  weather_icon;                           // Weather icon id
-    char *  base;                                   // Internal parameter
-    char *  main_temp;                              // Temperature. Unit Default: Kelvin, Metric: Celsius, Imperial: Fahrenheit.
-    char *  main_pressure;                          // Atmospheric pressure (on the sea level, if there is no sea_level or grnd_level data), hPa
-    char *  main_humidity;                          // Humidity, %
-    char *  main_temp_min;                          // Minimum temperature at the moment.
-    char *  main_temp_max;                          // Maximum temperature at the moment
-    char *  wind_speed;                             // Wind speed. Unit Default: meter/sec, Metric: meter/sec, Imperial: miles/hour.
-    char *  clouds_all;                             // Cloudiness, %
-    char *  dt;                                     // Time of data calculation, unix, UTC
-    char *  sys_type;                               // Internal parameter
-    char *  sys_id;                                 // Internal parameter
-    char *  sys_message;                            // Internal parameter
-    char *  sys_country;                            // Country code (GB, JP etc.)
-    char *  sys_sunrise;                            // Sunrise time, unix, UTC
-    char *  sys_sunset;                             // Sunset time, unix, UTC
-    char *  id;                                     // City ID
-    char *  name;                                   // City name
-    char *  cod;                                    // Internal parameter, 200 = ok
-} WEATHER;
+    int   deg;
+    int   i;
+    bool  round_up = false;
 
-static WEATHER weather;
-
-/*----------------------------------------------------------------------------------------------------------------------------------------
- * strip_quotes() - strip quotes
- *----------------------------------------------------------------------------------------------------------------------------------------
- */
-static char *
-strip_quotes (char * p)
-{
-    char *  pp;
-
-    if (*p == '"')
+    for (i = 0; degree[i]; i++)
     {
-        p++;
-
-        for (pp = p; *pp; pp++)
+        if (degree[i] == '.')
         {
-            if (*pp == '"')
+            if (degree[i + 1] >= '5')
             {
-                *pp = '\0';
-                break;
+                round_up = true;
             }
+
+            break;
         }
     }
-    return p;
+
+    deg = atoi (degree);
+
+    if (round_up)
+    {
+        deg++;
+    }
+
+    return deg;
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------
- * set_weather_value () - store a value in weather struct
+ * parse_json - simple json parser
+ *
+ * ArduinoJson parser is too fat and fails with 9 forecast data lines
+ *----------------------------------------------------------------------------------------------------------------------------------------
+ */
+static int
+parse_json (const char * str, const char * pattern, int cnt, char * result, int max_len)
+{
+    int     len    = strlen (pattern);
+    int     found  = 0;
+
+    while (*str)
+    {
+        if (*str == '"' && ! strncmp (str + 1, pattern, len) && *(str + len + 1) == '"' && *(str + len + 2) == ':')
+        {
+            if (found == cnt)
+            {
+                int l = 0;
+
+                str += len + 3;
+
+                if (*str == '"')
+                {
+                    str++;
+
+                    while (*(str + l) && *(str + l) != '"')
+                    {
+                        l++;
+                    }
+                }               
+                else
+                {
+                    while (*(str + l) && ((*(str + l) >= '0' && *(str + l) <= '9') || *(str + l) == '.'))
+                    {
+                        l++;
+                    }
+                }               
+
+                if (l > max_len - 1)
+                {
+                    l = max_len - 1;
+                }
+
+                strncpy (result, str, l);
+                *(result + l) = '\0';
+                return 1;
+            }
+
+            found++;
+        }
+        str++;
+    }
+
+    return 0;
+}
+
+#define MAX_LEN_COD             8
+#define MAX_LEN_TEMP            8
+#define MAX_LEN_DESCRIPTION     32
+#define MAX_LEN_ICON            8
+
+/*----------------------------------------------------------------------------------------------------------------------------------------
+ * parse_weather () - parse the answer for forecast and store the valuse in weather_fc struct
  *----------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-set_weather_value (char * name, char * subname, char * value)
+parse_weather (const char * answer, uint_fast8_t do_get_icon)
 {
-    if (subname && ! strcmp (name, "coord"))
-    {
-        if (! strcmp (subname, "lon"))
-        {
-            weather.coord_lon = value;
-        }
-        else if (! strcmp (subname, "lat"))
-        {
-            weather.coord_lat = value;
-        }
-    }
-    else if (subname && ! strcmp (name, "weather"))
-    {
-        if (! strcmp (subname, "id"))
-        {
-            weather.weather_id = value;
-        }
-        else if (! strcmp (subname, "main"))
-        {
-            weather.weather_main = value;
-        }
-        else if (! strcmp (subname, "description"))
-        {
-            convert_utf8_to_iso8859 ((unsigned char *) value);
-            weather.weather_description = value;
-        }
-        else if (! strcmp (subname, "icon"))
-        {
-            weather.weather_icon = value;
-        }
-    }
-    else if (! strcmp (name, "base"))
-    {
-        weather.base = value;
-    }
-    else if (subname && ! strcmp (name, "main"))
-    {
-        if (! strcmp (subname, "temp"))
-        {
-            weather.main_temp = value;
-        }
-        else if (! strcmp (subname, "pressure"))
-        {
-            weather.main_pressure = value;
-        }
-        else if (! strcmp (subname, "humidity"))
-        {
-            weather.main_humidity = value;
-        }
-        else if (! strcmp (subname, "temp_min"))
-        {
-            weather.main_temp_min = value;
-        }
-        else if (! strcmp (subname, "temp_max"))
-        {
-            weather.main_temp_max = value;
-        }
-    }
-    else if (subname && ! strcmp (name, "wind"))
-    {
-        if (! strcmp (subname, "speed"))
-        {
-            weather.wind_speed = value;
-        }
-    }
-    else if (subname && ! strcmp (name, "clouds"))
-    {
-        if (! strcmp (subname, "all"))
-        {
-            weather.clouds_all = value;
-        }
-    }
-    else if (! strcmp (name, "dt"))
-    {
-        weather.dt = value;
-    }
-    else if (subname && ! strcmp (name, "sys"))
-    {
-        if (! strcmp (subname, "type"))
-        {
-            weather.sys_type = value;
-        }
-        else if (! strcmp (subname, "id"))
-        {
-            weather.sys_id = value;
-        }
-        else if (! strcmp (subname, "message"))
-        {
-            weather.sys_message = value;
-        }
-        else if (! strcmp (subname, "country"))
-        {
-            weather.sys_country = value;
-        }
-        else if (! strcmp (subname, "sunrise"))
-        {
-            weather.sys_sunrise = value;
-        }
-        else if (! strcmp (subname, "sunset"))
-        {
-            weather.sys_sunset = value;
-        }
-    }
-    else if (! strcmp (name, "id"))
-    {
-        weather.id = value;
-    }
-    else if (! strcmp (name, "name"))
-    {
-        weather.name = value;
-    }
-    else if (! strcmp (name, "cod"))
-    {
-        weather.cod = value;
-    }
-}
+    char cod[MAX_LEN_COD];
 
-/*----------------------------------------------------------------------------------------------------------------------------------------
- * set_weather_values () - store all values in weather struct
- *----------------------------------------------------------------------------------------------------------------------------------------
- */
-static void
-set_weather_values (char * name, char * value)
-{
-    char * subname = (char *) 0;
-    char * p;
-
-    if (*value == '[')
+    if (parse_json (answer, "cod", 0, cod, MAX_LEN_COD) == 1)
     {
-        value++;
-        *(value + strlen (value) - 1) = '\0';
-    }
-
-    if (*value == '{')
-    {
-        value++;
-
-        while (*value && *value != '}')
+        if (atoi (cod) == 200)
         {
-            p = value;
-
-            while (1)
+            if (do_get_icon)
             {
-                if (*p == ':')
+                char icon[MAX_LEN_ICON];
+
+                if (parse_json (answer, "icon", 0, icon, MAX_LEN_ICON) == 1)
                 {
-                    subname = value;
-                    *p = '\0';
-                    value = p + 1;
+                    Serial.print("WICON ");
+                    Serial.println (icon);
                 }
-                else if (*p == ',' || *p == '}' || ! *p)
-                {
-                    if (*p)
-                    {
-                        *p++ = '\0';
-                    }
-
-                    if (subname)
-                    {
-                        subname = strip_quotes (subname);
-                    }
-
-                    value = strip_quotes (value);
-
-                    set_weather_value (name, subname, value);
-                    value = p;
-                    break;
-                }
-                p++;
             }
-        }
-    }
-    else
-    {
-        value = strip_quotes (value);
-        set_weather_value (name, (char *) 0, value);
-    }
-}
+            else
+            {
+                char  degree[MAX_LEN_TEMP];
+                char  description[MAX_LEN_DESCRIPTION];
+                int   deg;
 
-/*----------------------------------------------------------------------------------------------------------------------------------------
- * get_weather_value () - get a weather value
- *----------------------------------------------------------------------------------------------------------------------------------------
- */
-static char *
-get_weather_value (char * name, char * p)
-{
-    int cnt = 0;
+                Serial.print ("WEATHER ");
+                Serial.print ("Wetter heute: ");
 
-    char * value = p;
+                if (parse_json (answer, "temp", 0, degree, MAX_LEN_TEMP) == 1)
+                {
+                    deg = round_up (degree);
+                    Serial.print (deg);
+                    Serial.print (" Grad, ");
+                }
 
-    while (*p && (*p != ',' || cnt > 0))
-    {
-        if (*p == '{')
-        {
-            cnt++;
-            p++;
-        }
-        else if (*p == '}')
-        {
-            cnt--;
-            p++;
+                if (parse_json (answer, "description", 0, description, MAX_LEN_DESCRIPTION) == 1)
+                {
+                    char * description_iso8 = (char *) convert_utf8_to_iso8859 ((const unsigned char *) description);
+                    Serial.print (description_iso8);
+                }
+
+                Serial.println ("");
+            }
         }
         else
         {
-            p++;
-        }
-    }
-    *p++ = '\0';
-
-    set_weather_values (name, value);
-
-    return p;
-}
-
-/*----------------------------------------------------------------------------------------------------------------------------------------
- * get_weather_item () - get an item
- *----------------------------------------------------------------------------------------------------------------------------------------
- */
-static char *
-get_weather_item (char * p)
-{
-    char *  name;
-
-    if (*p == '{')
-    {
-        p++;
-    }
-
-    if (*p == '"')
-    {
-        p++;
-        name = p;
-
-        while (*p && *p != '"')
-        {
-            p++;
-        }
-
-        *p++ = '\0';
-
-        if (*p == ':')
-        {
-            p = get_weather_value (name, p + 1);
+            Serial.print ("WEATHER Wetter heute: Error ");
+            Serial.println (cod);
         }
     }
     else
     {
-        p = (char *) 0;
-    }
-
-    return p;
-}
-
-/*----------------------------------------------------------------------------------------------------------------------------------------
- * strip_whitespaces () - strip whitespaces at end of string
- *----------------------------------------------------------------------------------------------------------------------------------------
- */
-static void
-strip_whitespaces (char * p)
-{
-    int len = strlen (p);
-
-    while (len > 0 && (*(p + len - 1) == '\r' || *(p + len - 1) == '\n'))
-    {
-        *(p + len - 1) = '\0';
-        len--;
+        Serial.println ("WEATHER Wetter heute: Parse Error");
     }
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------
- * fill_weather () - fill weather struct
+ * parse_weather_fc () - parse the answer for forecast and store the valuse in weather_fc struct
+ * we get 9 of max. 36 records:
+ * 0 : current weather
+ * 1 : current weather + 3h
+ * 2 : current weather + 6h
+ * ...
+ * 8 : current weather + 24h
  *----------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-fill_weather (const char * answer)
+parse_weather_fc (const char * answer, uint_fast8_t do_get_icon)
 {
-    static char     buf[1024];                                      // must be static, weather items point to it!
-    char *          p;
+    char cod[MAX_LEN_COD];
 
-    memset (&weather, 0, sizeof (weather));
-
-    strncpy (buf, answer, 1024);
-    strip_whitespaces (buf);
-
-    p = buf;
-
-    if (*p == '{')
+    if (parse_json (answer, "cod", 0, cod, MAX_LEN_COD) == 1)
     {
-        p++;
-
-        while (*p == ' ')
+        if (atoi (cod) == 200)
         {
-            p++;
+            if (do_get_icon)
+            {
+                char icon[MAX_LEN_ICON];
+
+                if (parse_json (answer, "icon", 8, icon, MAX_LEN_ICON) == 1)                           // line index == 8
+                {
+                    Serial.print("WICON_FC ");
+                    Serial.println (icon);
+                }
+            }
+            else
+            {
+                char  degree[MAX_LEN_TEMP];
+                char  description[MAX_LEN_DESCRIPTION];
+                int   deg;
+
+                Serial.print ("WEATHER_FC ");
+                Serial.print ("Wetter morgen: ");
+
+                if (parse_json (answer, "temp", 8, degree, MAX_LEN_TEMP) == 1)                         // line index == 8
+                {
+                    deg = round_up (degree);
+                    Serial.print (deg);
+                    Serial.print (" Grad, ");
+                }
+
+                if (parse_json (answer, "description", 8, description, MAX_LEN_DESCRIPTION) == 1)      // line index == 8
+                {
+                    char * description_iso8 = (char *) convert_utf8_to_iso8859 ((const unsigned char *) description);
+                    Serial.print (description_iso8);
+                }
+
+                Serial.println ("");
+            }
         }
-
-        *(p + strlen (p) - 1) = '\0';
-
-        do
+        else
         {
-            p = get_weather_item (p);
-        } while (p && *p);
+            Serial.print ("WEATHER_FC Wetter morgen: Error ");
+            Serial.println (cod);
+        }
+    }
+    else
+    {
+        Serial.println ("WEATHER_FC Wetter morgen: Parse Error");
     }
 }
 
@@ -385,16 +238,25 @@ fill_weather (const char * answer)
  *----------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-query_weather (char * appid, char * lon, char * lat, char * city, int do_get_icon)
+query_weather (char * appid, char * lon, char * lat, char * city, int do_get_icon, int fc)
 {
     const char *    hostname = "api.openweathermap.org";
     String          url;
+
+    if (fc)
+    {
+        url = (String) "/data/2.5/forecast";                                                                    // get 3h forecast
+    }
+    else
+    {
+        url = (String) "/data/2.5/weather";
+    }
 
     if (city)
     {
         char * pp;
 
-        url = (String) "/data/2.5/weather?q=";
+        url += (String) "?q=";
 
         do
         {
@@ -413,7 +275,12 @@ query_weather (char * appid, char * lon, char * lat, char * city, int do_get_ico
     }
     else
     {
-        url = (String) "/data/2.5/weather?lon=" + lon + "&lat=" + lat + "&lang=de&units=metric&APPID=" + appid;
+        url += (String) "?lon=" + lon + "&lat=" + lat + "&lang=de&units=metric&APPID=" + appid;
+    }
+
+    if (fc)
+    {
+        url += "&cnt=9";                                                                                    // forecast: we need only 9 records of 36 records, limit output
     }
 
     if (openweather_client.connect(hostname, 80))
@@ -422,7 +289,7 @@ query_weather (char * appid, char * lon, char * lat, char * city, int do_get_ico
         openweather_client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + hostname + "\r\n" + "Connection: close\r\n\r\n");
         // debugmsg (String("GET ") + url + " HTTP/1.1<CR><LF>" + "Host: " + hostname + "<CR><LF>" + "Connection: close<CR><LF><CR><LF>");
 
-        delay (200);    // fm??? 100 results in timeout sometimes?
+        delay (200);    // 100 results in timeout sometimes
 
         if (openweather_client.available())
         {
@@ -472,61 +339,13 @@ query_weather (char * appid, char * lon, char * lat, char * city, int do_get_ico
 
                 if (p)
                 {
-                    fill_weather (p);
-#if 0
-                    debugmsg ("coord_lon", weather.coord_lon);                        delay (20);
-                    debugmsg ("coord_lat", weather.coord_lat);                        delay (20);
-                    debugmsg ("weather_id", weather.weather_id);                      delay (20);
-                    debugmsg ("weather_main", weather.weather_main);                  delay (20);
-                    debugmsg ("weather_description", weather.weather_description);    delay (20);
-                    debugmsg ("weather_icon", weather.weather_icon);                  delay (20);
-                    debugmsg ("base", weather.base);                                  delay (20);
-                    debugmsg ("main_temp", weather.main_temp);                        delay (20);
-                    debugmsg ("main_pressure", weather.main_pressure);                delay (20);
-                    debugmsg ("main_humidity", weather.main_humidity);                delay (20);
-                    debugmsg ("main_temp_min", weather.main_temp_min);                delay (20);
-                    debugmsg ("main_temp_max", weather.main_temp_max);                delay (20);
-                    debugmsg ("wind_speed", weather.wind_speed);                      delay (20);
-                    debugmsg ("clouds_all", weather.clouds_all);                      delay (20);
-                    debugmsg ("dt", weather.dt);                                      delay (20);
-                    debugmsg ("sys_type", weather.sys_type);                          delay (20);
-                    debugmsg ("sys_id", weather.sys_id);                              delay (20);
-                    debugmsg ("sys_message", weather.sys_message);                    delay (20);
-                    debugmsg ("sys_country", weather.sys_country);                    delay (20);
-                    debugmsg ("sys_sunrise", weather.sys_sunrise);                    delay (20);
-                    debugmsg ("sys_sunset", weather.sys_sunset);                      delay (20);
-                    debugmsg ("id", weather.id);                                      delay (20);
-                    debugmsg ("name", weather.name);                                  delay (20);
-                    debugmsg ("cod", weather.cod);                                    delay (20);
-#endif
-
-                    if (do_get_icon)
+                    if (fc)
                     {
-                        if (weather.weather_icon)
-                        {
-                            Serial.print("WICON ");
-                            Serial.println (weather.weather_icon);
-                        }
+                        parse_weather_fc (p, do_get_icon);
                     }
                     else
                     {
-                        if (weather.weather_description)
-                        {
-                            Serial.print ("WEATHER ");
-                            Serial.print ("Wetter: ");
-                            Serial.print (weather.main_temp);
-                            Serial.print (" Grad, ");
-                            Serial.println (weather.weather_description);
-                        }
-                        else if (weather.cod)
-                        {
-                            Serial.print("WEATHER Code ");
-                            Serial.println (weather.cod);
-                        }
-                        else
-                        {
-                            Serial.println("WEATHER Wetter: unbekannt");
-                        }
+                        parse_weather (p, do_get_icon);
                     }
                 }
             }
@@ -547,7 +366,7 @@ query_weather (char * appid, char * lon, char * lat, char * city, int do_get_ico
 void
 get_weather (char * appid, char * lon, char * lat)
 {
-    query_weather (appid, lon, lat, (char *) NULL, 0);
+    query_weather (appid, lon, lat, (char *) NULL, 0, 0);
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------
@@ -557,7 +376,27 @@ get_weather (char * appid, char * lon, char * lat)
 void
 get_weather (char * appid, char * city)
 {
-    query_weather (appid, (char *) NULL, (char *) NULL, city, 0);
+    query_weather (appid, (char *) NULL, (char *) NULL, city, 0, 0);
+}
+
+/*----------------------------------------------------------------------------------------------------------------------------------------
+ * get_weather_fc () - get weather for a coordinate
+ *----------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+get_weather_fc (char * appid, char * lon, char * lat)
+{
+    query_weather (appid, lon, lat, (char *) NULL, 0, 1);
+}
+
+/*----------------------------------------------------------------------------------------------------------------------------------------
+ * get_weather_fc () - get weather for a city
+ *----------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+get_weather_fc (char * appid, char * city)
+{
+    query_weather (appid, (char *) NULL, (char *) NULL, city, 0, 1);
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------
@@ -567,7 +406,7 @@ get_weather (char * appid, char * city)
 void
 get_weather_icon (char * appid, char * lon, char * lat)
 {
-    query_weather (appid, lon, lat, (char *) NULL, 1);
+    query_weather (appid, lon, lat, (char *) NULL, 1, 0);
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------
@@ -577,6 +416,25 @@ get_weather_icon (char * appid, char * lon, char * lat)
 void
 get_weather_icon (char * appid, char * city)
 {
-    query_weather (appid, (char *) NULL, (char *) NULL, city, 1);
+    query_weather (appid, (char *) NULL, (char *) NULL, city, 1, 0);
 }
 
+/*----------------------------------------------------------------------------------------------------------------------------------------
+ * get_weather_icon_fc () - get forecast weather icon for a coordinate
+ *----------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+get_weather_icon_fc (char * appid, char * lon, char * lat)
+{
+    query_weather (appid, lon, lat, (char *) NULL, 1, 1);
+}
+
+/*----------------------------------------------------------------------------------------------------------------------------------------
+ * get_weather_icon_fc () - get forecast weather icon for a city
+ *----------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+get_weather_icon_fc (char * appid, char * city)
+{
+    query_weather (appid, (char *) NULL, (char *) NULL, city, 1, 1);
+}

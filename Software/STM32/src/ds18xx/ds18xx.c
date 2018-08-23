@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------------------------------------------------------------------------------
  * ds18xx.c - DS18xx routines
  *
- * Copyright (c) 2015-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2015-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This library supports the following temperature sensors:
  *
