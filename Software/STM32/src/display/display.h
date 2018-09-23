@@ -291,7 +291,8 @@ typedef struct
 #define ANIMATION_MODE_SQUEEZE                  10                      // squeeze letters
 #define ANIMATION_MODE_FLICKER                  11                      // flicker LEDs
 #define ANIMATION_MODE_MATRIX                   12                      // matrix in current display colors
-#define ANIMATION_MODES                         13                      // number of animation modes
+#define ANIMATION_MODE_RED_MATRIX               13                      // green matrix
+#define ANIMATION_MODES                         14                      // number of animation modes
 
 #define EEPROM_MAX_ANIMATION_MODES              64                      // maximum number of animation modes stored in EEPROM
 #define EEPROM_ANIMATION_DECELERATION_MASK      0x0F                    // lower 4 bits (0...3) = deceleration

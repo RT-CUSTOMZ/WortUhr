@@ -132,6 +132,7 @@ uint_fast8_t daylight_blue[24]  = { 63, 47, 31, 15,  0,  0,  0,  0,  0,  0,  0, 
 #  define ANIMATION_SQUEEZE_DEFAULT_DEC         4
 #  define ANIMATION_FLICKER_DEFAULT_DEC         4
 #  define ANIMATION_MATRIX_DEFAULT_DEC          3
+#  define ANIMATION_RED_MATRIX_DEFAULT_DEC      3
 #else                                                           // slower
 #  define ANIMATION_NONE_DEFAULT_DEC            4
 #  define ANIMATION_FADE_DEFAULT_DEC            4
@@ -146,6 +147,7 @@ uint_fast8_t daylight_blue[24]  = { 63, 47, 31, 15,  0,  0,  0,  0,  0,  0,  0, 
 #  define ANIMATION_SQUEEZE_DEFAULT_DEC         4
 #  define ANIMATION_FLICKER_DEFAULT_DEC         4
 #  define ANIMATION_MATRIX_DEFAULT_DEC          4
+#  define ANIMATION_RED_MATRIX_DEFAULT_DEC      4
 #endif
 
 static void     display_animation_none (void);
@@ -161,6 +163,7 @@ static void     display_animation_drop (void);
 static void     display_animation_squeeze (void);
 static void     display_animation_flicker (void);
 static void     display_animation_matrix (void);
+static void     display_animation_red_matrix (void);
 
 static DISPLAY_ICON                     display_icon_st;
 
@@ -2340,7 +2343,7 @@ display_animation_cube (void)
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-display_animation_generic_matrix (uint_fast8_t do_use_green_color)
+display_animation_generic_matrix (uint_fast8_t do_use_fixed_color)
 {
     static uint_fast16_t    cnt;
     static uint_fast8_t     y[WC_COLUMNS];
@@ -2363,11 +2366,18 @@ display_animation_generic_matrix (uint_fast8_t do_use_green_color)
         display_dim_display_dsp_colors (&dsp_rgb_yellow_dimmed, &dsp_rgb_yellow, display.display_brightness, TRUE);
         CALC_LED_RGB(led_rgb_yellow, dsp_rgb_yellow_dimmed);
 
-        if (do_use_green_color)
+        if (do_use_fixed_color==1) //green
         {
             DSP_COLORS  dsp_rgb_matrix_color;
 
             SET_DSP_RGB(dsp_rgb_matrix_color, 0, MAX_COLOR_STEPS - 1, MAX_COLOR_STEPS / 4, 0);      // green with a piece of blue
+            display_dim_display_dsp_colors (&dsp_rgb_matrix_color_dimmed, &dsp_rgb_matrix_color, display.display_brightness, TRUE);
+        }
+        else if (do_use_fixed_color==2) //red+green swapped
+        {
+            DSP_COLORS  dsp_rgb_matrix_color;
+
+            SET_DSP_RGB(dsp_rgb_matrix_color, MAX_COLOR_STEPS - 1, 0, MAX_COLOR_STEPS / 4, 0);      // red with a piece of blue
             display_dim_display_dsp_colors (&dsp_rgb_matrix_color_dimmed, &dsp_rgb_matrix_color, display.display_brightness, TRUE);
         }
         else
@@ -2495,7 +2505,17 @@ display_animation_generic_matrix (uint_fast8_t do_use_green_color)
 static void
 display_animation_green_matrix (void)
 {
-    display_animation_generic_matrix (TRUE);
+    display_animation_generic_matrix (1);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * animation: red matrix
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_animation_red_matrix (void)
+{
+    display_animation_generic_matrix (2);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -2505,7 +2525,7 @@ display_animation_green_matrix (void)
 static void
 display_animation_matrix (void)
 {
-    display_animation_generic_matrix (FALSE);
+    display_animation_generic_matrix (0);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -6261,6 +6281,12 @@ display_init (void)
     display.animations[ANIMATION_MODE_MATRIX].deceleration                          = ANIMATION_MATRIX_DEFAULT_DEC;
     display.animations[ANIMATION_MODE_MATRIX].default_deceleration                  = ANIMATION_MATRIX_DEFAULT_DEC;
     display.animations[ANIMATION_MODE_MATRIX].flags                                 = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+
+    display.animations[ANIMATION_MODE_RED_MATRIX].name                              = "RedMatrix";
+    display.animations[ANIMATION_MODE_RED_MATRIX].func                              = display_animation_red_matrix;
+    display.animations[ANIMATION_MODE_RED_MATRIX].deceleration                      = ANIMATION_RED_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_RED_MATRIX].default_deceleration              = ANIMATION_RED_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_RED_MATRIX].flags                             = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
     display.color_animations[COLOR_ANIMATION_MODE_NONE].name                        = "None";
     display.color_animations[COLOR_ANIMATION_MODE_NONE].deceleration                = 1;
