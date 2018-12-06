@@ -907,6 +907,7 @@ static uint_fast8_t     show_date                   = 0;
 static uint_fast8_t     last_ldr_value              = 0xFF;
 static uint_fast8_t     show_overlay_idx            = MAX_OVERLAYS;
 static uint_fast8_t     icon_duration               = 0;
+static uint_fast8_t     show_cw_cnt                 = 0;
 static uint32_t         show_icon_stop_time         = 0;
 static uint32_t         local_uptime                = 0;
 
@@ -1049,6 +1050,19 @@ schedule_esp8266_remote_procedure (char * parameters)
         {
             show_date = 1;
             debug_log_message ("rpc: show date");
+            break;
+        }
+
+        case DISPLAY_CW_CNT_RPC_VAR:
+        {
+            var_idx = ((*parameters++)-'0');
+            if(*parameters){
+                var_idx*=10;
+                var_idx+=((*parameters++)-'0');
+            }
+
+            show_cw_cnt = var_idx;
+            debug_log_message ("rpc: show cw cnt");
             break;
         }
     }
@@ -3022,6 +3036,13 @@ main (void)
                 display_temperature (rtc_temperature_index);
                 show_icon_stop_time = 0xFFFFFFFF;                                       // flag: wait for end of animation
             }
+        }
+
+        if (show_cw_cnt)
+        {
+            display_cw_cnt(show_cw_cnt);
+            show_icon_stop_time = 0xFFFFFFFF;                                       // flag: wait for end of animation
+            show_cw_cnt = 0;
         }
 
         if (show_date)

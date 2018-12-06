@@ -6086,6 +6086,55 @@ display_test (void)
 
 #if WCLOCK24H == 1
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * display Campuswoche week counter
+ *
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+display_cw_cnt (uint_fast8_t weeks)
+{
+    if (display.display_power_is_on)
+    {
+        if (tables.complete)
+        {
+            if (weeks < 60)
+            {
+                const MINUTEDISPLAY *   tbl_minute;
+                uint_fast16_t           idx;
+
+                display_animation_flush (FALSE);
+                tbl_minute  = &(tables.minutes[weeks]);
+
+                display_reset_led_states ();
+
+                display_word_on (9); //IN
+
+                for (idx = 0; idx < tables.max_minute_words && tbl_minute->word_idx[idx] != 0; idx++)
+                {
+                    if(tbl_minute->word_idx[idx]==34)break;//MINUTEN
+                    display_word_on (tbl_minute->word_idx[idx]);
+                }
+
+                display_word_on (40); //WOCHEN
+                display_word_on (81); //IST
+                display_word_on (86); //CAMPUSWOCHE
+
+                display.animation_start_flag = 1;
+            }
+        }
+    }
+}
+
+#else
+void
+display_cw_cnt (uint_fast8_t weeks)
+{
+    ;
+}
+#endif
+
+#if WCLOCK24H == 1
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * display temperature
  *
  *   index ==   0  ->   0°C

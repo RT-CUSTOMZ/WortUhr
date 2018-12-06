@@ -29,6 +29,7 @@ typedef enum
     DISPLAY_DATE_RPC_VAR,                                                   // display current date
     GET_WEATHER_FC_RPC_VAR,                                                 // get weather forecast
     RESET_EEPROM_RPC_VAR,                                                   // reset EEPROM
+    DISPLAY_CW_CNT_RPC_VAR,
     MAX_RPC_VARIABLES                                                       // must be the last member
 } RPC_VARIABLE;
 

@@ -485,4 +485,6 @@ extern uint_fast8_t     display_write_config_to_eeprom (void);
 extern void             display_save_display_mode (void);
 extern void             display_init (void);
 
+extern void             display_cw_cnt (uint_fast8_t weeks);
+
 #endif

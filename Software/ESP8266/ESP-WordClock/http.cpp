@@ -1046,6 +1046,8 @@ http_main (void)
 
     tmp = get_tm_var (CURRENT_TM_VAR);
 
+    char test[30];
+
     if (tmp->tm_year >= 0 && tmp->tm_mon >= 0 && tmp->tm_mday >= 0 && tmp->tm_hour >= 0 && tmp->tm_min >= 0 &&
         tmp->tm_year <= 1200 && tmp->tm_mon <= 12 && tmp->tm_mday <= 31 && tmp->tm_hour < 24 && tmp->tm_min < 60)
     {                                                               // check values to avoid buffer overflow
@@ -1144,6 +1146,36 @@ http_main (void)
             char * ticker = http_get_param ("ticker");
             set_strvar (TICKER_TEXT_STR_VAR, ticker);
         }
+        else if (! strcmp (action, "showcwcnt"))
+        {
+            //message = "Showing cw cnt";
+//---
+            int len = httpclient ("wortuhr.42volt.de", "update", "cw.php");
+            sprintf(test,"Showing cw cnt %d",len);
+            message = test;
+            if (len > 0)
+            {
+                char         weeks[3];
+                int          ch;
+                int          l = 0;
+        
+                while (len > 0 && l<2)
+                {
+                    ch = httpclient_read (&len);
+                    weeks[l++]=ch;
+                }
+                weeks[2]=0;
+
+                sprintf(test,"Showing cw cnt %d - %s weeks",len,weeks);
+                message = test;
+
+                httpclient_stop ();
+//---
+                Serial.printf ("CMD R%02x%s\r\n", (int) DISPLAY_CW_CNT_RPC_VAR, weeks);
+                Serial.flush ();
+               //rpc (DISPLAY_CW_CNT_RPC_VAR);
+            }
+        }
     }
 
     if (do_reset)
@@ -1239,6 +1271,10 @@ http_main (void)
         begin_table_row (0);
         button_column ("rststm32", "Reset STM32");
         button_column ("rsteeprom", "Reset EEPROM");
+        end_table_row ();
+        begin_table_row (0);
+        button_column ("showcwcnt", "Show CW weeks");
+        //button_column ("rsteeprom", "Reset EEPROM");
         end_table_row ();
         end_form ();
 
