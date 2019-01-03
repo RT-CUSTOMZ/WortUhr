@@ -20,4 +20,6 @@
 #define WC_COLUMNS  11
 #endif
 
+#define NOIR
+
 #endif // WCLOCK24H_CONFIG_H

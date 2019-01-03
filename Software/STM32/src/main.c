@@ -2401,9 +2401,9 @@ main (void)
     log_message ("power_init...");
     log_flush ();
     power_init ();                                                          // initialize power port pin
-    log_message ("power_on...");
-    log_flush ();
-    power_on ();                                                            // switch power on
+//    log_message ("power_on...");
+//    log_flush ();
+//    power_on ();                                                            // switch power on
     log_message ("delay_init...");
     log_flush ();
     delay_init (DELAY_RESOLUTION_5_US);                                     // initialize delay functions with granularity of 5 us
@@ -2416,8 +2416,14 @@ main (void)
 
     if (button_pressed ())                                                  // set ESP8266 into flash mode
     {
-        board_led_on ();
-        esp8266_flash ();
+        ap_pressed = 0;
+        while(button_pressed() && ap_pressed++<10){
+            delay_msec(100);
+            if(ap_pressed==9){
+                board_led_on ();
+                esp8266_flash (); //will never return
+            }
+        }
     }
 
     log_message ("timer2_init...");
@@ -2518,6 +2524,11 @@ main (void)
     overlay_init ();                                                        // initialize overlays
     night_init ();                                                          // initialize night time routines
 
+    log_message ("power_on...");
+    log_flush ();
+    power_on ();                                                            // switch power on
+
+
     read_configuration_from_eeprom ();                                      // read configuration from EEPROM
     display_reset_led_states ();
     upgrade_eeprom_version ();                                              // upgrade EEPROM to current version
@@ -2530,6 +2541,7 @@ main (void)
 
     ds3231_flag = 1;
 
+#ifndef NOIR
     stop_time = uptime + 3;                                                 // wait 3 seconds for IR signal...
     display_set_status_or_minute_leds (1, 1, 1);                            // show white status or minute LEDs
 
@@ -2552,8 +2564,16 @@ main (void)
     }
 
     display_set_status_or_minute_leds (0, 0, 0);                            // switch off status or minute LEDs
+#endif
 
     esp8266_init ();
+    DSP_COLORS col = DSP_DARK_RED_COLOR;
+    display_set_display_led(0,&col,1);
+    //led_set_led(DSP_DISPLAY_LED_OFFSET,&col);
+    //led_refresh(1);
+
+    //led.state[1] |= NEW_STATE;
+    //display_show_new_display (NEW_STATE);
 
     if (ds18xx.is_up)
     {
@@ -3088,7 +3108,7 @@ main (void)
             display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;                         // update display after ticker
         }
 
-        if (display_clock_flag)                                                         // refresh display (time/mode changed)
+        if (display_clock_flag && tables.complete)                                                         // refresh display (time/mode changed)
         {
             debug_log_message ("update display");
 
@@ -3125,7 +3145,7 @@ main (void)
             display_clock_flag = DISPLAY_CLOCK_FLAG_NONE;
         }
 
-        if (animation_flag)
+        if (animation_flag && tables.complete)
         {
             animation_flag = 0;
             display_animation ();
