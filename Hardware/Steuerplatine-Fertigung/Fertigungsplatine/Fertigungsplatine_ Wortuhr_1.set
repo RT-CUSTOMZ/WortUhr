@@ -1,0 +1,714 @@
+
+.set
+2
+.tool
+vias                 yes
+contour              no
+errors               no
+pushing              no
+slide                yes
+springback           no
+online_drc           yes
+autoneck             no
+move_comp            yes
+effort               10
+width_type	unnecked
+width_val            50800
+angle                45
+passes               6
+spiviaseparation     0
+spiviastartangle     0
+spiviaincangle       0
+spiviaradialinc      0
+curved_routes        no
+vias_under_smd	no
+freehand             no
+freetidy             no
+equispace_lengthen   no
+mitre_routing        no
+equi_smoothing       no
+pinswap              no
+snapvia              no
+snap_distance        0
+new_route45          no
+autotear             yes
+autopour             yes
+ring_removal         yes
+aerial_removal       yes
+restricted_exit      yes
+respect_vias         no
+respect_fixed_footprints no
+use_max_foot_length  no
+max_footprint_length 500000
+respect_fixed_escape_routing no
+spiral_via_pref_auto	Disallow
+activ45_tidy	full
+spiviaMinimizeLayerSpan no
+spread_routes        yes
+
+.grid
+screen_type	off
+screen_typed         1
+grid_track           12700
+grid_via             12700
+grid_testpoint       63500
+grid_working         254000
+
+.display
+autopan              no
+pinOrder             no
+pinBranch            no
+dynDelay	off
+clearance            0
+lock                 no
+shadedShape	solid
+shadedTrack	solid
+shadedPad	solid
+connDeclutter        yes
+shadedPlace	outline
+textHeight           82284
+wholeNet             no
+wholeNetExcludePower yes
+dynamicConns         no
+offBoardConns        yes
+showPPIsoAndTherm	off
+routingConns         yes
+initialAnnotationTextHeight 500000
+unmirroredCompText   no
+showDrillHoles       yes
+showSelOnAllLayers   no
+shadedTru	hatched
+constraintIndicator  yes
+constraintIndicatorScale 10
+constraintIndicatorSize	medium
+shadedMap	solid
+showConnOnHiddenLayers no
+drawFilledShapesOutline yes
+pinRelativeSkewBase  no
+oversizeDistance     254000
+shadedCopper	solid
+shadedClearanceShape	solid
+vbpNamesVisible      no
+
+.report
+screen               yes
+file                 no
+filename	"EmbRou-Steuerplatine V2"
+overwrite            no
+
+.layer
+5   active         displayed     
+1   active         displayed     
+2   active         displayed     
+4   active         displayed     
+
+.colour
+wildcard	"*"
+layers              1       2       4       5       
+Pad                 mask_9  mask_9  mask_26 mask_26 
+Via_(unfixed)       mask_1  mask_1  mask_3  mask_3  
+Via_(fixed)         mask_1  mask_1  mask_3  mask_3  
+Via_(semi-fixed)    mask_1  mask_1  mask_3  mask_3  
+Drill_holes         mask_49 mask_49 mask_49 mask_49 
+Track_(unfixed)     mask_0  mask_1  mask_3  mask_0  
+Track_(fixed)       mask_0  mask_1  mask_3  mask_0  
+Track_(semi-fixed)  mask_0  mask_1  mask_3  mask_0  
+Track_(odd)         mask_0  mask_1  mask_3  mask_0  
+Track_(plating_tail)	mask_0  mask_1  mask_3  mask_0  
+Copper              mask_9  mask_9  mask_26 mask_26 
+Text                mask_1  mask_1  mask_3  mask_3  
+Ascii_text          mask_1  mask_1  mask_3  mask_3  
+Template            mask_1  mask_1  mask_3  mask_3  
+No_track_area       mask_9  mask_9  mask_26 mask_26 
+Other_Routing_area  mask_9  mask_9  mask_26 mask_26 
+Error_item          mask_4  mask_4  mask_4  mask_4  
+Error_letter        mask_4  mask_4  mask_4  mask_4  
+Connection/layer    colour_5	colour_5	colour_5	colour_5
+Connection          colour_5	colour_5	colour_5	colour_5
+Board_outline       mask_36 mask_36 mask_36 mask_36 
+Profile             mask_36 mask_36 mask_36 mask_36 
+Routing_area        mask_9  mask_9  mask_26 mask_26 
+No_via_area         mask_9  mask_9  mask_26 mask_26 
+Placement_Area_top  mask_9  mask_9  mask_26 mask_26 
+Placement_Area_bottom	mask_9  mask_9  mask_26 mask_26 
+Highlight           mask_7  mask_7  mask_7  mask_7  
+Grid                mask_7  mask_7  mask_7  mask_7  
+Testpoint_top       mask_6  mask_6  mask_6  mask_6  
+Testpoint_bottom    mask_6  mask_6  mask_6  mask_6  
+Placement_top       mask_50 mask_50 mask_50 mask_50 
+Placement_bottom    mask_49 mask_49 mask_49 mask_49 
+Clearance_top       mask_50 mask_50 mask_50 mask_50 
+Clearance_bottom    mask_49 mask_49 mask_49 mask_49 
+Component_name_top  mask_4  mask_4  mask_4  mask_4  
+Component_name_bottom	mask_36 mask_36 mask_36 mask_36 
+Power_dissipation_top	mask_0  mask_0  mask_0  mask_0  
+Power_dissipation_bottom	mask_0  mask_0  mask_0  mask_0  
+Thermal_box_top     mask_0  mask_0  mask_0  mask_0  
+Thermal_box_bottom  mask_0  mask_0  mask_0  mask_0  
+Terminal            mask_0  mask_0  mask_0  mask_0  
+Component_group     mask_4  mask_4  mask_4  mask_4  
+Thermal             mask_0  mask_0  mask_0  mask_0  
+Virtual_branch_point	mask_1  mask_1  mask_1  mask_1  
+Power_plane         mask_0  mask_0  mask_0  mask_0  
+Expansion           mask_3  mask_4  mask_3  mask_4  
+Pin_swap_flags      mask_7  mask_7  mask_7  mask_7  
+LowLight            mask_50 mask_50 mask_50 mask_50 
+Annotation          mask_1  mask_1  mask_1  mask_1  
+Diff_pair_indicator mask_50 mask_50 mask_50 mask_50 
+Trunking_twist_arrow	mask_4  mask_4  mask_4  mask_4  
+Trunking_snap_axis  mask_50 mask_50 mask_50 mask_50 
+Trunking_marker     mask_7  mask_7  mask_7  mask_7  
+Trunking_marker_text	mask_5  mask_5  mask_5  mask_5  
+Trunking_end_routing_area	mask_50 mask_50 mask_50 mask_50 
+Comparison_comparison	mask_1  mask_1  mask_1  mask_1  
+Comparison_current  mask_2  mask_2  mask_2  mask_2  
+Power_plane_isolations	mask_0  mask_0  mask_0  mask_0  
+
+
+wildcard	"19V-3"
+default_colour       colour_2
+
+wildcard	"GND-3-2"
+default_colour       colour_2
+
+wildcard	"5V-1"
+default_colour       colour_2
+
+wildcard	"5V-3-2"
+default_colour       colour_2
+
+wildcard	"5V-3"
+default_colour       colour_2
+
+wildcard	"3V3-2"
+default_colour       colour_2
+
+wildcard	"3V3-1"
+default_colour       colour_2
+
+wildcard	"GND-1"
+default_colour       colour_2
+
+wildcard	"5V-2"
+default_colour       colour_2
+
+wildcard	"GND-3"
+default_colour       colour_2
+
+wildcard	"3,3V-3"
+default_colour       colour_2
+
+wildcard	"GND-2"
+default_colour       colour_2
+
+
+.colour_vias
+colour_by_layer_pair	off
+default_layer_pair_colour	colour_50	invis	colour_5	vis
+2-4	colour_9	invis	colour_9	vis
+
+.window
+10323077 14862784 13445637 16162857
+
+.debug
+break	none
+flood                no
+delay                0
+
+.costs
+r_costs.wrong_way.cost 2
+r_costs.unblay       1.5
+r_costs.atblay       5
+r_costs.via.base     1
+r_costs.via.smoothing 1.6666
+r_costs.via.pp       0
+r_costs.err.base     1
+r_costs.preroute     2
+r_costs.via.errfact  0
+r_costs.hs_maxlength 1
+r_costs.allow_offgrid no
+r_costs.ignore_exitdir no
+r_costs.ignore_drc   no
+r_costs.ignore_hsrules no
+r_costs.ignore_samenet no
+
+.xtalk
+xtalkFull            yes
+xtalkViol            no
+xtalkTotal           yes
+
+.checkops
+checkopsDimens       yes
+checkopsTP           yes
+checkopsTS           yes
+checkopsTV           yes
+checkopsTT           yes
+checkopsTC           yes
+checkopsTF           yes
+checkopsVP           yes
+checkopsVS           yes
+checkopsVV           yes
+checkopsVC           yes
+checkopsVF           yes
+checkopsPP           yes
+checkopsPS           yes
+checkopsPC           yes
+checkopsPF           yes
+checkopsSS           yes
+checkopsSC           yes
+checkopsSF           yes
+checkopsCC           yes
+checkopsCF           yes
+checkopsTSPL         yes
+checkopsTSTS         yes
+checkopsTSF          yes
+checkopsTNT          yes
+checkopsVNV          yes
+checkopsSameNet      no
+checkopsTPsn         yes
+checkopsTSsn         yes
+checkopsTVsn         yes
+checkopsTTsn         yes
+checkopsTCsn         yes
+checkopsVPsn         yes
+checkopsVSsn         yes
+checkopsVVsn         yes
+checkopsVCsn         yes
+checkopsPPsn         yes
+checkopsPSsn         yes
+checkopsPCsn         yes
+checkopsSSsn         yes
+checkopsSCsn         yes
+checkopsCCsn         yes
+checkopsDaisy        no
+checkopsCrosstalk    no
+checkopsOGTracks     yes
+checkopsOGVias       yes
+checkopsOGPads       yes
+checkopsExitErrs     yes
+checkopsUnroutable   yes
+checkopsTJunction    yes
+checkopsDrill        yes
+checkopsWireBond     no
+checkopsAcid         yes
+checkopsPLPL         yes
+checkopsPLCL         yes
+checkopsPLAR         yes
+checkopsPLBOA        yes
+checkopsOGComp       yes
+checkopsOther        yes
+checkopsSkew         no
+checkopsDelay        no
+checkopsTrunkTrunk   yes
+checkopsTrunkTrack   yes
+checkopsTrunkVia     yes
+checkopsTrunkPad     yes
+checkopsTrunkCopper  yes
+checkopsTrunkProfile yes
+checkopsTrunkKeepOut yes
+checkopsTrunkSmd     yes
+checkopsViaPatternViaPattern yes
+checkopsViaPatternTrunk yes
+checkopsViaPatternTrack yes
+checkopsViaPatternVia yes
+checkopsViaPatternPad yes
+checkopsViaPatternCopper yes
+checkopsViaPatternProfile yes
+checkopsViaPatternKeepOut yes
+checkopsViaPatternSmd yes
+checkopsTrunking     yes
+
+.testp
+testpDefBothPad	""
+testpDefTopPad	""
+testpDefBottomPad	""
+testpLayerMin        no
+testpLayerMax        no
+testpCentreSpace     0
+testpUsablePadsList
+
+.attribs
+hidespacing	yes
+.attribs_end
+
+.comprep
+X
+Y
+Rotation
+Swapped
+Part
+
+.plot
+file                 no
+printer              yes
+filename	"R:/Hardies/Wortuhr/Wortuhr_Steuerplatine/Version2.2//EmbRou-Steuerplatine V2.2/pcb/EmbRou-Steuerplatine V2.fif"
+printname	"lp -c"
+color                3
+
+.shape
+type	"Route Area"
+signal	"(no signal)"
+filled               yes
+closed               yes
+arrow                0
+width                0
+
+.hsl
+modify_length        yes
+shield_signal	"(no signal)"
+delay_by_time        no
+hsplacement          no
+increase_length      no
+ring_count           20
+move_vbps            no
+relengthen_interactive_urgency	off
+push_during_lengthening no
+lengthening_reduction_method 0
+push_during_lengthening_effort 3
+lengthen_non_trunk_segs_in_diffpr yes
+
+.security
+security_saves       yes
+confirm_saves        no
+time_between_saves   900
+undo_steps           20
+
+.radial
+connectivity         no
+footprints           yes
+movevias             yes
+
+.template
+template_name	""
+change_alts          yes
+match_parts          no
+ignore_power         no
+allow_conn_mismatch  no
+
+.space
+even                 yes
+spacing              0
+
+.plc_display
+display_lock         no
+top_layer_displayed  yes
+bottom_layer_displayed yes
+declutter_grid_size  100
+declutter_pad_size   190
+declutter_text_size  125
+
+.scale
+min_temperature      0
+max_temperature      155
+
+.interactive
+mincon               no
+mincon_on_fly        no
+check                no
+grid                 yes
+minimum_force_arrow  no
+allow_errors         no
+align_comps          no
+align_comps_mode     no
+avoid_routes         no
+route_comp_after_move no
+search_effort        3
+only_onboard_conns   no
+refine_comp_after_move no
+move_tracks_with_comp yes
+
+.automatic
+allow_swaps          yes
+allow_rotation       yes
+user_reposition      no
+align_comps          no
+align_comps_mode     no
+net_costs            no
+bias                 no
+
+.place
+place	rules
+sweep_direction	left_to_right
+
+.stack
+stack_by	part
+stack_offset         25
+
+.improve
+improve	rules
+sweep_direction	left_to_right
+
+.swap
+swap_to	opposite
+
+.rotate
+rotate_type	by_specified
+to_rotation          0
+by_rotation          90
+
+.align
+vertical_alignment	none
+horizontal_alignment	left
+
+.plc_grid
+vertical_alignment	bottom
+horizontal_alignment	left
+
+.query
+verbose_query        no
+
+.pin_gate_swap
+gate_swap_effort     1
+swap_type	gate
+gate_swap_between_comps yes
+gate_swap_discrete_comps no
+pin_swap_standard    yes
+pin_swap_discrete    no
+pin_swap_connectors  no
+
+.push_aside
+dynamic              no
+effort_level         5
+springback           yes
+
+.thermal
+accuracy             0.5
+top_temp             30
+bottom_temp          30
+top_coefficient      2
+bottom_coefficient   2
+grid                 30
+
+.heatsinks
+hold_top             no
+hold_bottom          no
+hold_left            no
+hold_right           no
+hold_temp            0
+
+.heatcoeff
+side_1_natural_conv  yes
+side_1_normal_flow   yes
+side_1_velocity      0.1
+board_vertical       no
+side_2_natural_conv  yes
+side_2_normal_flow   yes
+side_2_velocity      0.1
+
+.analysis
+analysis_type	none
+show_junction_temp   yes
+display_overlay      no
+show_val_cursor      no
+
+.powertrees
+
+
+.wild
+wildcard	*
+by_comp              yes
+by_area              no
+by_net               no
+extend               no
+
+.concurrent_place
+align                no
+allow_sided_regions  no
+bus_net_weight       1
+cabled_conn_weight   0
+conn_autoselect_attr_level_is_comp no
+conn_autoselect_attr_level_is_pack no
+conn_autoselect_attr_level_is_part no
+conn_autoselect_attribute_name	""
+conn_autoselect_attribute_value	""
+conn_autoselect_by_attribute no
+conn_autoselect_by_comp_name no
+conn_autoselect_by_part yes
+conn_autoselect_comp_name_filter	""
+conn_autoselect_part_is_conn yes
+conn_autoselect_part_is_edge_conn yes
+dcap_autoselect_attr_level_is_comp no
+dcap_autoselect_attr_level_is_pack no
+dcap_autoselect_attr_level_is_part no
+dcap_autoselect_attribute_name	""
+dcap_autoselect_attribute_value	""
+dcap_autoselect_by_attribute no
+dcap_autoselect_by_comp_name no
+dcap_autoselect_comp_name_filter	""
+dcap_autoselect_ignore_unconnected no
+dcap_autoselect_two_pin_only no
+dcap_autoselect_type_is_capacitor no
+default_block_name	"<no block>"
+group_child_comps_with_parent yes
+heavy_cluster_allow_rotate no
+heavy_cluster_packing_method	by_cluster
+last_chance_swapping no
+net_weight           1
+no_pins              2
+oversize_comps_for_routing yes
+pack_heavy_clusters  no
+package              0
+partitioning_check_legal_fit no
+partitioning_min_cut no
+partitioning_repartition no
+partitioning_vary_cut_ratio no
+place_decaps         no
+placement_order	large
+power_net_weight     1
+reallocate           yes
+refine_placement     no
+relax_smd_covering_rules no
+small_pins           yes
+spread               no
+stack_unplaceable_comps yes
+use_clusters         yes
+use_multi_pin_pin_groups no
+use_partial_power_planes no
+use_pin_aware_clusters no
+use_redit_bounce_to_legal no
+use_split_power_planes no
+use_true_board_outline no
+
+.visibility
+Track_(unfixed)      yes
+Track_(fixed)        yes
+Track_(semifixed)    yes
+Track_(oddwidth)     yes
+Track_(plating_tail) yes
+Via_(unfixed)        yes
+Via_(fixed)          yes
+Via_(semifixed)      yes
+Pad                  yes
+Copper               yes
+Power_plane          yes
+Virtual_branch_point yes
+Testpoint            yes
+Connection/layer     yes
+Connection           yes
+Terminal             yes
+Placement            yes
+Clearance            yes
+Component_Group      yes
+Component_name       no
+Power_dissipation    yes
+Thermal_box          yes
+Thermal              yes
+Board_Outline        yes
+Profile              yes
+Placement_Area       yes
+Template             yes
+Text                 yes
+Current_Area         yes
+Non-Current_Area     yes
+No_track_area        yes
+No_via_area          yes
+Error_item           yes
+Error_letter         yes
+Highlight            yes
+Lowlight             yes
+Drill_holes          yes
+Pin_Swap_Flags       yes
+Grid                 yes
+Comparison_Current   yes
+Comparison_Comparison yes
+Diff_pair_indicator  yes
+Trunking_twist_arrow yes
+Trunking_snap_axis   yes
+Trunking_marker      yes
+Trunking_marker_text yes
+Trunking_end_routing_area yes
+
+.trunking
+tru_qrt_large_auto   no
+tru_qrt_large_distance	medium
+tru_qrt_large_is_more_than 2
+tru_qrt_small_auto   yes
+tru_qrt_small_distance	medium
+tru_guide_snapping   yes
+tru_guide_single_click_finish yes
+tru_guide_snap_distance	medium
+tru_guide_size	medium
+tru_guide_axis_size	medium
+tru_min_x_con        yes
+tru_spacing_type	normal
+tru_width_type	normal
+tru_compose_tole_angle 0.01
+tru_compose_tole_via 300
+tru_compose_ignore_viapattern no
+tru_via_pattern_style	box
+tru_compose_tole_spacing 100
+tru_width_change_style	use_routing_angle
+tru_qrt_large_auto_dynamic_only no
+tru_qrt_small_auto_dynamic_only no
+tru_qrt_large_method_v2	use_routing_angle
+tru_qrt_small_method_v2	use_routing_angle
+tru_corner_style_v2	use_routing_angle
+tru_via_allow_same_net_errors no
+tru_ignore_bus_attr  no
+
+.final_positioning
+align_comps          no
+comps_push_in_direction_of_travel no
+effort               5
+expand_selection_when_pushing no
+force                5
+include_rotation     no
+large_comp_less_likely_to_move no
+
+.compare
+components           yes
+nets                 yes
+shapes               yes
+tracks               yes
+vias                 yes
+pads                 yes
+copper               yes
+
+.rcc
+description	""
+filename	""
+
+.fanout
+smart_fanout         no
+simple_fanout        yes
+auto_router_fanout   no
+escape_routing       no
+sm_direction	"Outwards"
+sm_gridded           yes
+sm_via_name	""
+sm_layer_pair1	""
+sm_layer_pair2	""
+sm_spiral_vias	Disallow
+sm_via_position	Midpoints
+sm_via_share	Discourage
+sm_pin_share	Discourage
+sm_length	"0"
+si_gridded           yes
+si_via_name	""
+si_layer_pair1	""
+si_layer_pair2	""
+si_spiral_vias	Disallow
+si_direction	"Outwards"
+si_direction_file_name	""
+si_via_position	Minimum_Spacing
+si_first_length	"0"
+si_second_length	"0"
+au_gridded           yes
+au_via_share         yes
+au_pin_share         yes
+es_offset	"0"
+es_use_surface_layers yes
+es_trim_vias         yes
+es_discourage_wrong_dir yes
+
+.bestpass
+save                 yes
+completion           yes
+fails                no
+errors               no
+vias                 no
+segments             no
+length               no
+use_as_final_result  no
+
+.eof

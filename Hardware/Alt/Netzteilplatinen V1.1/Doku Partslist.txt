@@ -1,0 +1,1118 @@
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><HTML>
+<HEAD>
+<META NAME="GENERATOR" CONTENT="Cadstar Active Report">
+<META NAME="AUTHOR" CONTENT="Zuken Ltd">
+<TITLE>Parts List</TITLE>
+<style type="text/css">/* CADSTAR HTML Reports CSS File V1.2 SL 08-Jul-2015 */
+
+body
+{
+	font-family:'Lucida Sans Unicode', 'Lucida Grande', Sans-Serif;
+	font-size:x-small;
+	background:#FFF;
+	color:#101010;
+	margin-left:22px;
+}
+
+pre
+{
+    font-family:'Lucida Sans Unicode', 'Lucida Grande', Sans-Serif;
+	font-size:x-small
+} 
+
+hr
+{
+	margin-right:22px;
+    height:1px;
+} 
+
+td.number-col
+{
+	text-align:right
+} 
+
+ul
+{
+	margin-left:3em;
+	padding-left:0;
+} 
+
+li
+{	
+	line-height:1.8em
+} 
+
+
+
+.label-for-check
+{
+	text-decoration:underline
+}
+
+.check-with-label:checked + .label-for-check
+{
+	color:#F01010
+} 
+
+a
+{
+	color:#000
+} 
+
+.hor-header-summary-a
+{
+    font-family:'Lucida Sans Unicode', 'Lucida Grande', Sans-Serif;
+	font-size:1em;
+    background:#FFF;
+	margin-bottom:2em;
+	margin-top:1em
+} 
+
+.hor-header-summary-a th
+{
+	font-size:14px;
+	font-weight:400;
+	border-bottom:2px solid #6678b1;
+	padding:10px 24px
+} 
+
+.hor-header-summary-a td
+{
+	color:#101010;
+	vertical-align:baseline;
+	padding:9px 24px 0 0
+}
+
+.hor-header-summary-a tbody td
+{
+	color:#101010
+} 
+
+#content tr:hover 
+{
+    background: #FAFAFA;
+} 
+
+.hor-minimalist-a
+{
+    font-family:'Lucida Sans Unicode', 'Lucida Grande', Sans-Serif;
+	font-size:x-small;
+	background:#fff;
+	margin-bottom:3em;
+	#margin-top:3em;
+	border-collapse:collapse;
+	text-align:left;
+	line-height:1em
+}
+
+.hor-minimalist-a td
+{
+	padding:9px 48px 0 0
+} 
+
+table
+{
+	margin-top:0;padding-top:0
+} 
+
+h1,h2,h3
+{
+	margin-bottom:0;
+	padding-bottom:0
+} 
+
+h1
+{
+	font-size:1.5em
+} 
+
+h3,h4
+{
+	font-size:1.2em
+} 
+
+.hor-header-summary-a thead,.hor-minimalist-a thead
+{
+	color:#101010;
+	font-weight:700;
+	padding:10px 24px
+} 
+
+.ActiveLink 
+{
+	color:#000000
+} 
+
+.ActiveLinkDRC 
+{
+	color:#0000FF
+} 
+
+.ActiveLinkSelected 
+{
+	color:#000000; 
+	background-color:#B0ffB0;
+} 
+
+.ActiveLinkDRCSelected 
+{
+	color:#0000FF; 
+	background-color:#B0ffB0;
+} 
+
+pre
+{
+	display: inline
+}
+
+.altTable 
+{
+	font-size:1em;
+	margin-bottom:2em;
+	margin-top:1em;
+	border-collapse:
+	collapse;text-align:left
+}
+
+.altTable th
+{
+	font-size:14px;
+	font-weight:500;
+	border-bottom:2px;
+	padding:2px 5px 5px
+} 
+
+.altTable td
+{
+	color:#101010;
+	vertical-align:top;
+	padding:1px 6px
+}
+</style>
+</HEAD>
+<body>
+<H1>
+Parts List
+</H1>
+<table class="hor-header-summary-a">
+<tr><td>CADSTAR Design Editor Version</td><td>17.0.0.3</td></tr>
+<tr><td>Design:</td><td>R:\TEMP\Wortuhr-Netzteilplatine -Nutzen 1,1-BO.pcb</td></tr>
+
+<tr>
+
+<td>
+Design Title:
+</td>
+
+<td>
+<pre>
+WortUhr Powerplatine Nutzen</pre>
+
+</td>
+
+</tr>
+<tr><td>Date:</td><td>Samstag, 28. Juli 2018</td></tr>
+<tr><td>Time:</td><td>14:34</td></tr>
+
+</table>
+<hr>
+<div id="content"><table class="hor-header-summary-a">
+
+<thead>
+
+<tr>
+
+<td>
+Part Name/Number       
+</td>
+
+<td>
+Description
+</td>
+
+<td>
+Qty
+</td>
+
+<td>
+   Comps.
+</td>
+
+<td>
+Part Acceptance
+</td>
+
+</tr>
+
+</thead>
+
+<tr>
+
+<td>
+10_pol_wanne
+</td>
+
+<td>
+Wannenstecker 10 pol
+</td>
+
+<td class="number-col">
+1
+</td>
+
+<td>
+X101
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+1N5408
+</td>
+
+<td>
+Silizium Diode
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+D11
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+D21
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+D31
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+4N36
+</td>
+
+<td>
+Optokoppler 2,5kV DIL6 7Âµs
+</td>
+
+<td class="number-col">
+6
+</td>
+
+<td>
+OK11-12
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+OK21-22
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+OK31-32
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+Bohrung3_5
+</td>
+
+<td>
+Befestigungsbohrung 3,5mm
+</td>
+
+<td class="number-col">
+11
+</td>
+
+<td>
+B1-11
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+ELKO_1000µ_50V_RM5_radial_D13mm_RT
+</td>
+
+<td>
+Elektrolytkondensator radial_D
+</td>
+
+<td class="number-col">
+6
+</td>
+
+<td>
+C11-12
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+C21-22
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+C31-32
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+Hohlsteckerbuchse_HEBW21
+</td>
+
+<td>
+Hohlsteckerbuchse_2,1*5,5mm
+</td>
+
+<td class="number-col">
+1
+</td>
+
+<td>
+X102
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+IRF7425
+</td>
+
+<td>
+IRF7425
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+T11
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+T21
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+T31
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+LPKF_Passmarke
+</td>
+
+<td>
+Platzhalter fuer Passmarke
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+M1-3
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+PAD
+</td>
+
+<td>
+Einzelnes Pad 1,5mm
+</td>
+
+<td class="number-col">
+26
+</td>
+
+<td>
+X103-109
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+X203-209
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+X213-218
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+X313-318
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+PASTEN_PASSMARKE
+</td>
+
+<td>
+Platzhalter fuer Passmarke
+</td>
+
+<td class="number-col">
+4
+</td>
+
+<td>
+M4-7
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+RES_19K1_1.00%_0.40W_axial_Metallschicht_RT
+</td>
+
+<td>
+Metallschichtwiderstand 19,1K 
+</td>
+
+<td class="number-col">
+6
+</td>
+
+<td>
+R15-16
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R25-26
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R35-36
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+RES_1K2_5.00%_0.25W_axial_Kohleschicht
+</td>
+
+<td>
+Kohleschichtwiderstand 1,2k Oh
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+R11
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R21
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R31
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+RES_330R_5.00%_0.25W_AXIAL_KOHLESCHICHT_RT
+</td>
+
+<td>
+Kohleschichtwiderstand 330 Ohm
+</td>
+
+<td class="number-col">
+6
+</td>
+
+<td>
+R13-14
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R23-24
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R33-34
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+RES_3K9_5.00%_0.25W_axial_Kohleschicht
+</td>
+
+<td>
+Kohleschichtwiderstand 3,9k Oh
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+R12
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R22
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+R32
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+Spule 470uH
+</td>
+
+<td>
+Spule 470uH
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+L11
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+L21
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+L31
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+Steckerleiste_3pol
+</td>
+
+<td>
+Steckerleiste SIL RM2,54
+</td>
+
+<td class="number-col">
+19
+</td>
+
+<td>
+X110-115
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+X221-227
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+X301-306
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+TL2575
+</td>
+
+<td>
+Schaltregler
+</td>
+
+<td class="number-col">
+3
+</td>
+
+<td>
+IC11
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+IC21
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+
+</td>
+
+<td>
+IC31
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+WHS_LOGO
+</td>
+
+<td>
+Platzhalter für WHS Logo
+</td>
+
+<td class="number-col">
+2
+</td>
+
+<td>
+LOGO1-2
+</td>
+
+</tr>
+
+</table>
+</div><BR>
+<BR>
+End of report
+
+</body>
+</html>
