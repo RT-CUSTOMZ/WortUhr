@@ -366,6 +366,11 @@ loop()
                     {
                         *pp = '\0';
                         ssid = p + 1;
+
+                        if((pp-6)>p && strcmp(pp-6,"$$$$$$")==0){
+                          snprintf((pp-6),7,"%06X", ESP.getChipId());                    
+                        }
+                        
                         p = pp + 1;
 
                         if (*p == ',' && *(p + 1) == '"')

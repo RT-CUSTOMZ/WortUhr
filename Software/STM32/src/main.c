@@ -2531,13 +2531,29 @@ main (void)
 
     read_configuration_from_eeprom ();                                      // read configuration from EEPROM
     display_reset_led_states ();
+
+    uint_fast8_t startup_leds = 1;
+    DSP_COLORS col_black = DSP_BLACK_COLOR;
+    DSP_COLORS col = DSP_DARK_RED_COLOR;
+    display_set_display_led(0,&col,1);
+    for(int i=0,j=WC_ROWS-1; i<WC_ROWS; i++,j--){
+        display_set_display_led(i*WC_COLUMNS+i+1,&col,1);
+        display_set_display_led(i*WC_COLUMNS+(WC_COLUMNS-i-1),&col,1);
+    }
+
     upgrade_eeprom_version ();                                              // upgrade EEPROM to current version
 
+    display_set_display_led(WC_COLUMNS,&col,1);
     ldr_init ();                                                            // initialize LDR (ADC)
+    display_set_display_led(2*WC_COLUMNS,&col,1);
     dcf77_init ();                                                          // initialize DCF77
+    display_set_display_led(3*WC_COLUMNS,&col,1);
     alarm_init ();                                                          // initialize alarm routines
+    display_set_display_led(4*WC_COLUMNS,&col,1);
     temp_init ();                                                           // initialize DS18xx
+    display_set_display_led(5*WC_COLUMNS,&col,1);
     dfplayer_init ();                                                       // initialize DFPlayer
+    display_set_display_led(6*WC_COLUMNS,&col,1);
 
     ds3231_flag = 1;
 
@@ -2567,21 +2583,17 @@ main (void)
 #endif
 
     esp8266_init ();
-    DSP_COLORS col = DSP_DARK_RED_COLOR;
-    display_set_display_led(0,&col,1);
-    //led_set_led(DSP_DISPLAY_LED_OFFSET,&col);
-    //led_refresh(1);
-
-    //led.state[1] |= NEW_STATE;
-    //display_show_new_display (NEW_STATE);
+    display_set_display_led(7*WC_COLUMNS,&col,1);
 
     if (ds18xx.is_up)
     {
+        display_set_display_led(8*WC_COLUMNS,&col,1);
         temp_read_temp_index ();
     }
 
     if (grtc.rtc_is_up)
     {
+        display_set_display_led(9*WC_COLUMNS,&col,1);
         rtc_get_temperature_index ();
     }
 
@@ -2620,7 +2632,7 @@ main (void)
                 log_message ("user button pressed: configuring esp8266 as access point");
                 esp8266.is_online = 0;
                 esp8266.ipaddress[0] = '\0';
-                esp8266_accesspoint ("wordclock", "1234567890");
+                esp8266_accesspoint ("wordclock_$$$$$$", "1234567890");
             }
             else if (local_uptime - wps_pressed > 5 && wpsbutton_pressed ())            // if user pressed wps button, send WPS command to ESP8266
             {
@@ -2677,6 +2689,22 @@ main (void)
             {
                 esp8266_is_up = 1;
                 log_message ("esp8266 now up");
+            }
+            else if(!tables.complete)
+            {
+                for(int i=10;i<WC_ROWS;i++)
+                {
+                    if(i==startup_leds)
+                    {
+                        display_set_display_led(i*WC_COLUMNS,&col,1);
+                    }
+                    else
+                    {
+                        display_set_display_led(i*WC_COLUMNS,&col_black,1);
+                    }
+                }
+                startup_leds++;
+                if(startup_leds>=WC_ROWS) startup_leds = 10;
             }
         }
         else
