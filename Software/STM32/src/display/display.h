@@ -16,6 +16,8 @@
 #include "tables.h"
 
 #define MAX_BRIGHTNESS                          15
+#define BRIGHTNESS_66                           10
+#define BRIGHTNESS_33                           5
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * display flags:

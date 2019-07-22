@@ -6230,8 +6230,8 @@ display_init (void)
     display.display_mode                    = 10;                                       // display_mode, default is Rhein/Ruhr (12)
     display.ambilight_mode                  = 0,                                        // ambilight_mode
     display.color_animation_mode            = COLOR_ANIMATION_MODE_RAINBOW;             // color_animation_mode, default is Rainbow
-    display.display_brightness              = MAX_BRIGHTNESS;                           // display brightness, default is maximum brightness
-    display.ambilight_brightness            = MAX_BRIGHTNESS,                           // ambilight brightness, default is maximum brightness
+    display.display_brightness              = BRIGHTNESS_33;                           // display brightness, default is 1/3 brightness
+    display.ambilight_brightness            = BRIGHTNESS_33,                           // ambilight brightness, default is 1/3 brightness
     display.automatic_brightness            = 0;                                        // automatic brightness, default is off
     display.display_flags                    = (DISPLAY_FLAGS_PERMANENT_IT_IS |
                                                 DISPLAY_FLAGS_SYNC_AMBILIGHT |
@@ -6377,21 +6377,21 @@ display_init (void)
     display.ambilight_modes[AMBILIGHT_MODE_DAYLIGHT].default_deceleration           = 0;
     display.ambilight_modes[AMBILIGHT_MODE_DAYLIGHT].flags                          = AMBILIGHT_FLAG_NONE;
 
-    display.dimmed_display_colors[0]    = 8;
-    display.dimmed_display_colors[1]    = 8;
-    display.dimmed_display_colors[2]    = 9;
-    display.dimmed_display_colors[3]    = 9;
-    display.dimmed_display_colors[4]    = 10;
-    display.dimmed_display_colors[5]    = 10;
-    display.dimmed_display_colors[6]    = 11;
-    display.dimmed_display_colors[7]    = 11;
-    display.dimmed_display_colors[8]    = 12;
-    display.dimmed_display_colors[9]    = 12;
-    display.dimmed_display_colors[10]   = 13;
-    display.dimmed_display_colors[11]   = 13;
-    display.dimmed_display_colors[12]   = 14;
-    display.dimmed_display_colors[13]   = 14;
-    display.dimmed_display_colors[14]   = 15;
+    display.dimmed_display_colors[0]    = 0;
+    display.dimmed_display_colors[1]    = 1;
+    display.dimmed_display_colors[2]    = 2;
+    display.dimmed_display_colors[3]    = 3;
+    display.dimmed_display_colors[4]    = 4;
+    display.dimmed_display_colors[5]    = 5;
+    display.dimmed_display_colors[6]    = 6;
+    display.dimmed_display_colors[7]    = 7;
+    display.dimmed_display_colors[8]    = 8;
+    display.dimmed_display_colors[9]    = 9;
+    display.dimmed_display_colors[10]   = 10;
+    display.dimmed_display_colors[11]   = 11;
+    display.dimmed_display_colors[12]   = 12;
+    display.dimmed_display_colors[13]   = 13;
+    display.dimmed_display_colors[14]   = 14;
     display.dimmed_display_colors[15]   = MAX_BRIGHTNESS;
 
     for (idx = 0; idx < 15; idx++)
