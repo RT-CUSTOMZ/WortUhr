@@ -47,6 +47,8 @@ static WiFiClient           http_client;
 #define WC_LIST_TXT                                 "wc-list.txt"                   // list of available STM32 firmware files
 #define WC_TABLES_LIST_TXT                          "wc-list-tables.txt"            // list of available layout table files
 
+#define CW_WEEKS_PHP                                "cw.php"                        // number of weeks until next campuswoche
+
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * http parameters
  *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1029,6 +1031,8 @@ http_main (void)
     const char *    esp_firmware_version                        = ESP_VERSION;
     char *          version;
     char *          eeprom_version;
+    char *          update_host;
+    char *          update_path;
     uint_fast8_t    rtc                                         = 0;
     struct tm *     tmp;
     uint_fast8_t    eeprom_is_up;
@@ -1149,10 +1153,20 @@ http_main (void)
         else if (! strcmp (action, "showcwcnt"))
         {
             //message = "Showing cw cnt";
-//---
-            int len = httpclient ("wortuhr.42volt.de", "update", "cw.php");
-            sprintf(test,"Showing cw cnt %d",len);
-            message = test;
+//---                
+            sv = get_strvar (UPDATE_HOST_VAR);
+            update_host  = sv->str;
+            sv = get_strvar (UPDATE_PATH_VAR);
+            update_path = sv->str;
+
+            int len = 0;
+            if (!update_host[0] || !update_path[0]){
+              http_send_FS ("<P><B>Update path or host missing!</B><BR>\r\n");
+            }else{
+              len = httpclient (update_host, update_path, CW_WEEKS_PHP);
+              sprintf(test,"Showing cw cnt %d",len);
+              message = test;
+            }
             if (len > 0)
             {
                 char         weeks[3];
