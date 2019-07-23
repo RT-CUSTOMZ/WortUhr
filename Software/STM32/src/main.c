@@ -2333,8 +2333,10 @@ main (void)
 {
     static uint_fast16_t    last_ldr_raw_value          = 0xFFFF;
     uint_fast8_t            esp8266_is_up               = 0;
+#ifndef NOIR
     IRMP_DATA               irmp_data;
     uint32_t                stop_time;
+#endif
     uint_fast8_t            cmd;
     uint_fast8_t            status_led_cnt              = 0;
     uint_fast8_t            time_changed                = 0;
@@ -2533,8 +2535,8 @@ main (void)
     display_reset_led_states ();
 
     uint_fast8_t startup_leds = 1;
-    DSP_COLORS col_black = DSP_BLACK_COLOR;
-    DSP_COLORS col = DSP_DARK_RED_COLOR;
+    LED_RGB col_black = DSP_BLACK_COLOR;
+    LED_RGB col = DSP_DARK_RED_COLOR;
     display_set_display_led(0,&col,1);
     for(int i=0,j=WC_ROWS-1; i<WC_ROWS; i++,j--){
         display_set_display_led(i*WC_COLUMNS+i+1,&col,1);
@@ -2692,7 +2694,7 @@ main (void)
             }
             else if(!tables.complete)
             {
-                for(int i=10;i<WC_ROWS;i++)
+                for(uint_fast8_t i=10;i<WC_ROWS;i++)
                 {
                     if(i==startup_leds)
                     {
