@@ -3161,14 +3161,17 @@ main (void)
                     debug_log_message ("no temperature available");
                 }
 
-                display_clock (0, temperature_index - 20, display_clock_flag);          // show temperature
+                if (temperature_index >= 20)
+                {
+                    display_clock (0, temperature_index - 20, display_clock_flag);      // show temperature
+                }
             }
             else
             {
                 display_clock (gmain.hour, gmain.minute, display_clock_flag);           // show new time
             }
 #else
-            display_clock (gmain.hour, gmain.minute, display_clock_flag);                           // show new time
+            display_clock (gmain.hour, gmain.minute, display_clock_flag);               // show new time
 #endif
             display_clock_flag = DISPLAY_CLOCK_FLAG_NONE;
         }
@@ -3518,7 +3521,39 @@ main (void)
                         {
                             if (dfplayer.speak_cycle > 0 && gmain.minute % dfplayer.speak_cycle == 0)
                             {
+#if WCLOCK24H == 1
+                                if (display.display_mode == tables.modes_count - 1)                     // temperature
+                                {
+                                    uint_fast8_t temperature_index;
+
+                                    if (ds18xx.is_up)
+                                    {
+                                        temperature_index = temp_read_temp_index ();
+                                        log_printf ("got temperature from DS18xxx: %d%s\r\n", temperature_index / 2, (temperature_index % 2) ? ".5" : "");
+                                    }
+                                    else if (grtc.rtc_is_up)
+                                    {
+                                        temperature_index = rtc_get_temperature_index ();
+                                        log_printf ("got temperature from RTC: %d%s\r\n", temperature_index / 2, (temperature_index % 2) ? ".5" : "");
+                                    }
+                                    else
+                                    {
+                                        temperature_index = 0x00;
+                                        debug_log_message ("no temperature available");
+                                    }
+
+                                    if (temperature_index >= 20)
+                                    {
+                                        speak (0, temperature_index - 20);                              // speak temperature
+                                    }
+                                }
+                                else
+                                {
+                                    speak (gmain.hour, gmain.minute);
+                                }
+#else
                                 speak (gmain.hour, gmain.minute);
+#endif
                             }
                         }
                     }

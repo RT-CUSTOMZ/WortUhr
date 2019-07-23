@@ -199,6 +199,31 @@ http_send (String s)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * normalize http parameters
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+normalize_http_parameters (char * p)
+{
+    while (*p)
+    {
+        if (*p == '%')
+        {
+            char * pp;
+
+            *p = htoi (p + 1, 2);
+
+            for (pp = p + 1; *(pp + 2); pp++)
+            {
+                *pp = *(pp + 2);
+            }
+            *pp = '\0';
+        }
+        p++;
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * set parameters from list
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
@@ -207,6 +232,7 @@ http_set_params (char * paramlist)
 {
     char *  p;                                              // ap=access&pw=secret&action=saveap
     int     idx = 0;
+    int     i;
 
     if (paramlist && *paramlist)
     {
@@ -227,6 +253,11 @@ http_set_params (char * paramlist)
             }
         }
         idx++;
+    }
+
+    for (i = 0; i < idx; i++)
+    {
+        normalize_http_parameters (http_parameters[i].value);
     }
 
     while (idx < MAX_HTTP_PARAMS)
@@ -4874,20 +4905,7 @@ http (const char * path, const char * const_param)
 
     for (p = param; *p; p++)
     {
-        if (*p == '%')
-        {
-            *p = htoi (p + 1, 2);
-
-            t = p + 1;
-            s = p + 3;
-
-            while (*s)
-            {
-                *t++ = *s++;
-            }
-            *t = '\0';
-        }
-        else if (*p == '+')                                     // plus must be mapped to space if GET method
+        if (*p == '+')                                     // plus must be mapped to space if GET method
         {
             *p = ' ';
         }

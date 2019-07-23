@@ -7,9 +7,9 @@ Die Software von Frank Meyer wurde minimal angepasst. Das Layout der Matrix, sow
 
 Documentation: https://www.mikrocontroller.net/articles/WordClock_mit_WS2812
 
-Version: 2.9.4
+Version: 2.9.5
 
-Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
+Copyright (c) 2014-2019 Frank Meyer - frank(at)fli4l.de
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

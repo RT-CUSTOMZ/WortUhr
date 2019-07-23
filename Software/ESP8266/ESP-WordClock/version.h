@@ -12,6 +12,6 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define ESP_VERSION                "2.9.2"
+#define ESP_VERSION                "2.9.5"
 
 #endif

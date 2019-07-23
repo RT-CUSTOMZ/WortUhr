@@ -78,7 +78,7 @@ var_send_short (const char * id, uint_fast32_t var, uint_fast16_t value)
 {
     char            buf[32];
 
-    sprintf (buf, "%s%02x%02x%02x", id, (int) var, value & 0xFF, (value >> 8) & 0xFF);
+    sprintf (buf, "%s%02x%04x", id, (int) var, value & 0xFFFF);
     var_send_buf (buf);
 }
 

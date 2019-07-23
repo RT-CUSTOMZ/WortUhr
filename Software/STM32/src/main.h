@@ -15,7 +15,7 @@
 #include <time.h>
 #include "eeprom-data.h"
 
-#define VERSION                     "2.9.4"
+#define VERSION                     "2.9.5"
 
 #define MAX_EEPROM_VERSION_LEN      4
 
