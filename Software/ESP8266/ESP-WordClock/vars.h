@@ -168,9 +168,9 @@ extern uint_fast8_t         set_num16_array (NUM16_ARRAY, uint32_t, uint_fast16_
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 #define MAX_TICKER_TEXT_LEN             32
-#define MAX_VERSION_TEXT_LEN            8
+#define MAX_VERSION_TEXT_LEN            12
 #define MAX_EEPROM_VERSION_TEXT_LEN     8
-#define MAX_ESP8266_VERSION_TEXT_LEN    8
+#define MAX_ESP8266_VERSION_TEXT_LEN    12
 #define MAX_TIMESERVER_NAME_LEN         16
 #define MAX_WEATHER_APPID_LEN           32
 #define MAX_WEATHER_CITY_LEN            32

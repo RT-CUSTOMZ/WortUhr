@@ -4371,8 +4371,8 @@ http_update (void)
             }
             else
             {
-                char    new_esp_version[16];
-                char    new_wc_version[16];
+                char    new_esp_version[MAX_ESP8266_VERSION_TEXT_LEN+1];
+                char    new_wc_version[MAX_VERSION_TEXT_LEN+1];
                 int     len;
     
                 new_esp_version[0] = '\0';
@@ -4389,7 +4389,7 @@ http_update (void)
                     {
                         ch = httpclient_read (&len);
     
-                        if (ch != '\r' && ch != '\n' && l < 16 - 1)
+                        if (ch != '\r' && ch != '\n' && l < MAX_ESP8266_VERSION_TEXT_LEN)
                         {
                             new_esp_version[l++] = ch;
                         }
@@ -4448,7 +4448,7 @@ http_update (void)
                     {
                         ch = httpclient_read (&len);
     
-                        if (ch != '\r' && ch != '\n' && l < 16 - 1)
+                        if (ch != '\r' && ch != '\n' && l < MAX_VERSION_TEXT_LEN)
                         {
                             new_wc_version[l++] = ch;
                         }
