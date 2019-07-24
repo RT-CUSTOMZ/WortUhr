@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * vars.c - synchronisation of variables/parameters between STM32 and ESP8266
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,16 +12,8 @@
 #include <stdio.h>
 
 #include "vars.h"
-
-#if WCLOCK24H == 1
-#include "tables.h"
-#else
-#include "tables12h.h"
-#endif
-
 #include "display.h"
 #include "overlay.h"
-
 #include "eeprom.h"
 #include "eeprom-data.h"
 #include "main.h"
@@ -86,7 +78,7 @@ var_send_short (const char * id, uint_fast32_t var, uint_fast16_t value)
 {
     char            buf[32];
 
-    sprintf (buf, "%s%02x%02x%02x", id, (int) var, value & 0xFF, (value >> 8) & 0xFF);
+    sprintf (buf, "%s%02x%04x", id, (int) var, value & 0xFFFF);
     var_send_buf (buf);
 }
 
@@ -185,22 +177,6 @@ var_send_tm_variable (TM_VARIABLE var, TM * tm)
     if (var < MAX_TM_VARIABLES)
     {
         sprintf (buf, "T%02x%04d%02d%02d%02d%02d%02d", (int) var, tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
-        var_send_buf (buf);
-    }
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------
- * send a display mode variable to ESP8266
- *--------------------------------------------------------------------------------------------------------------------------------------
- */
-static void
-var_send_display_mode_variable (DISPLAY_MODE_VARIABLE var, const char * value)
-{
-    char            buf[64];
-
-    if (var < MAX_DISPLAY_MODE_VARIABLES && value)
-    {
-        sprintf (buf, "DN%02x%s", (int) var, value);
         var_send_buf (buf);
     }
 }
@@ -511,7 +487,7 @@ var_send_rtc_is_up (void)
 void
 var_send_display_power (void)
 {
-    var_send_num_variable (DISPLAY_POWER_NUM_VAR, display.power_is_on);
+    var_send_num_variable (DISPLAY_POWER_NUM_VAR, display.display_power_is_on);
 }
 
 static void
@@ -524,12 +500,6 @@ void
 var_send_display_mode (void)
 {
     var_send_num_variable (DISPLAY_MODE_NUM_VAR, display.display_mode);
-}
-
-static void
-var_send_max_display_modes (void)
-{
-    var_send_num_variable (MAX_DISPLAY_MODES_NUM_VAR, MODES_COUNT);
 }
 
 void
@@ -724,25 +694,16 @@ var_send_update_path (void)
     var_send_str_variable (UPDATE_PATH_VAR, gmain.update_path);
 }
 
+static void
+var_send_date_ticker_format (void)
+{
+    var_send_str_variable (DATE_TICKER_FORMAT_VAR, (char *) display.date_ticker_format);
+}
+
 void
 var_send_tm (void)
 {
     var_send_tm_variable (CURRENT_TM_VAR, &(gmain.tm));
-}
-
-void
-var_send_display_mode_names (void)
-{
-    uint_fast8_t    idx;
-
-    for (idx = 0; idx < MODES_COUNT; idx++)
-    {
-#if WCLOCK24H == 1
-        var_send_display_mode_variable (idx, tbl_modes[idx].description);
-#else
-        var_send_display_mode_variable (idx, tbl_modes[idx]);
-#endif
-    }
 }
 
 void
@@ -755,6 +716,12 @@ void
 var_send_ambilight_colors (void)
 {
     var_send_dsp_color_variable (AMBILIGHT_DSP_COLOR_VAR, &(display.ambilight_colors));
+}
+
+void
+var_send_ambilight_marker_colors (void)
+{
+    var_send_dsp_color_variable (AMBILIGHT_MARKER_DSP_COLOR_VAR, &(display.ambilight_marker_colors));
 }
 
 void
@@ -853,9 +820,15 @@ var_send_alarm_times (void)
 }
 
 static void
-var_send_dimmed_colors (void)
+var_send_dimmed_display_colors (void)
 {
-    var_send_num8_array (DISPLAY_DIMMED_COLORS, display.dimmed_colors, sizeof (display.dimmed_colors));
+    var_send_num8_array (DISPLAY_DIMMED_DISPLAY_COLORS, display.dimmed_display_colors, sizeof (display.dimmed_display_colors));
+}
+
+static void
+var_send_dimmed_ambilight_colors (void)
+{
+    var_send_num8_array (DISPLAY_DIMMED_AMBILIGHT_COLORS, display.dimmed_ambilight_colors, sizeof (display.dimmed_ambilight_colors));
 }
 
 static void
@@ -920,7 +893,6 @@ var_send_all_variables (void)
     var_send_display_power ();
     var_send_display_ambilight_power ();
     var_send_display_mode ();
-    var_send_max_display_modes ();
     var_send_display_brightness ();
     var_send_display_flags ();
     var_send_display_automatic_brightness_active ();
@@ -951,19 +923,21 @@ var_send_all_variables (void)
     var_send_weather_lat ();
     var_send_update_host ();
     var_send_update_path ();
+    var_send_date_ticker_format ();
 
     var_send_tm ();
 
-    var_send_display_mode_names ();
     var_send_display_colors ();
     var_send_ambilight_colors ();
+    var_send_ambilight_marker_colors ();
     var_send_display_animations ();
     var_send_color_animations ();
     var_send_ambilight_modes ();
     var_send_overlays ();
     var_send_night_times ();
     var_send_ambilight_night_times ();
-    var_send_dimmed_colors ();
+    var_send_dimmed_display_colors ();
+    var_send_dimmed_ambilight_colors ();
     var_send_dfplayer_is_up ();
     var_send_dfplayer_version ();
     var_send_dfplayer_volume ();

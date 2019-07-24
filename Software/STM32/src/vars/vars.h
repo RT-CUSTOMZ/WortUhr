@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * vars.h - synchronisation of variables/parameters between STM32 and ESP8266
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,9 @@ typedef enum
     TEST_DISPLAY_RPC_VAR,                                                   // test display
     GET_WEATHER_RPC_VAR,                                                    // get weather
     DISPLAY_DATE_RPC_VAR,                                                   // display current date
+    GET_WEATHER_FC_RPC_VAR,                                                 // get weather forecast
+    RESET_EEPROM_RPC_VAR,                                                   // reset EEPROM
+    DISPLAY_CW_CNT_RPC_VAR,
     MAX_RPC_VARIABLES                                                       // must be the last member
 } RPC_VARIABLE;
 
@@ -41,11 +44,11 @@ typedef enum
     RTC_IS_UP_NUM_VAR,
     DISPLAY_POWER_NUM_VAR,
     DISPLAY_MODE_NUM_VAR,
-    MAX_DISPLAY_MODES_NUM_VAR,
+    OBSOLETE_1_NUMVAR,                                                      // obsolete: MAX_DISPLAY_MODES_NUM_VAR
     DISPLAY_BRIGHTNESS_NUM_VAR,
     DISPLAY_FLAGS_NUM_VAR,
     DISPLAY_AUTOMATIC_BRIGHTNESS_ACTIVE_NUM_VAR,
-    OBSOLETE_1_NUMVAR,                                                      // obsolete: DISPLAY_TEMPERATURE_INTERVAL_NUM_VAR
+    OBSOLETE_2_NUMVAR,                                                      // obsolete: DISPLAY_TEMPERATURE_INTERVAL_NUM_VAR
     ANIMATION_MODE_NUM_VAR,
     AMBILIGHT_MODE_NUM_VAR,
     AMBILIGHT_LEDS_NUM_VAR,
@@ -61,10 +64,10 @@ typedef enum
     RTC_TEMP_CORRECTION_NUM_VAR,
     DS18XX_TEMP_INDEX_NUM_VAR,
     DS18XX_TEMP_CORRECTION_NUM_VAR,
-    OBSOLETE_2_NUMVAR,                                                      // obsolete: DISPLAY_HEART_INTERVAL_NUM_VAR,
-    OBSOLETE_3_NUMVAR,                                                      // obsolete: DISPLAY_XMAS_TREE_INTERVAL_NUM_VAR,
-    OBSOLETE_4_NUMVAR,                                                      // obsolete: DISPLAY_DATE_INTERVAL_NUM_VAR,
-    OBSOLETE_5_NUMVAR,                                                      // obsolete: DISPLAY_FIREWORKS_INTERVAL_NUM_VAR,
+    OBSOLETE_3_NUMVAR,                                                      // obsolete: DISPLAY_HEART_INTERVAL_NUM_VAR,
+    OBSOLETE_4_NUMVAR,                                                      // obsolete: DISPLAY_XMAS_TREE_INTERVAL_NUM_VAR,
+    OBSOLETE_5_NUMVAR,                                                      // obsolete: DISPLAY_DATE_INTERVAL_NUM_VAR,
+    OBSOLETE_6_NUMVAR,                                                      // obsolete: DISPLAY_FIREWORKS_INTERVAL_NUM_VAR,
     HARDWARE_CONFIGURATION_NUM_VAR,
     DISPLAY_AMBILIGHT_POWER_NUM_VAR,
     TICKER_DECELRATION_NUM_VAR,
@@ -76,12 +79,12 @@ typedef enum
     DFPLAYER_MODE_NUM_VAR,
     DFPLAYER_BELL_FLAGS_NUM_VAR,
     DFPLAYER_SPEAK_CYCLE_NUM_VAR,
-    OBSOLETE_6_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT1_INTERVAL_NUM_VAR,
-    OBSOLETE_7_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT2_INTERVAL_NUM_VAR,
-    OBSOLETE_8_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT3_INTERVAL_NUM_VAR,
-    OBSOLETE_9_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT4_INTERVAL_NUM_VAR,
+    OBSOLETE_7_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT1_INTERVAL_NUM_VAR,
+    OBSOLETE_8_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT2_INTERVAL_NUM_VAR,
+    OBSOLETE_9_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT3_INTERVAL_NUM_VAR,
+    OBSOLETE_10_NUMVAR,                                                     // obsolete: DISPLAY_ADVENT4_INTERVAL_NUM_VAR,
     DFPLAYER_PLAY_FOLDER_TRACK_NUM_VAR,
-    DISPLAY_OVERLAY_NUM_VAR,                                                // TODO
+    DISPLAY_OVERLAY_NUM_VAR,
     OVERLAY_N_OVERLAYS_NUM_VAR,
     MAX_NUM_VARIABLES                                                       // must be the last member
 } NUM_VARIABLE;
@@ -92,7 +95,8 @@ typedef enum
  */
 typedef enum
 {
-    DISPLAY_DIMMED_COLORS,
+    DISPLAY_DIMMED_DISPLAY_COLORS,
+    DISPLAY_DIMMED_AMBILIGHT_COLORS,
     MAX_NUM8_ARRAYS                                                          // must be the last member
 } NUM8_ARRAY;
 
@@ -125,6 +129,7 @@ typedef enum
     WEATHER_LAT_STR_VAR,
     UPDATE_HOST_VAR,
     UPDATE_PATH_VAR,
+    DATE_TICKER_FORMAT_VAR,
     MAX_STR_VARIABLES                                                       // must be the last member
 } STR_VARIABLE;
 
@@ -139,39 +144,6 @@ typedef enum
 } TM_VARIABLE;
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * 24 virtual display mode variables:
- *-------------------------------------------------------------------------------------------------------------------------------------------
- */
-typedef enum
-{
-    DISPLAY_MODE_0_VAR,
-    DISPLAY_MODE_1_VAR,
-    DISPLAY_MODE_2_VAR,
-    DISPLAY_MODE_3_VAR,
-    DISPLAY_MODE_4_VAR,
-    DISPLAY_MODE_5_VAR,
-    DISPLAY_MODE_6_VAR,
-    DISPLAY_MODE_7_VAR,
-    DISPLAY_MODE_8_VAR,
-    DISPLAY_MODE_9_VAR,
-    DISPLAY_MODE_10_VAR,
-    DISPLAY_MODE_11_VAR,
-    DISPLAY_MODE_12_VAR,
-    DISPLAY_MODE_13_VAR,
-    DISPLAY_MODE_14_VAR,
-    DISPLAY_MODE_15_VAR,
-    DISPLAY_MODE_16_VAR,
-    DISPLAY_MODE_17_VAR,
-    DISPLAY_MODE_18_VAR,
-    DISPLAY_MODE_19_VAR,
-    DISPLAY_MODE_20_VAR,
-    DISPLAY_MODE_21_VAR,
-    DISPLAY_MODE_22_VAR,
-    DISPLAY_MODE_23_VAR,
-    MAX_DISPLAY_MODE_VARIABLES                                              // must be the last member
-} DISPLAY_MODE_VARIABLE;
-
-/*-------------------------------------------------------------------------------------------------------------------------------------------
  * display color variables:
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
@@ -179,6 +151,7 @@ typedef enum
 {
     DISPLAY_DSP_COLOR_VAR,
     AMBILIGHT_DSP_COLOR_VAR,
+    AMBILIGHT_MARKER_DSP_COLOR_VAR,
     MAX_DSP_COLOR_VARIABLES                                                 // must be the last member
 } DSP_COLOR_VARIABLE;
 
@@ -196,10 +169,12 @@ typedef enum
     SNAKE_DISPLAY_ANIMATION_VAR,
     TELETYPE_DISPLAY_ANIMATION_VAR,
     CUBE_DISPLAY_ANIMATION_VAR,
-    MATRIX_DISPLAY_ANIMATION_VAR,
+    GREEN_MATRIX_DISPLAY_ANIMATION_VAR,
     DROP_DISPLAY_ANIMATION_VAR,
     SQUEEZE_DISPLAY_ANIMATION_VAR,
     FLICKER_DISPLAY_ANIMATION_VAR,
+    MATRIX_DISPLAY_ANIMATION_VAR,
+    RED_MATRIX_DISPLAY_ANIMATION_VAR,
     MAX_DISPLAY_ANIMATION_VARIABLES                                         // must be the last member
 } DISPLAY_ANIMATION_VARIABLE;
 
@@ -211,6 +186,7 @@ typedef enum
 {
     NO_COLOR_ANIMATION_VAR,
     RAINBOW_COLOR_ANIMATION_VAR,
+    DAYLIGHT_COLOR_ANIMATION_VAR,
     MAX_COLOR_ANIMATION_VARIABLES                                           // must be the last member
 } COLOR_ANIMATION_VARIABLE;
 
@@ -224,6 +200,7 @@ typedef enum
     CLOCK_AMBILIGHT_MODE_VAR,
     CLOCK2_AMBILIGHT_MODE_VAR,
     RAINBOW_AMBILIGHT_MODE_VAR,
+    DAYLIGHT_AMBILIGHT_MODE_VAR,
     MAX_AMBILIGHT_MODE_VARIABLES                                            // must be the last member
 } AMBILIGHT_MODE_VARIABLE;
 
@@ -286,9 +263,9 @@ extern void         var_send_weather_city (void);
 extern void         var_send_weather_lon (void);
 extern void         var_send_weather_lat (void);
 extern void         var_send_tm (void);
-extern void         var_send_display_mode_names (void);
 extern void         var_send_display_colors (void);
 extern void         var_send_ambilight_colors (void);
+extern void         var_send_ambilight_marker_colors (void);
 extern void         var_send_display_animations (void);
 extern void         var_send_color_animations (void);
 extern void         var_send_ambilight_modes (void);

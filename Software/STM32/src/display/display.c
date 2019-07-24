@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * display.c - routines for LED display 16x18 and 10x11
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "wclock24h-config.h"
-
-#if WCLOCK24H == 1
 #include "tables.h"
-#else
-#include "tables12h.h"
-#endif
-
 #include "display.h"
 #include "overlay.h"
 
@@ -35,6 +29,7 @@
 #include "ldr.h"
 #include "log.h"
 #include "base.h"
+#include "main.h"
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 HERE IS A SHORT PROGRAM TO CALCULATE THE PWM TABLE:
@@ -111,38 +106,48 @@ const uint16_t pwmtable8[MAX_COLOR_STEPS]  =
   197,   205,   213,   221,   229,   238,   246,   255
 };
 
-static DSP_COLORS       dimmed_display_colors   = DSP_DARK_RED_COLOR;
-static DSP_COLORS       dimmed_ambilight_colors = DSP_DARK_RED_COLOR;
+static DSP_COLORS       dimmed_display_colors           = DSP_DARK_RED_COLOR;
+static DSP_COLORS       dimmed_ambilight_colors         = DSP_DARK_RED_COLOR;
+static DSP_COLORS       dimmed_ambilight_marker_colors  = DSP_CYAN_COLOR;
 
-#define MAX_TICKER_DECELERATION             16
-#define DEFAULT_TICKER_DECELERATION         3
+uint_fast8_t daylight_red[24]   = {  0,  0,  0, 15, 31, 47, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 47, 31, 15,  0,  0 };
+uint_fast8_t daylight_green[24] = {  0,  0,  0,  0,  0,  0,  0,  0,  0, 15, 31, 47, 63, 47, 31, 15,  0,  0,  0,  0,  0,  0,  0,  0 };
+uint_fast8_t daylight_blue[24]  = { 63, 47, 31, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 15, 31, 47, 63, 63, 63, 63, 63, 63 };
+
+
+#define MAX_TICKER_DECELERATION                 16
+#define DEFAULT_TICKER_DECELERATION             3
 
 #if WCLOCK24H == 1                                              // faster
-#  define ANIMATION_NONE_DEFAULT_DEC        2
-#  define ANIMATION_FADE_DEFAULT_DEC        4
-#  define ANIMATION_ROLL_DEFAULT_DEC        2
-#  define ANIMATION_EXPLODE_DEFAULT_DEC     2
-#  define ANIMATION_RANDOM_DEFAULT_DEC      2
-#  define ANIMATION_SNAKE_DEFAULT_DEC       2
-#  define ANIMATION_TELETYPE_DEFAULT_DEC    4
-#  define ANIMATION_CUBE_DEFAULT_DEC        2
-#  define ANIMATION_MATRIX_DEFAULT_DEC      3
-#  define ANIMATION_DROP_DEFAULT_DEC        2
-#  define ANIMATION_SQUEEZE_DEFAULT_DEC     4
-#  define ANIMATION_FLICKER_DEFAULT_DEC     4
+#  define ANIMATION_NONE_DEFAULT_DEC            2
+#  define ANIMATION_FADE_DEFAULT_DEC            4
+#  define ANIMATION_ROLL_DEFAULT_DEC            2
+#  define ANIMATION_EXPLODE_DEFAULT_DEC         2
+#  define ANIMATION_RANDOM_DEFAULT_DEC          2
+#  define ANIMATION_SNAKE_DEFAULT_DEC           2
+#  define ANIMATION_TELETYPE_DEFAULT_DEC        4
+#  define ANIMATION_CUBE_DEFAULT_DEC            2
+#  define ANIMATION_GREEN_MATRIX_DEFAULT_DEC    3
+#  define ANIMATION_DROP_DEFAULT_DEC            2
+#  define ANIMATION_SQUEEZE_DEFAULT_DEC         4
+#  define ANIMATION_FLICKER_DEFAULT_DEC         4
+#  define ANIMATION_MATRIX_DEFAULT_DEC          3
+#  define ANIMATION_RED_MATRIX_DEFAULT_DEC      3
 #else                                                           // slower
-#  define ANIMATION_NONE_DEFAULT_DEC        4
-#  define ANIMATION_FADE_DEFAULT_DEC        4
-#  define ANIMATION_ROLL_DEFAULT_DEC        4
-#  define ANIMATION_EXPLODE_DEFAULT_DEC     6
-#  define ANIMATION_RANDOM_DEFAULT_DEC      4
-#  define ANIMATION_SNAKE_DEFAULT_DEC       4
-#  define ANIMATION_TELETYPE_DEFAULT_DEC    4
-#  define ANIMATION_CUBE_DEFAULT_DEC        4
-#  define ANIMATION_MATRIX_DEFAULT_DEC      4
-#  define ANIMATION_DROP_DEFAULT_DEC        4
-#  define ANIMATION_SQUEEZE_DEFAULT_DEC     4
-#  define ANIMATION_FLICKER_DEFAULT_DEC     4
+#  define ANIMATION_NONE_DEFAULT_DEC            4
+#  define ANIMATION_FADE_DEFAULT_DEC            4
+#  define ANIMATION_ROLL_DEFAULT_DEC            4
+#  define ANIMATION_EXPLODE_DEFAULT_DEC         6
+#  define ANIMATION_RANDOM_DEFAULT_DEC          4
+#  define ANIMATION_SNAKE_DEFAULT_DEC           4
+#  define ANIMATION_TELETYPE_DEFAULT_DEC        4
+#  define ANIMATION_CUBE_DEFAULT_DEC            4
+#  define ANIMATION_GREEN_MATRIX_DEFAULT_DEC    4
+#  define ANIMATION_DROP_DEFAULT_DEC            4
+#  define ANIMATION_SQUEEZE_DEFAULT_DEC         4
+#  define ANIMATION_FLICKER_DEFAULT_DEC         4
+#  define ANIMATION_MATRIX_DEFAULT_DEC          4
+#  define ANIMATION_RED_MATRIX_DEFAULT_DEC      4
 #endif
 
 static void     display_animation_none (void);
@@ -153,16 +158,16 @@ static void     display_animation_random (void);
 static void     display_animation_snake (void);
 static void     display_animation_teletype (void);
 static void     display_animation_cube (void);
-static void     display_animation_matrix (void);
+static void     display_animation_green_matrix (void);
 static void     display_animation_drop (void);
 static void     display_animation_squeeze (void);
 static void     display_animation_flicker (void);
+static void     display_animation_matrix (void);
+static void     display_animation_red_matrix (void);
 
 static DISPLAY_ICON                     display_icon_st;
 
 DISPLAY_GLOBALS                         display;
-static DSP_COLORS                       dimmed_display_colors_up;
-static DSP_COLORS                       dimmed_display_colors_down;
 
 #define CURRENT_STATE                   0x01
 #define TARGET_STATE                    0x02
@@ -174,13 +179,6 @@ static union
     uint8_t                             state[DSP_DISPLAY_LEDS];
     uint8_t                             matrix[WC_ROWS][WC_COLUMNS];
 } led;
-
-static uint_fast8_t                     red_step;
-static uint_fast8_t                     green_step;
-static uint_fast8_t                     blue_step;
-#if DSP_USE_SK6812_RGBW == 1
-static uint_fast8_t                     white_step;
-#endif
 
 #define MAX_TICKER_LEN  64
 
@@ -571,43 +569,283 @@ display_set_status_or_minute_leds (uint_fast8_t r_flag, uint_fast8_t g_flag, uin
 #endif
 }
 
+#if DSP_MINUTE_LEDS != 0
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * animation: fade minutes
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#define MINUTE_STATUS_STAY 0
+#define MINUTE_STATUS_UP   1
+#define MINUTE_STATUS_DOWN 2
+
+static uint_fast8_t     minutes_fade_start_flag;
+static uint_fast8_t     minutes_fade_stop_flag;
+
+static uint_fast8_t     minute_status[DSP_MINUTE_LEDS];
+static uint_fast8_t     minute_on[DSP_MINUTE_LEDS];
+
+static void
+display_minutes_fade (void)
+{
+    static DSP_COLORS       dimmed_minute_colors_up;
+    static DSP_COLORS       dimmed_minute_colors_down;
+    static uint_fast8_t     red_step;
+    static uint_fast8_t     green_step;
+    static uint_fast8_t     blue_step;
+#if DSP_USE_SK6812_RGBW == 1
+    static uint_fast8_t     white_step;
+#endif
+    uint_fast8_t            changed = 0;
+    uint_fast8_t            i;
+
+    if (minutes_fade_start_flag)
+    {
+        minutes_fade_start_flag = 0;
+        minutes_fade_stop_flag  = 0;
+
+        red_step = dimmed_display_colors.red / 20;
+
+        if (red_step == 0 && dimmed_display_colors.red > 0)
+        {
+            red_step = 1;
+        }
+
+        green_step = dimmed_display_colors.green / 20;
+
+        if (green_step == 0 && dimmed_display_colors.green > 0)
+        {
+            green_step = 1;
+        }
+
+        blue_step = dimmed_display_colors.blue / 20;
+
+        if (blue_step == 0 && dimmed_display_colors.blue > 0)
+        {
+            blue_step = 1;
+        }
+
+#if DSP_USE_SK6812_RGBW == 1
+        white_step = dimmed_display_colors.white / 20;
+
+        if (white_step == 0 && dimmed_display_colors.white > 0)
+        {
+            white_step = 1;
+        }
+#endif
+
+        dimmed_minute_colors_up.red       = 0;
+        dimmed_minute_colors_up.green     = 0;
+        dimmed_minute_colors_up.blue      = 0;
+#if DSP_USE_SK6812_RGBW == 1
+        dimmed_minute_colors_up.white     = 0;
+#endif
+
+        dimmed_minute_colors_down.red     = dimmed_display_colors.red;
+        dimmed_minute_colors_down.green   = dimmed_display_colors.green;
+        dimmed_minute_colors_down.blue    = dimmed_display_colors.blue;
+#if DSP_USE_SK6812_RGBW == 1
+        dimmed_minute_colors_down.white   = dimmed_display_colors.white;
+#endif
+    }
+
+    if (! minutes_fade_stop_flag)
+    {
+        if (red_step > 0)
+        {
+            if (dimmed_minute_colors_down.red >= red_step)
+            {
+                dimmed_minute_colors_down.red -= red_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_down.red != 0)
+            {
+                dimmed_minute_colors_down.red = 0;
+                changed = 1;
+            }
+
+            if (dimmed_minute_colors_up.red + red_step <= dimmed_display_colors.red)
+            {
+                dimmed_minute_colors_up.red += red_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_up.red != dimmed_display_colors.red)
+            {
+                dimmed_minute_colors_up.red = dimmed_display_colors.red;
+                changed = 1;
+            }
+        }
+
+        if (green_step > 0)
+        {
+            if (dimmed_minute_colors_down.green >= green_step)
+            {
+                dimmed_minute_colors_down.green -= green_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_down.green != 0)
+            {
+                dimmed_minute_colors_down.green = 0;
+                changed = 1;
+            }
+
+            if (dimmed_minute_colors_up.green + green_step <= dimmed_display_colors.green)
+            {
+                dimmed_minute_colors_up.green += green_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_up.green != dimmed_display_colors.green)
+            {
+                dimmed_minute_colors_up.green = dimmed_display_colors.green;
+                changed = 1;
+            }
+        }
+
+        if (blue_step > 0)
+        {
+            if (dimmed_minute_colors_down.blue >= blue_step)
+            {
+                dimmed_minute_colors_down.blue -= blue_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_down.blue != 0)
+            {
+                dimmed_minute_colors_down.blue = 0;
+                changed = 1;
+            }
+
+            if (dimmed_minute_colors_up.blue + blue_step <= dimmed_display_colors.blue)
+            {
+                dimmed_minute_colors_up.blue += blue_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_up.blue != dimmed_display_colors.blue)
+            {
+                dimmed_minute_colors_up.blue = dimmed_display_colors.blue;
+                changed = 1;
+            }
+        }
+
+#if DSP_USE_SK6812_RGBW == 1
+        if (white_step > 0)
+        {
+            if (dimmed_minute_colors_down.white >= white_step)
+            {
+                dimmed_minute_colors_down.white -= white_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_down.white != 0)
+            {
+                dimmed_minute_colors_down.white = 0;
+                changed = 1;
+            }
+
+            if (dimmed_minute_colors_up.white + white_step <= dimmed_display_colors.white)
+            {
+                dimmed_minute_colors_up.white += white_step;
+                changed = 1;
+            }
+            else if (dimmed_minute_colors_up.white != dimmed_display_colors.white)
+            {
+                dimmed_minute_colors_up.white = dimmed_display_colors.white;
+                changed = 1;
+            }
+        }
+#endif
+
+        if (changed)
+        {
+#if 00
+            LED_RGB     rgb0;
+            LED_RGB     rgb;
+#endif
+            LED_RGB     rgb_up;
+            LED_RGB     rgb_down;
+
+#if 00
+            RESET_LED_RGB(rgb0);
+            CALC_LED_RGB(rgb, dimmed_display_colors);
+#endif
+            CALC_LED_RGB(rgb_up, dimmed_minute_colors_up);
+            CALC_LED_RGB(rgb_down, dimmed_minute_colors_down);
+
+            for (i = 0; i < DSP_MINUTE_LEDS; i++)
+            {
+                if (minute_status[i] == MINUTE_STATUS_UP)
+                {
+                    led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb_up);
+                }
+                else if (minute_status[i] == MINUTE_STATUS_DOWN)
+                {
+                    led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb_down);
+                }
+#if 00
+                else
+                {
+                    if (minute_on[i])
+                    {
+                        led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb);
+                    }
+                    else
+                    {
+                        led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb0);
+                    }
+                }
+#endif
+            }
+        }
+        else
+        {
+            minutes_fade_stop_flag = 1;
+        }
+    }
+}
+
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * display minute LEDs
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
-#if DSP_MINUTE_LEDS != 0
-static uint_fast8_t last_minute;
-static uint_fast8_t last_power_is_on;
+static uint_fast8_t last_minute = 0xFF;
 
 static void
-display_minute_leds (uint_fast8_t tmp_power_is_on, uint_fast8_t minute)
+display_minute_leds (uint_fast8_t minute)
 {
-    LED_RGB         rgb;
-    LED_RGB         rgb0;
     uint_fast8_t    n_leds;
     uint_fast8_t    i;
 
-    last_minute = minute;
-    last_power_is_on = tmp_power_is_on;
-
-    if (DSP_MINUTE_LEDS > 0)
+    if (last_minute != minute)
     {
-        RESET_LED_RGB(rgb0);
+        last_minute = minute;
 
-        if (tmp_power_is_on)
+        if (display.display_power_is_on)
         {
-            CALC_LED_RGB(rgb, dimmed_display_colors);
             n_leds = minute % 5;
 
             for (i = 0; i < DSP_MINUTE_LEDS; i++)
             {
                 if (i < n_leds)
                 {
-                    led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb);
+                    if (minute_on[i])
+                    {
+                        minute_status[i]    = MINUTE_STATUS_STAY;
+                    }
+                    else
+                    {
+                        minute_status[i]    = MINUTE_STATUS_UP;
+                        minute_on[i]        = 1;
+                    }
                 }
                 else
                 {
-                    led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb0);
+                    if (! minute_on[i])
+                    {
+                        minute_status[i]    = MINUTE_STATUS_STAY;
+                    }
+                    else
+                    {
+                        minute_status[i]    = MINUTE_STATUS_DOWN;
+                        minute_on[i]        = 0;
+                    }
                 }
             }
         }
@@ -615,13 +853,50 @@ display_minute_leds (uint_fast8_t tmp_power_is_on, uint_fast8_t minute)
         {
             for (i = 0; i < DSP_MINUTE_LEDS; i++)
             {
-                led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb0);
+                if (! minute_on[i])
+                {
+                    minute_status[i]    = MINUTE_STATUS_STAY;
+                }
+                else
+                {
+                    minute_status[i]    = MINUTE_STATUS_DOWN;
+                    minute_on[i]        = 0;
+                }
             }
         }
 
-        display_refresh_minute_leds ();
+        minutes_fade_start_flag = 1;
     }
 }
+
+static void
+display_flush_minute_leds (void)
+{
+    uint_fast8_t    i;
+
+    LED_RGB     rgb0;
+    LED_RGB     rgb;
+
+    RESET_LED_RGB(rgb0);
+    CALC_LED_RGB(rgb, dimmed_display_colors);
+
+    for (i = 0; i < DSP_MINUTE_LEDS; i++)
+    {
+        if (minute_on[i])
+        {
+            led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb);
+        }
+        else
+        {
+            led_set_led (DSP_MINUTE_LED_OFFSET + i, &rgb0);
+        }
+    }
+
+    display_refresh_minute_leds ();
+    minutes_fade_start_flag = 0;
+    minutes_fade_stop_flag  = 1;
+}
+
 #endif
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -656,6 +931,7 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
             display_refresh_display_leds ();
         }
 #else
+
         y = n / WC_COLUMNS;
 
         if (y & 0x01)                                       // snake: odd row: count from right to left
@@ -675,15 +951,35 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set display LED to dimmed RGB - used by NIC function wordclock_set_led
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+display_set_dimmed_display_led (uint_fast16_t n, DSP_COLORS * dsp_rgb)
+{
+    LED_RGB     led_rgb;
+
+    CALC_LED_RGB(led_rgb, *dsp_rgb);
+    display_set_display_led (n, &led_rgb, 0);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * set ambilight LED to RGB
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
 display_set_ambilight_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
 {
-    if (n < DSP_AMBILIGHT_LEDS)
+    uint_fast16_t led_idx = n + display.ambilight_led_offset;
+
+    if (led_idx >= display.ambilight_leds)                            // wrap around
     {
-        led_set_led (DSP_AMBILIGHT_LED_OFFSET + n, rgb);
+        led_idx -= display.ambilight_leds;
+    }
+
+    if (led_idx < DSP_AMBILIGHT_LEDS)
+    {
+        led_set_led (DSP_AMBILIGHT_LED_OFFSET + led_idx, rgb);
     }
 
     if (refresh)
@@ -751,11 +1047,11 @@ display_led_on (uint_fast8_t y, uint_fast8_t x)
 static void
 display_word_on (uint_fast8_t idx)
 {
-    uint_fast8_t y = illumination[idx].row;
-    uint_fast8_t x = illumination[idx].col;
-    int_fast8_t l = illumination[idx].len;
+    uint_fast8_t y = tables.illumination[idx].row;
+    uint_fast8_t x = tables.illumination[idx].col;
+    int_fast8_t l = tables.illumination[idx].len;
 
-    if(l>0)
+if(l>0)
     {
         while (l--)
         {
@@ -774,64 +1070,97 @@ display_word_on (uint_fast8_t idx)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * calc dimmed colors
+ * dim DSP colors
+ *
+ * Called by:
+ *  display_dim_display_dsp_colors()
+ *  display_dim_ambilight_dsp_colors()
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+dim_dsp_colors (DSP_COLORS * dimmed_colors, const DSP_COLORS * colors, uint_fast8_t factor)
+{
+    dimmed_colors->red = (colors->red * factor) / MAX_BRIGHTNESS;
+
+    if (colors->red > 0 && dimmed_colors->red == 0)
+    {
+        dimmed_colors->red = 1;
+    }
+
+    dimmed_colors->green = (colors->green * factor) / MAX_BRIGHTNESS;
+
+    if (colors->green > 0 && dimmed_colors->green == 0)
+    {
+        dimmed_colors->green = 1;
+    }
+
+    dimmed_colors->blue = (colors->blue * factor) / MAX_BRIGHTNESS;
+
+    if (colors->blue > 0 && dimmed_colors->blue == 0)
+    {
+        dimmed_colors->blue = 1;
+    }
+
+#if DSP_USE_SK6812_RGBW == 1
+    dimmed_colors->white = (colors->white * factor) / MAX_BRIGHTNESS;
+
+    if (colors->white > 0 && dimmed_colors->white == 0)
+    {
+        dimmed_colors->white = 1;
+    }
+#endif
+
+}
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * calc dimmed display DSP colors
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 void
-calc_dimmed_colors (DSP_COLORS * dimmed_colors, const DSP_COLORS * colors, uint_fast8_t brightness, uint_fast8_t use_dimmed_colors)
+display_dim_display_dsp_colors (DSP_COLORS * dimmed_colors, const DSP_COLORS * colors, uint_fast8_t brightness, uint_fast8_t use_dimmed_colors)
 {
+    uint_fast8_t    factor;
+
     if (brightness > MAX_BRIGHTNESS)                                // never should be
     {
-        dimmed_colors->red   = colors->red;
-        dimmed_colors->green = colors->green;
-        dimmed_colors->blue  = colors->blue;
-#if DSP_USE_SK6812_RGBW == 1
-        dimmed_colors->white = colors->white;
-#endif
+        brightness = MAX_BRIGHTNESS;
+    }
+
+    if (use_dimmed_colors)
+    {
+        factor = display.dimmed_display_colors[brightness];         // brightness == MAX_brightness is also allowed
     }
     else
     {
-        uint_fast8_t    factor;
-
-        if (use_dimmed_colors)
-        {
-            factor = display.dimmed_colors[brightness];             // brightness == MAX_brightness is also allowed
-        }
-        else
-        {
-            factor = brightness;
-        }
-
-        dimmed_colors->red = (colors->red * factor) / MAX_BRIGHTNESS;
-
-        if (colors->red > 0 && dimmed_colors->red == 0)
-        {
-            dimmed_colors->red = 1;
-        }
-
-        dimmed_colors->green = (colors->green * factor) / MAX_BRIGHTNESS;
-
-        if (colors->green > 0 && dimmed_colors->green == 0)
-        {
-            dimmed_colors->green = 1;
-        }
-
-        dimmed_colors->blue = (colors->blue * factor) / MAX_BRIGHTNESS;
-
-        if (colors->blue > 0 && dimmed_colors->blue == 0)
-        {
-            dimmed_colors->blue = 1;
-        }
-
-#if DSP_USE_SK6812_RGBW == 1
-        dimmed_colors->white = (colors->white * factor) / MAX_BRIGHTNESS;
-
-        if (colors->white > 0 && dimmed_colors->white == 0)
-        {
-            dimmed_colors->white = 1;
-        }
-#endif
+        factor = brightness;
     }
+
+    dim_dsp_colors (dimmed_colors, colors, factor);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * calc dimmed ambilight DSP colors
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+display_dim_ambilight_dsp_colors (DSP_COLORS * dimmed_colors, const DSP_COLORS * colors, uint_fast8_t brightness, uint_fast8_t use_dimmed_colors)
+{
+    uint_fast8_t    factor;
+
+    if (brightness > MAX_BRIGHTNESS)                                // never should be
+    {
+        brightness = MAX_BRIGHTNESS;
+    }
+
+    if (use_dimmed_colors)
+    {
+        factor = display.dimmed_ambilight_colors[brightness];       // brightness == MAX_brightness is also allowed
+    }
+    else
+    {
+        factor = brightness;
+    }
+
+    dim_dsp_colors (dimmed_colors, colors, factor);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -885,6 +1214,10 @@ display_set_new_states (void)
     }
 }
 
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * display_show_ambilight_normal_mode - show ambilight in normal mode
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
 static void
 display_show_ambilight_normal_mode (uint_fast8_t refresh)
 {
@@ -930,7 +1263,7 @@ display_animation_flush (uint_fast8_t flush_ambi)
     }
 
 #if DSP_MINUTE_LEDS != 0
-    display_minute_leds (last_power_is_on, last_minute);
+    display_flush_minute_leds ();
 #endif
 
     if (flush_ambi && display.ambilight_mode == AMBILIGHT_MODE_NORMAL)
@@ -968,6 +1301,14 @@ display_animation_none (void)
 static void
 display_animation_fade (void)
 {
+    static DSP_COLORS       dimmed_display_colors_up;
+    static DSP_COLORS       dimmed_display_colors_down;
+    static uint_fast8_t     red_step;
+    static uint_fast8_t     green_step;
+    static uint_fast8_t     blue_step;
+#if DSP_USE_SK6812_RGBW == 1
+    static uint_fast8_t     white_step;
+#endif
     uint_fast16_t           idx;
     uint_fast8_t            changed = 0;
 
@@ -1430,7 +1771,12 @@ display_animation_roll (void)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * animation: explode - helper functions
+ * animation: explode - helper function
+ *
+ * Here we calculate an implosion of the new letters. Afterwards we replay the implosion backwards as an explosion.
+ *
+ * Parameters:
+ *    int n     - calculation step beginning with (WC_COLUMNS / 2 - 1)
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
@@ -1443,7 +1789,7 @@ display_animation_calc_implode (int n)
     uint_fast8_t    ny;
     uint_fast8_t    nx;
 
-    for (yi = 0; yi < WC_ROWS * WC_COLUMNS; yi += WC_COLUMNS)
+    for (yi = 0; yi < WC_ROWS * WC_COLUMNS; yi += WC_COLUMNS)                   // reset calc states
     {
         for (xi = 0; xi < WC_COLUMNS; xi++)
         {
@@ -1455,72 +1801,43 @@ display_animation_calc_implode (int n)
     {
         for (x = 0; x < WC_COLUMNS; x++)
         {
-            if (led.matrix[y][x] & TARGET_STATE)
+            if (led.matrix[y][x] & TARGET_STATE)                                // new letter found...
             {
-                if (y < WC_ROWS / 2)
+                if (y < WC_ROWS / 2)                                            // we are in upper half
                 {
-                    if (x < WC_COLUMNS / 2)
+                    ny = y + n;                                                 // get inner y coordinate: go down
+
+                    if (ny > WC_ROWS / 2 - 1)                                   // if new y is below from center, set it to center
                     {
-                        ny = y + n;
-                        nx = x + n;
-
-                        if (ny > WC_ROWS / 2 - 1)
-                        {
-                            ny = WC_ROWS / 2 - 1;
-                        }
-
-                        if (nx > WC_COLUMNS / 2 - 1)
-                        {
-                            nx = WC_COLUMNS / 2 - 1;
-                        }
-                    }
-                    else
-                    {
-                        ny = y + n;
-                        nx = x - n;
-
-                        if (ny > WC_ROWS / 2 - 1)
-                        {
-                            ny = WC_ROWS / 2 - 1;
-                        }
-
-                        if (nx < WC_COLUMNS / 2)
-                        {
-                            nx = WC_COLUMNS / 2;
-                        }
+                        ny = WC_ROWS / 2 - 1;
                     }
                 }
-                else
+                else                                                            // we are in lower half
                 {
-                    if (x < WC_COLUMNS / 2)
+                    ny = y - n;                                                 // get inner y coordinate: go up
+
+                    if (ny < WC_ROWS / 2)                                       // if new y is above from center, set it to center
                     {
-                        ny = y - n;
-                        nx = x + n;
-
-                        if (ny < WC_ROWS / 2)
-                        {
-                            ny = WC_ROWS / 2;
-                        }
-
-                        if (nx > WC_COLUMNS / 2 - 1)
-                        {
-                            nx = WC_COLUMNS / 2 - 1;
-                        }
+                        ny = WC_ROWS / 2;
                     }
-                    else
+                }
+
+                if (x < WC_COLUMNS / 2)                                         // we are in left half
+                {
+                    nx = x + n;                                                 // get inner x coordinate: go right
+
+                    if (nx > WC_COLUMNS / 2 - 1)                                // if new x is right from center, set it to center
                     {
-                        ny = y - n;
-                        nx = x - n;
+                        nx = WC_COLUMNS / 2 - 1;
+                    }
+                }
+                else                                                            // we are in right half
+                {
+                    nx = x - n;                                                 // get inner x coordinate: go left
 
-                        if (ny < WC_ROWS / 2)
-                        {
-                            ny = WC_ROWS / 2;
-                        }
-
-                        if (nx < WC_COLUMNS / 2)
-                        {
-                            nx = WC_COLUMNS / 2;
-                        }
+                    if (nx < WC_COLUMNS / 2)                                    // if new x is left from center, set it to center
+                    {
+                        nx = WC_COLUMNS / 2;
                     }
                 }
 
@@ -1569,39 +1886,39 @@ display_animation_explode (void)
             {
                 for (x = 0; x < WC_COLUMNS; x++)
                 {
-                    if (led.matrix[y][x] & CURRENT_STATE)
+                    if (led.matrix[y][x] & CURRENT_STATE)                                           // old letter found?
                     {
-                        if (y < WC_ROWS / 2)
+                        if (y < WC_ROWS / 2)                                                        // we are in upper half
                         {
-                            if (x < WC_COLUMNS / 2)
+                            if (x < WC_COLUMNS / 2)                                                 // we are in left upper quarter
                             {
                                 if (y >= cnt && x >= cnt)
                                 {
-                                    led.matrix[y - cnt][x - cnt] |= NEW_STATE;
+                                    led.matrix[y - cnt][x - cnt] |= NEW_STATE;                      // shift old letter up + left
                                 }
                             }
-                            else
+                            else                                                                    // we are in right upper half
                             {
                                 if (y >= cnt && x + cnt < WC_COLUMNS)
                                 {
-                                    led.matrix[y - cnt][x + cnt] |= NEW_STATE;
+                                    led.matrix[y - cnt][x + cnt] |= NEW_STATE;                      // shift old letter up + right
                                 }
                             }
                         }
-                        else
+                        else                                                                        // we are in lower half
                         {
-                            if (x < WC_COLUMNS / 2)
+                            if (x < WC_COLUMNS / 2)                                                 // we are in left lower quarter
                             {
                                 if (y + cnt < WC_ROWS && x >= cnt)
                                 {
-                                    led.matrix[y + cnt][x - cnt] |= NEW_STATE;
+                                    led.matrix[y + cnt][x - cnt] |= NEW_STATE;                      // shift old letter down + left
                                 }
                             }
-                            else
+                            else                                                                    // we are in right lower quarter
                             {
                                 if (y + cnt < WC_ROWS && x + cnt < WC_COLUMNS)
                                 {
-                                    led.matrix[y + cnt][x + cnt] |= NEW_STATE;
+                                    led.matrix[y + cnt][x + cnt] |= NEW_STATE;                      // shift old letter down + right
                                 }
                             }
                         }
@@ -1609,7 +1926,7 @@ display_animation_explode (void)
 
                     if (led.state[yi + x] & CALC_STATE)
                     {
-                        led.state[yi + x] |= NEW_STATE;        // matrix leds |= calculated leds
+                        led.state[yi + x] |= NEW_STATE;                                             // add new calculated leds
                     }
                 }
             }
@@ -1636,9 +1953,9 @@ animation_snake_next_word_in_line (uint_fast8_t start_y, uint_fast8_t start_x, u
 
     if (start_y & 0x01)
     {
-        for (x = start_x + 1; x > 0; x--)
+        for (x = start_x + 1; x > 0; x--)                                   // search old and new words from right to left
         {
-            if (led.matrix[start_y][x - 1] & CURRENT_STATE)
+            if ((led.matrix[start_y][x - 1] & CURRENT_STATE) || (led.matrix[start_y][x - 1] & TARGET_STATE))
             {
                 *next_y = start_y;
                 *next_x = x - 1;
@@ -1648,9 +1965,9 @@ animation_snake_next_word_in_line (uint_fast8_t start_y, uint_fast8_t start_x, u
     }
     else
     {
-        for (x = start_x; x < WC_COLUMNS; x++)
+        for (x = start_x; x < WC_COLUMNS; x++)                              // search old and new words from left to right
         {
-            if (led.matrix[start_y][x] & CURRENT_STATE)
+            if ((led.matrix[start_y][x] & CURRENT_STATE) || (led.matrix[start_y][x] & TARGET_STATE))
             {
                 *next_y = start_y;
                 *next_x = x;
@@ -1724,6 +2041,7 @@ animation_snake_search_next_word (uint_fast8_t start_y, uint_fast8_t start_x, ui
 static void
 display_animation_snake (void)
 {
+    static LED_RGB          led_rgb_display_color;
     static LED_RGB          snake_led_rgb;
     static LED_RGB          snake_led_rgb0;
     static uint8_t          snakepos_y[SNAKE_LEN];
@@ -1736,13 +2054,15 @@ display_animation_snake (void)
 
     if (display.animation_start_flag)
     {
-        display.animation_start_flag = 0;
-        display.animation_stop_flag = 0;
-        len     = 0;
-        snake_y = 0;
-        snake_x = 0;
-        next_y = 0;
-        next_x = 0;
+        display.animation_start_flag    = 0;
+        display.animation_stop_flag     = 0;
+        len         = 0;
+        snake_y     = 0;
+        snake_x     = 0;
+        next_y      = 0;
+        next_x      = 0;
+
+        CALC_LED_RGB(led_rgb_display_color, dimmed_display_colors);                                 // LED values of display color
     }
 
     if (! display.animation_stop_flag)
@@ -1769,7 +2089,7 @@ display_animation_snake (void)
                 SET_DSP_RGB(dsp_rgb, 0, MAX_COLOR_STEPS - 1, MAX_COLOR_STEPS - 1, 0);                   // use cyan as snake color
             }
 
-            calc_dimmed_colors (&dsp_rgb_dimmed, &dsp_rgb, display.display_brightness, TRUE);
+            display_dim_display_dsp_colors (&dsp_rgb_dimmed, &dsp_rgb, display.display_brightness, TRUE);
 
             CALC_LED_RGB(snake_led_rgb, dsp_rgb_dimmed);
             RESET_LED_RGB(snake_led_rgb0);
@@ -1822,7 +2142,7 @@ display_animation_snake (void)
                 if (snake_y < WC_ROWS)
                 {
                     // led.matrix[snake_y][snake_x] |= NEW_STATE;
-                    display_set_display_led (snake_y * WC_COLUMNS + snake_x, &snake_led_rgb, 0);                        // LED on
+                    display_set_display_led (snake_y * WC_COLUMNS + snake_x, &snake_led_rgb, 0);                            // LED on
                 }
 
                 if (len == SNAKE_LEN)
@@ -1832,7 +2152,14 @@ display_animation_snake (void)
                     if (snakepos_y[0] < WC_ROWS)
                     {
                         //led.matrix[snakepos_y[0]][snakepos_x[0]] &= ~NEW_STATE;
-                        display_set_display_led (snakepos_y[0] * WC_COLUMNS + snakepos_x[0] , &snake_led_rgb0, 0);      // LED off
+                        if (led.matrix[snakepos_y[0]][snakepos_x[0]] & TARGET_STATE)                                        // show new letter
+                        {
+                            display_set_display_led (snakepos_y[0] * WC_COLUMNS + snakepos_x[0], &led_rgb_display_color, 0);
+                        }
+                        else
+                        {
+                            display_set_display_led (snakepos_y[0] * WC_COLUMNS + snakepos_x[0], &snake_led_rgb0, 0);      // LED off
+                        }
                     }
 
                     for (i = 0; i < SNAKE_LEN - 1; i++)
@@ -2016,33 +2343,52 @@ display_animation_cube (void)
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-display_animation_matrix (void)
+display_animation_generic_matrix (uint_fast8_t do_use_fixed_color)
 {
     static uint_fast16_t    cnt;
     static uint_fast8_t     y[WC_COLUMNS];
     static LED_RGB          led_rgb_yellow;
-    static LED_RGB          led_rgb_green;
+    static LED_RGB          led_rgb_matrix_color;
+    static LED_RGB          led_rgb_display_color;
     uint_fast8_t            x;
 
     if (display.animation_start_flag)
     {
         DSP_COLORS          dsp_rgb_yellow;
-        DSP_COLORS          dsp_rgb_green;
         DSP_COLORS          dsp_rgb_yellow_dimmed;
-        DSP_COLORS          dsp_rgb_green_dimmed;
+        DSP_COLORS          dsp_rgb_matrix_color_dimmed;
 
         display.animation_start_flag = 0;
         display.animation_stop_flag = 0;
         cnt = 0;
 
         SET_DSP_RGB(dsp_rgb_yellow, MAX_COLOR_STEPS - 1, MAX_COLOR_STEPS - 1, 0, 0);                // yellow
-        SET_DSP_RGB(dsp_rgb_green, 0, MAX_COLOR_STEPS - 1, MAX_COLOR_STEPS / 4, 0);                 // green with a piece of blue
-
-        calc_dimmed_colors (&dsp_rgb_yellow_dimmed, &dsp_rgb_yellow, display.display_brightness, TRUE);
-        calc_dimmed_colors (&dsp_rgb_green_dimmed, &dsp_rgb_green, display.display_brightness, TRUE);
-
+        display_dim_display_dsp_colors (&dsp_rgb_yellow_dimmed, &dsp_rgb_yellow, display.display_brightness, TRUE);
         CALC_LED_RGB(led_rgb_yellow, dsp_rgb_yellow_dimmed);
-        CALC_LED_RGB(led_rgb_green, dsp_rgb_green_dimmed);
+
+        if (do_use_fixed_color==1) //green
+        {
+            DSP_COLORS  dsp_rgb_matrix_color;
+
+            SET_DSP_RGB(dsp_rgb_matrix_color, 0, MAX_COLOR_STEPS - 1, MAX_COLOR_STEPS / 4, 0);      // green with a piece of blue
+            display_dim_display_dsp_colors (&dsp_rgb_matrix_color_dimmed, &dsp_rgb_matrix_color, display.display_brightness, TRUE);
+        }
+        else if (do_use_fixed_color==2) //red+green swapped
+        {
+            DSP_COLORS  dsp_rgb_matrix_color;
+
+            SET_DSP_RGB(dsp_rgb_matrix_color, MAX_COLOR_STEPS - 1, 0, MAX_COLOR_STEPS / 4, 0);      // red with a piece of blue
+            display_dim_display_dsp_colors (&dsp_rgb_matrix_color_dimmed, &dsp_rgb_matrix_color, display.display_brightness, TRUE);
+        }
+        else
+        {
+            dsp_rgb_matrix_color_dimmed.red   = dimmed_display_colors.red;
+            dsp_rgb_matrix_color_dimmed.green = dimmed_display_colors.green;
+            dsp_rgb_matrix_color_dimmed.blue  = dimmed_display_colors.blue;
+        }
+
+        CALC_LED_RGB(led_rgb_matrix_color, dsp_rgb_matrix_color_dimmed);                            // LED values of matrix color
+        CALC_LED_RGB(led_rgb_display_color, dimmed_display_colors);                                 // LED values of display color
 
         for (x = 0; x < WC_COLUMNS; x++)
         {
@@ -2064,7 +2410,7 @@ display_animation_matrix (void)
             LED_RGB      led_rgb;
             uint_fast8_t yy;
 
-            COPY_LED_RGB(led_rgb, led_rgb_green);
+            COPY_LED_RGB(led_rgb, led_rgb_matrix_color);
 
             for (x = 0; x < WC_COLUMNS; x++)
             {
@@ -2080,7 +2426,7 @@ display_animation_matrix (void)
                     {
                         if (yy - 2 < WC_ROWS)
                         {
-                            display_set_display_led ((yy - 2) * WC_COLUMNS + x, &led_rgb_green, 0);
+                            display_set_display_led ((yy - 2) * WC_COLUMNS + x, &led_rgb_matrix_color, 0);
                         }
                     }
 
@@ -2095,7 +2441,19 @@ display_animation_matrix (void)
 
                         if (yy < WC_ROWS)
                         {
-                            led_rgb.green = led_rgb_green.green / i;
+                            if ((led.matrix[yy][x] & TARGET_STATE) && i > 5)
+                            {
+                                led_rgb.red     = led_rgb_display_color.red;                // show new letters
+                                led_rgb.green   = led_rgb_display_color.green;
+                                led_rgb.blue    = led_rgb_display_color.blue;
+                            }
+                            else
+                            {
+                                led_rgb.red     = led_rgb_matrix_color.red   / i;           // fade matrix color getting darker
+                                led_rgb.green   = led_rgb_matrix_color.green / i;
+                                led_rgb.blue    = led_rgb_matrix_color.blue  / i;
+                            }
+
                             display_set_display_led (yy * WC_COLUMNS + x, &led_rgb, 0);
                         }
 
@@ -2105,7 +2463,19 @@ display_animation_matrix (void)
 
                             if (yy > 0 && yy < WC_ROWS)
                             {
-                                led_rgb.green = led_rgb_green.green / i;
+                                if ((led.matrix[yy][x] & TARGET_STATE) && i > 5)
+                                {
+                                    led_rgb.red     = led_rgb_display_color.red;            // show new letters
+                                    led_rgb.green   = led_rgb_display_color.green;
+                                    led_rgb.blue    = led_rgb_display_color.blue;
+                                }
+                                else
+                                {
+                                    led_rgb.red     = led_rgb_matrix_color.red   / i;       // fade matrix color getting darker
+                                    led_rgb.green   = led_rgb_matrix_color.green / i;
+                                    led_rgb.blue    = led_rgb_matrix_color.blue  / i;
+                                }
+
                                 display_set_display_led (yy * WC_COLUMNS + x, &led_rgb, 0);
                             }
                         }
@@ -2128,6 +2498,35 @@ display_animation_matrix (void)
     }
 }
 
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * animation: green matrix
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_animation_green_matrix (void)
+{
+    display_animation_generic_matrix (1);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * animation: red matrix
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_animation_red_matrix (void)
+{
+    display_animation_generic_matrix (2);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * animation: matrix in current display colors
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_animation_matrix (void)
+{
+    display_animation_generic_matrix (0);
+}
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * animation: drop
@@ -2514,21 +2913,10 @@ display_set_ambilight_power (uint_fast8_t on)
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 void
-display_clock (uint_fast8_t hour, uint_fast8_t minute, uint_fast8_t display_clock_flag)
+display_clock (uint_fast8_t hh, uint_fast8_t mm, uint_fast8_t display_clock_flag)
 {
-    static uint8_t                  words[WP_COUNT];
-    uint_fast8_t                    hour_mode;
-    uint_fast8_t                    minute_mode;
-    uint_fast8_t                    it_is_mode;
-#if WCLOCK24H == 1
-    const struct MinuteDisplay *    tbl_minute;
-#else
-    const struct MinuteDisplay12 *  tbl_minute;
-    uint_fast8_t                    am_pm_mode;                                  // AM / PM Mode for 12h Clock
-    uint_fast8_t                    is_pm = 0;
-#endif
-    const uint8_t *                 word_idx_p;
-    uint_fast16_t                   idx;
+    static uint8_t  words[WP_COUNT];
+    uint_fast16_t   idx;
 
     if (display_clock_flag)
     {
@@ -2543,120 +2931,55 @@ display_clock (uint_fast8_t hour, uint_fast8_t minute, uint_fast8_t display_cloc
             {
                 display_show_ambilight_normal_mode (1);
             }
+#if DSP_MINUTE_LEDS != 0
+            display_minute_leds (mm);
+#endif
         }
         else if (display_clock_flag & DISPLAY_CLOCK_FLAG_POWER_OFF)
         {
             display_show_ambilight_off (1);
+#if DSP_MINUTE_LEDS != 0
+            display_minute_leds (0);
+#endif
         }
-
-#if WCLOCK24H == 1
-        minute_mode = tbl_modes[display.display_mode].minute_txt;
-        tbl_minute  = &tbl_minutes[minute_mode][minute];
-        hour_mode   = tbl_modes[display.display_mode].hour_txt;
-#else
-        display_minute_leds (display.power_is_on, minute);
-        minute_mode = display.display_mode;
-        tbl_minute  = &tbl_minutes[minute_mode][minute / 5];
-        hour_mode   = tbl_minute->hour_mode;
+#if DSP_MINUTE_LEDS != 0
+        else if (display.display_power_is_on)
+        {
+            display_minute_leds (mm);
+        }
 #endif
 
         if (display_clock_flag & DISPLAY_CLOCK_FLAG_UPDATE_ALL)
         {
-            memset (words, 0, WP_COUNT);
             display_reset_led_states ();
 
-            if (display.power_is_on)
+            if (display.display_power_is_on)
             {
-#if WCLOCK24H == 1
-                if ((display.display_flags & DISPLAY_FLAGS_PERMANENT_IT_IS) || minute == 0 || minute == 30)
-#else
-                if ((display.display_flags & DISPLAY_FLAGS_PERMANENT_IT_IS) || minute <= 4 || (minute >= 30 && minute <= 34))
+                uint_fast8_t do_show_it_is = 0;
+#if WCLOCK24H == 0
+                mm /= 5;
 #endif
+                if ((display.display_flags & DISPLAY_FLAGS_PERMANENT_IT_IS) || mm == 0 || mm == MINUTE_COUNT / 2)
                 {
-                    it_is_mode = tbl_minute->flags & MDF_IT_IS_MASK;
-                    word_idx_p = tbl_it_is[it_is_mode];
-                    words[word_idx_p[0]] = 1;
-                    words[word_idx_p[1]] = 1;
+                    do_show_it_is = 1;
                 }
 
-                for (idx = 0; idx < MAX_MINUTE_WORDS && tbl_minute->wordIdx[idx] != 0; idx++)
+                if (tables_fill_words (words, hh, mm, do_show_it_is))
                 {
-                    words[tbl_minute->wordIdx[idx]] = 1;
-                }
-
-#if WCLOCK24H == 0                                                          // WC12h: we have only 12 hours
-                if (hour >= HOUR_COUNT)
-                {
-                    hour -= HOUR_COUNT;
-                    is_pm = 1;
-                }
-#endif
-
-                if (tbl_minute->flags & MDF_HOUR_OFFSET_MASK)
-                {
-                    hour += 1;                                              // correct hour offset
-                }
-
-                if (hour >= HOUR_COUNT)
-                {
-                    hour -= HOUR_COUNT;
-
-#if WCLOCK24H == 0                                                          // WC12h: we have only 12 hours
-                    if (is_pm)
+                    for (idx = 0; idx < WP_COUNT; idx++)
                     {
-                        is_pm = 0;                                          // before midnight
-                    }
-                    else
-                    {
-                        is_pm = 1;                                          // before lunch
-                    }
-#endif
-                }
-
-#if WCLOCK24H == 0                                                          // WC12h: we have only 12 hours
-                am_pm_mode = tbl_minute->flags & MDF_AM_PM_MODE_MASK;       // check if AM / PM mode active
-
-                if (am_pm_mode && is_pm)                                    // check if it's AM or PM in AM / PM mode
-                {
-                    hour_mode += 1;
-                }
-#endif
-
-                word_idx_p = tbl_hours[hour_mode][hour];                    // get the hour words from hour table
-
-                for (idx = 0; idx < MAX_HOUR_WORDS && word_idx_p[idx] != 0; idx++)
-                {
-#if WCLOCK24H == 1                                                  // WC24h:
-                    if (word_idx_p[idx] == WP_IF_MINUTE_IS_0)       // if minute is null take word index + 1, otherwise word index + 2
-                    {                                               // this handles "EIN UHR" instead of "EINS UHR" at 01:00 & 13:00
-                        if (minute == 0)
+                        if (words[idx])
                         {
-                            words[word_idx_p[idx + 1]] = 1;
+                            display_word_on (idx);
                         }
-                        else
-                        {
-                            words[word_idx_p[idx + 2]] = 1;
-                        }
-                        idx += 2;
                     }
-                    else
-                    {
-                        words[word_idx_p[idx]] = 1;
-                    }
-#else
-                    words[word_idx_p[idx]] = 1;
-#endif
-                }
 
-                for (idx = 0; idx < WP_COUNT; idx++)
+                    display.animation_start_flag = 1;                               // start animation if power is on
+                }
+                else
                 {
-                    if (words[idx])
-                    {
-                        display_word_on (idx);
-                    }
+                    display_set_status_or_minute_leds (0, 0, 1);                    // indicate error: BLUE led: cannot load layout tables
                 }
-
-                display.animation_start_flag = 1;                                   // start animation if power is on
             }
             else if (display_clock_flag & DISPLAY_CLOCK_FLAG_POWER_OFF)
             {
@@ -2664,6 +2987,34 @@ display_clock (uint_fast8_t hour, uint_fast8_t minute, uint_fast8_t display_cloc
             }
         }
     }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * calculate dimmed ambilight LED colors
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_calc_dimmed_ambilight_colors (void)
+{
+    display_dim_ambilight_dsp_colors (&dimmed_ambilight_colors, &display.ambilight_colors, display.ambilight_brightness, TRUE);
+
+    if (display.ambilight_power_is_on)
+    {
+        LED_RGB          rgb;
+
+        CALC_LED_RGB(rgb, dimmed_ambilight_colors);
+        display_set_ambilight_leds (&rgb, 1);
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * calculate dimmed ambilight marker colors
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_calc_dimmed_ambilight_marker_colors (void)
+{
+    display_dim_ambilight_dsp_colors (&dimmed_ambilight_marker_colors, &display.ambilight_marker_colors, display.ambilight_brightness, TRUE);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -2680,21 +3031,15 @@ sync_colors (void)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * calculate dimmed ambilight colors
+ * de-sync display colors with ambilight colors
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-display_calc_dimmed_ambilight_colors (void)
+desync_colors (void)
 {
-    calc_dimmed_colors (&dimmed_ambilight_colors, &display.ambilight_colors, display.ambilight_brightness, TRUE);
-
-    if (display.ambilight_power_is_on)
-    {
-        LED_RGB          rgb;
-
-        CALC_LED_RGB(rgb, dimmed_ambilight_colors);
-        display_set_ambilight_leds (&rgb, 1);
-    }
+    display.ambilight_brightness = display.saved_ambilight_brightness;
+    COPY_DSP_RGB(display.ambilight_colors, display.saved_ambilight_colors);
+    display_calc_dimmed_ambilight_colors ();
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -2709,11 +3054,20 @@ display_init_ambilight_mode_rainbow (void)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * initialize ambilight mode daylight
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_init_ambilight_mode_daylight (void)
+{
+    SET_DSP_RGB(display.ambilight_colors, daylight_red[gmain.hour], daylight_green[gmain.hour], daylight_blue[gmain.hour], 0);
+    display_calc_dimmed_ambilight_colors ();
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * initialize ambilight mode clock
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
-static uint_fast8_t     ambilight_clock_increasing;
-
 static void
 display_init_ambilight_mode_clock (void)
 {
@@ -2727,8 +3081,6 @@ display_init_ambilight_mode_clock (void)
 static void
 display_init_ambilight_mode_clock2 (void)
 {
-    ambilight_clock_increasing = 1;
-
     display_show_ambilight_off (0);                                         // switch all ambilight LEDs off, but don't refresh here
 }
 
@@ -2754,24 +3106,28 @@ display_init_ambilight_mode (void)
         case AMBILIGHT_MODE_RAINBOW:
             display_init_ambilight_mode_rainbow ();
             break;
+        case AMBILIGHT_MODE_DAYLIGHT:
+            display_init_ambilight_mode_daylight ();
+            break;
     }
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * calculate dimmed colors
+ * calculate dimmed display colors
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
 display_calc_dimmed_display_colors (void)
 {
-    calc_dimmed_colors (&dimmed_display_colors, &display.display_colors, display.display_brightness, TRUE);
+    display_dim_display_dsp_colors (&dimmed_display_colors, &display.display_colors, display.display_brightness, TRUE);
 
-    if (display.ambilight_mode != AMBILIGHT_MODE_RAINBOW && (display.display_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT))
+    if (display.ambilight_mode != AMBILIGHT_MODE_RAINBOW && display.ambilight_mode != AMBILIGHT_MODE_DAYLIGHT &&
+        (display.display_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT))
     {
         sync_colors ();
     }
 
-    if (display.power_is_on)
+    if (display.display_power_is_on)
     {
         display_animation_flush (TRUE);
     }
@@ -2788,12 +3144,24 @@ display_init_color_animation_rainbow (void)
     display_calc_dimmed_display_colors ();
 }
 
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * initialize display daylight color animation
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_init_color_animation_daylight (void)
+{
+    SET_DSP_RGB(display.display_colors, daylight_red[gmain.hour], daylight_green[gmain.hour], daylight_blue[gmain.hour], 0);
+    display_calc_dimmed_display_colors ();
+}
+
 static void
 display_init_color_animation (void)
 {
     switch (display.color_animation_mode)
     {
-        case COLOR_ANIMATION_MODE_RAINBOW:  display_init_color_animation_rainbow (); break;
+        case COLOR_ANIMATION_MODE_RAINBOW:  display_init_color_animation_rainbow  (); break;
+        case COLOR_ANIMATION_MODE_DAYLIGHT: display_init_color_animation_daylight (); break;
     }
 }
 
@@ -2884,26 +3252,30 @@ display_read_config_from_eeprom (uint32_t eeprom_version)
 
     if (eeprom_is_up)
     {
-        uint8_t                 display_rgb_color_buf8[EEPROM_DATA_SIZE_DSP_COLORS];
-        uint8_t                 display_w_color8 = 0;
-        uint8_t                 ambilight_rgb_color_buf8[EEPROM_DATA_SIZE_AMBI_COLORS] = { MAX_COLOR_STEPS - 1, 0, 0 };
-        uint8_t                 ambilight_w_color8 = 0;
-        uint8_t                 animation_values8[ANIMATION_MODES];
-        uint8_t                 color_animation_values8[COLOR_ANIMATION_MODES];
-        uint8_t                 ambilight_mode_values8[AMBILIGHT_MODES];
-        uint8_t                 display_mode8;
-        uint8_t                 ambilight_mode8;
-        uint8_t                 ambilight_leds8                 = 60;
-        uint8_t                 ambilight_led_offset8           = 22;
-        uint8_t                 animation_mode8                 = AMBILIGHT_MODE_NORMAL;
-        uint8_t                 color_animation_mode8           = 0;
-        uint8_t                 display_flags8                  = DISPLAY_FLAGS_PERMANENT_IT_IS | DISPLAY_FLAGS_SYNC_AMBILIGHT;
-        uint8_t                 display_brightness8;
-        uint8_t                 ambilight_brightness8           = MAX_BRIGHTNESS;
-        uint8_t                 automatic_brightness8;
-        uint8_t                 ticker_deceleration8            = 3;
-        uint_fast8_t            save_power_is_on;
-        uint_fast8_t            idx;
+        uint8_t      display_rgb_color_buf8[EEPROM_DATA_SIZE_DSP_COLORS];
+        uint8_t      display_w_color8               = 0;
+        uint8_t      ambilight_rgb_color_buf8[EEPROM_DATA_SIZE_AMBI_COLORS] = { MAX_COLOR_STEPS - 1, 0, 0 };
+        uint8_t      ambilight_w_color8             = 0;
+        uint8_t      ambilight_marker_rgb_color_buf8[EEPROM_DATA_SIZE_AMBI_MARKER_COLORS] = { 0, MAX_COLOR_STEPS - 1, MAX_COLOR_STEPS - 1 };
+        uint8_t      ambilight_marker_w_color8      = 0;
+        uint8_t      animation_values8[ANIMATION_MODES];
+        uint8_t      color_animation_values8[COLOR_ANIMATION_MODES];
+        uint8_t      ambilight_mode_values8[AMBILIGHT_MODES];
+        uint8_t      display_mode8;
+        uint8_t      ambilight_mode8;
+        uint8_t      ambilight_leds8                 = 60;
+        uint8_t      ambilight_led_offset8           = 22;
+        uint8_t      animation_mode8                 = AMBILIGHT_MODE_NORMAL;
+        uint8_t      color_animation_mode8           = 0;
+        uint8_t      display_flags8                  = DISPLAY_FLAGS_PERMANENT_IT_IS |
+                                                       DISPLAY_FLAGS_SYNC_AMBILIGHT |
+                                                       DISPLAY_FLAGS_SYNC_CLOCK_MARKERS;
+        uint8_t      display_brightness8;
+        uint8_t      ambilight_brightness8           = MAX_BRIGHTNESS;
+        uint8_t      automatic_brightness8;
+        uint8_t      ticker_deceleration8            = 3;
+        uint_fast8_t save_power_is_on;
+        uint_fast8_t idx;
 
         rtc = 1;
 
@@ -2989,23 +3361,21 @@ display_read_config_from_eeprom (uint32_t eeprom_version)
 
         if (eeprom_version > EEPROM_VERSION_2_4)
         {
-            uint8_t dimmed_colors8[MAX_BRIGHTNESS + 1];
+            uint8_t dimmed_display_colors8[MAX_BRIGHTNESS + 1];
 
-            eeprom_read (EEPROM_DATA_OFFSET_DIMMED_COLORS, dimmed_colors8, EEPROM_DATA_SIZE_DIMMED_COLORS);
+            eeprom_read (EEPROM_DATA_OFFSET_DIMMED_DISPLAY_COLORS, dimmed_display_colors8, EEPROM_DATA_SIZE_DIMMED_DISPLAY_COLORS);
 
-            for (idx = 0; idx < MAX_BRIGHTNESS; idx++)                              // not (MAX_BRIGHTNESS + 1)!
+            for (idx = 0; idx <= MAX_BRIGHTNESS; idx++)                         // MAX_BRIGHTNESS + 1!
             {
-                if (dimmed_colors8[idx] > MAX_BRIGHTNESS)
+                if (dimmed_display_colors8[idx] > MAX_BRIGHTNESS)
                 {
-                    display.dimmed_colors[idx] = MAX_BRIGHTNESS;
+                    display.dimmed_display_colors[idx] = MAX_BRIGHTNESS;
                 }
                 else
                 {
-                    display.dimmed_colors[idx] = dimmed_colors8[idx];
+                    display.dimmed_display_colors[idx] = dimmed_display_colors8[idx];
                 }
             }
-
-            display.dimmed_colors[MAX_BRIGHTNESS] = MAX_BRIGHTNESS;             // last member should be MAX_BRIGHTNESS
         }
 
         if (eeprom_version >= EEPROM_VERSION_2_6)
@@ -3013,9 +3383,33 @@ display_read_config_from_eeprom (uint32_t eeprom_version)
             eeprom_read (EEPROM_DATA_OFFSET_TICKER_DECELERATION,  &ticker_deceleration8,   EEPROM_DATA_SIZE_TICKER_DECELERATION);
         }
 
-        if (display_mode8 >= MODES_COUNT)
+        if (eeprom_version >= EEPROM_VERSION_2_9)
         {
-            display_mode8 = 0;
+            uint8_t dimmed_ambilight_colors8[MAX_BRIGHTNESS + 1];
+
+            eeprom_read (EEPROM_DATA_OFFSET_AMBI_MARKER_COLORS, ambilight_marker_rgb_color_buf8, EEPROM_DATA_SIZE_AMBI_MARKER_COLORS);
+            eeprom_read (EEPROM_DATA_OFFSET_AMBI_W_COLOR,       &ambilight_marker_w_color8,      EEPROM_DATA_SIZE_AMBI_MARKER_W_COLOR);
+            eeprom_read (EEPROM_DATA_OFFSET_DATE_TICKER_FORMAT, display.date_ticker_format,      EEPROM_DATA_SIZE_DATE_TICKER_FORMAT);
+            eeprom_read (EEPROM_DATA_OFFSET_DIMMED_AMBILIGHT_COLORS, dimmed_ambilight_colors8,   EEPROM_DATA_SIZE_DIMMED_AMBILIGHT_COLORS);
+
+            for (idx = 0; idx <= MAX_BRIGHTNESS; idx++)                              // MAX_BRIGHTNESS + 1!
+            {
+                if (dimmed_ambilight_colors8[idx] > MAX_BRIGHTNESS)
+                {
+                    display.dimmed_ambilight_colors[idx] = MAX_BRIGHTNESS;
+                }
+                else
+                {
+                    display.dimmed_ambilight_colors[idx] = dimmed_ambilight_colors8[idx];
+                }
+            }
+        }
+        else
+        {   // compatability: copy display brightness to ambilight brightness values
+            for (idx = 0; idx <= MAX_BRIGHTNESS; idx++)                              // MAX_BRIGHTNESS + 1!
+            {
+                display.dimmed_ambilight_colors[idx] = display.dimmed_display_colors[idx];
+            }
         }
 
         if (ambilight_mode8 >= AMBILIGHT_MODES)
@@ -3121,6 +3515,14 @@ display_read_config_from_eeprom (uint32_t eeprom_version)
         display.ambilight_colors.white          = ambilight_w_color8;
 #endif
 
+
+        display.ambilight_marker_colors.red     = ambilight_marker_rgb_color_buf8[0];
+        display.ambilight_marker_colors.green   = ambilight_marker_rgb_color_buf8[1];
+        display.ambilight_marker_colors.blue    = ambilight_marker_rgb_color_buf8[2];
+#if DSP_USE_SK6812_RGBW == 1
+        display.ambilight_marker_colors.white   = ambilight_marker_w_color8;
+#endif
+
         display.display_brightness              = display_brightness8;
         display.ambilight_brightness            = ambilight_brightness8;
         display.automatic_brightness            = automatic_brightness8;
@@ -3128,11 +3530,18 @@ display_read_config_from_eeprom (uint32_t eeprom_version)
         display.ambilight_leds                  = ambilight_leds8;
         display.ambilight_led_offset            = ambilight_led_offset8;
 
-        save_power_is_on                        = display.power_is_on;
-        display.power_is_on                     = FALSE;
-        display_calc_dimmed_ambilight_colors ();                    // first calculate dimmed ambilight colors
+        save_power_is_on                        = display.display_power_is_on;
+        display.display_power_is_on             = FALSE;
+
+        COPY_DSP_RGB (display.saved_ambilight_colors, display.ambilight_colors);
+
+        display.saved_ambilight_brightness      = display.ambilight_brightness;
+
+        display_calc_dimmed_ambilight_colors ();                    // first calculate dimmed ambilight LED colors
+        display_calc_dimmed_ambilight_marker_colors();              // and dimmed ambilight marker colors
         display_calc_dimmed_display_colors ();                      // then calculate display colors, may overwrite ambilight colors by sync
-        display.power_is_on                     = save_power_is_on;
+        display.display_power_is_on             = save_power_is_on;
+
         display.ticker_deceleration             = ticker_deceleration8;
 
         display_init_color_animation ();                            // init color animation
@@ -3170,7 +3579,7 @@ display_save_display_colors (void)
  * save display mode in EEPROM
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
-static void
+void
 display_save_display_mode (void)
 {
     uint8_t     display_mode8;
@@ -3263,6 +3672,28 @@ display_save_ambilight_colors (void)
 
     ambilight_w_color8 = display.ambilight_colors.white;
     eeprom_write (EEPROM_DATA_OFFSET_AMBI_W_COLOR, &ambilight_w_color8, EEPROM_DATA_SIZE_AMBI_W_COLOR);
+#endif
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * save ambilight marker colors in EEPROM
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_save_ambilight_marker_colors (void)
+{
+    uint8_t     ambilight_marker_rgb_color_buf8[3];
+
+    ambilight_marker_rgb_color_buf8[0] = display.ambilight_marker_colors.red;
+    ambilight_marker_rgb_color_buf8[1] = display.ambilight_marker_colors.green;
+    ambilight_marker_rgb_color_buf8[2] = display.ambilight_marker_colors.blue;
+    eeprom_write (EEPROM_DATA_OFFSET_AMBI_MARKER_COLORS, ambilight_marker_rgb_color_buf8, EEPROM_DATA_SIZE_AMBI_MARKER_COLORS);
+
+#if DSP_USE_SK6812_RGBW == 1
+    uint8_t     ambilight_marker_w_color8;
+
+    ambilight_marker_w_color8 = display.ambilight_marker_colors.white;
+    eeprom_write (EEPROM_DATA_OFFSET_AMBI_MARKER_W_COLOR, &ambilight_marker_w_color8, EEPROM_DATA_SIZE_AMBI_MARKER_W_COLOR);
 #endif
 }
 
@@ -3437,38 +3868,74 @@ display_save_ambilight_mode_decelerations (void)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * save dimmed colors
+ * save dimmed display colors
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static void
-display_save_dimmed_colors (void)
+display_save_dimmed_display_colors (void)
 {
-    uint8_t         dimmed_colors8[MAX_BRIGHTNESS + 1];
+    uint8_t         dimmed_display_colors8[MAX_BRIGHTNESS + 1];
     uint_fast8_t    idx;
 
     for (idx = 0; idx <= MAX_BRIGHTNESS; idx++)
     {
-        dimmed_colors8[idx] = display.dimmed_colors[idx];
+        dimmed_display_colors8[idx] = display.dimmed_display_colors[idx];
     }
 
-    eeprom_write (EEPROM_DATA_OFFSET_DIMMED_COLORS, dimmed_colors8, EEPROM_DATA_SIZE_DIMMED_COLORS);
+    eeprom_write (EEPROM_DATA_OFFSET_DIMMED_DISPLAY_COLORS, dimmed_display_colors8, EEPROM_DATA_SIZE_DIMMED_DISPLAY_COLORS);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * set dimmed color
+ * save dimmed ambilight colors
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+display_save_dimmed_ambilight_colors (void)
+{
+    uint8_t         dimmed_ambilight_colors8[MAX_BRIGHTNESS + 1];
+    uint_fast8_t    idx;
+
+    for (idx = 0; idx <= MAX_BRIGHTNESS; idx++)
+    {
+        dimmed_ambilight_colors8[idx] = display.dimmed_ambilight_colors[idx];
+    }
+
+    eeprom_write (EEPROM_DATA_OFFSET_DIMMED_AMBILIGHT_COLORS, dimmed_ambilight_colors8, EEPROM_DATA_SIZE_DIMMED_AMBILIGHT_COLORS);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set dimmed display color
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 uint_fast8_t
-display_set_dimmed_color (uint_fast8_t idx, uint_fast8_t val)
+display_set_dimmed_display_color (uint_fast8_t idx, uint_fast8_t val)
 {
     if (val > MAX_BRIGHTNESS)
     {
         val = MAX_BRIGHTNESS;
     }
 
-    display.dimmed_colors[idx] = val;
-    display_save_dimmed_colors ();
+    display.dimmed_display_colors[idx] = val;
+    display_save_dimmed_display_colors ();
     display_calc_dimmed_display_colors ();
+    return val;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set dimmed ambilight color
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+uint_fast8_t
+display_set_dimmed_ambilight_color (uint_fast8_t idx, uint_fast8_t val)
+{
+    if (val > MAX_BRIGHTNESS)
+    {
+        val = MAX_BRIGHTNESS;
+    }
+
+    display.dimmed_ambilight_colors[idx] = val;
+    display_save_dimmed_ambilight_colors ();
+    display_calc_dimmed_ambilight_colors ();
     return val;
 }
 
@@ -3484,6 +3951,11 @@ display_save_ticker_deceleration (void)
     eeprom_write (EEPROM_DATA_OFFSET_TICKER_DECELERATION, &ticker_deceleration8, EEPROM_DATA_SIZE_TICKER_DECELERATION);
 }
 
+static void
+display_save_date_ticker_format (void)
+{
+    eeprom_write (EEPROM_DATA_OFFSET_DATE_TICKER_FORMAT, display.date_ticker_format, EEPROM_DATA_SIZE_DATE_TICKER_FORMAT);
+}
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * write configuration to EEPROM
@@ -3504,6 +3976,7 @@ display_write_config_to_eeprom (void)
         display_save_brightness ();
         display_save_automatic_brightness ();
         display_save_ambilight_colors ();
+        display_save_ambilight_marker_colors ();
         display_save_ambilight_brightness ();
         display_save_ambilight_mode ();
         display_save_number_of_ambilight_leds ();
@@ -3511,8 +3984,10 @@ display_write_config_to_eeprom (void)
         display_save_animations ();
         display_save_color_animations ();
         display_save_ambilight_mode_decelerations ();
-        display_save_dimmed_colors ();
+        display_save_dimmed_display_colors ();
+        display_save_dimmed_ambilight_colors ();
         display_save_ticker_deceleration ();
+        display_save_date_ticker_format ();
 
         rtc = 1;
     }
@@ -3540,13 +4015,25 @@ display_set_ticker_deceleration (uint_fast8_t new_ticker_deceleration)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set date ticker format
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+display_set_date_ticker_format (char * new_date_ticker_format)
+{
+    strncpy ((char *) display.date_ticker_format, new_date_ticker_format, DATE_TICKER_FORMAT_LEN - 1);
+    display.date_ticker_format[DATE_TICKER_FORMAT_LEN - 1] = '\0';
+    display_save_date_ticker_format ();
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * set display flags
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 uint_fast8_t
 display_set_display_flags (uint_fast8_t new_flags)
 {
-    if (display.ambilight_mode != AMBILIGHT_MODE_RAINBOW &&
+    if (display.ambilight_mode != AMBILIGHT_MODE_RAINBOW && display.ambilight_mode != AMBILIGHT_MODE_DAYLIGHT &&
         (new_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT) && (! (display.display_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT)))
     {                                                                           // synchronize ambilight colors
         sync_colors ();
@@ -3554,6 +4041,12 @@ display_set_display_flags (uint_fast8_t new_flags)
 
     display_init_ambilight_mode ();
     display.display_flags = new_flags;
+
+    if (! (new_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT))
+    {
+        desync_colors ();
+    }
+
     display.animation_start_flag = 1;                                           // fm: needed?
     display_save_display_flags ();
     return display.display_flags;
@@ -3569,6 +4062,12 @@ display_set_ambilight_mode (uint_fast8_t new_mode, uint_fast8_t do_sync)
     if (new_mode < AMBILIGHT_MODES && display.ambilight_mode != new_mode)
     {
         display.ambilight_mode = new_mode;
+
+        if (! (display.display_flags & DISPLAY_FLAGS_SYNC_AMBILIGHT))
+        {
+            desync_colors ();
+        }
+
         display_init_ambilight_mode ();
 
         if (do_sync)
@@ -3596,6 +4095,8 @@ display_set_number_of_ambilight_leds (uint_fast8_t new_leds)
     {
         display.ambilight_leds = DSP_AMBILIGHT_LEDS;
     }
+
+    main_set_ambilight_clock_wait_cycles ();
 
     display_save_number_of_ambilight_leds ();
     return display.ambilight_leds;
@@ -3628,17 +4129,27 @@ display_set_ambilight_led_offset (uint_fast8_t new_led_offset)
 uint_fast8_t
 display_set_display_mode (uint_fast8_t new_mode, uint_fast8_t do_sync)
 {
-    if (new_mode < MODES_COUNT)
+    if (new_mode < tables.modes_count)
     {
-        display.display_mode = new_mode;
-        display.animation_start_flag = 1;
-
-        if (do_sync)
+        if (display.display_mode != new_mode)
         {
-            var_send_display_mode ();
-        }
+            display.display_mode = new_mode;
+            display.animation_start_flag = 1;
 
-        display_save_display_mode ();
+            if (do_sync)
+            {
+                var_send_display_mode ();
+            }
+
+            display_save_display_mode ();
+            tables_get (display.display_mode);
+
+            do
+            {
+                schedule_esp8266_messages ();
+            } while (! tables.complete);
+
+        }
     }
     return display.display_mode;
 }
@@ -3650,24 +4161,18 @@ display_set_display_mode (uint_fast8_t new_mode, uint_fast8_t do_sync)
 uint_fast8_t
 display_increment_display_mode (uint_fast8_t do_sync)
 {
-    if (display.display_mode < MODES_COUNT - 1)
+    uint_fast8_t new_mode;
+
+    if (display.display_mode < tables.modes_count - 1)
     {
-        display.display_mode++;
+        new_mode = display.display_mode + 1;
     }
     else
     {
-        display.display_mode = 0;
+        new_mode = 0;
     }
 
-    display.animation_start_flag = 1;
-
-    if (do_sync)
-    {
-        var_send_display_mode ();
-    }
-
-    display_save_display_mode ();
-    return display.display_mode;
+    return display_set_display_mode (new_mode, do_sync);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -3677,24 +4182,18 @@ display_increment_display_mode (uint_fast8_t do_sync)
 uint_fast8_t
 display_decrement_display_mode (uint_fast8_t do_sync)
 {
+    uint_fast8_t new_mode;
+
     if (display.display_mode == 0)
     {
-        display.display_mode = MODES_COUNT - 1;
+        new_mode = tables.modes_count - 1;
     }
     else
     {
-        display.display_mode--;
+        new_mode = display.display_mode - 1;
     }
 
-    display.animation_start_flag = 1;
-
-    if (do_sync)
-    {
-        var_send_display_mode ();
-    }
-
-    display_save_display_mode ();
-    return display.display_mode;
+    return display_set_display_mode (new_mode, do_sync);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -3871,158 +4370,268 @@ display_decrement_color_animation_mode (uint_fast8_t do_sync)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * display seconds
+ * display seconds, called (AMBILIGHT_CLOCK_TICK_COUNT_PER_LED * ambi leds) per second
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 void
-display_seconds (uint_fast8_t seconds)
+display_seconds (uint_fast8_t led_idx)
 {
-    uint_fast8_t    led_idx;
-    uint_fast8_t    marker_idx;
-    uint_fast8_t    idx;
-    uint_fast8_t    n_clock_leds;
+    static uint_fast8_t     last_led_idx = 0;                       // last led idx
+    static uint_fast8_t     cnt;
+    static LED_RGB          rgb_fade;
+    static LED_RGB          rgb_step[2];
+    static int              ambi_red_step;
+    static int              ambi_green_step;
+    static int              ambi_blue_step;
+#if DSP_USE_SK6812_RGBW == 1
+    static int              ambi_white_step;
+#endif
+    uint_fast8_t            idx;
+    DSP_COLORS              dsp_ambilight_fade;
+    int                     i;
+    int                     ii;
 
-    if (display.ambilight_mode == AMBILIGHT_MODE_CLOCK)
+    if (display.ambilight_mode == AMBILIGHT_MODE_CLOCK || display.ambilight_mode == AMBILIGHT_MODE_CLOCK2)
     {
-        LED_RGB rgb;
-        LED_RGB marker_rgb;
-
-        display_show_ambilight_off (0);                                     // switch all ambilight LEDs off, but don't refresh here
-
-        if (display.ambilight_leds >= 60)
+        if (led_idx >= display.ambilight_leds)                                  // don't wrap around
         {
-            led_idx = seconds;
-            led_idx += display.ambilight_led_offset;
-            n_clock_leds = 60;
+            led_idx = 0;
         }
-        else if (display.ambilight_leds >= 30)
+
+        if (led_idx != last_led_idx)
         {
-            led_idx = seconds / 2;
-            led_idx += display.ambilight_led_offset;
-            n_clock_leds = 30;
-        }
-        else if (display.ambilight_leds >= 20)
-        {
-            led_idx = seconds / 3;
-            led_idx += display.ambilight_led_offset;
-            n_clock_leds = 20;
+            cnt = 0;
+            last_led_idx = led_idx;
+
+            display_dim_ambilight_dsp_colors (&dsp_ambilight_fade, &display.ambilight_colors, display.ambilight_brightness, TRUE);
+            CALC_LED_RGB(rgb_fade, dsp_ambilight_fade);
+
+            if (display.display_flags & DISPLAY_FLAGS_FADE_CLOCK_SECONDS)           // calculate steps only if fading enabled
+            {
+                ambi_red_step = rgb_fade.red / AMBILIGHT_CLOCK_TICK_COUNT_PER_LED;
+
+                if (ambi_red_step == 0)
+                {
+                    ambi_red_step = 1;
+                }
+
+                ambi_green_step = rgb_fade.green / AMBILIGHT_CLOCK_TICK_COUNT_PER_LED;
+
+                if (ambi_green_step == 0)
+                {
+                    ambi_green_step = 1;
+                }
+
+                ambi_blue_step = rgb_fade.blue / AMBILIGHT_CLOCK_TICK_COUNT_PER_LED;
+
+                if (ambi_blue_step == 0)
+                {
+                    ambi_blue_step = 1;
+                }
+
+#if DSP_USE_SK6812_RGBW == 1
+                ambi_white_step = rgb_fade.white / AMBILIGHT_CLOCK_TICK_COUNT_PER_LED;
+
+                if (ambi_white_step == 0)
+                {
+                    ambi_white_step = 1;
+                }
+#endif
+
+                rgb_step[0].red     = 0;
+                rgb_step[0].green   = 0;
+                rgb_step[0].blue    = 0;
+#if DSP_USE_SK6812_RGBW == 1
+                rgb_step[0].white   = 0;
+#endif
+
+                rgb_step[1].red     = rgb_fade.red;
+                rgb_step[1].green   = rgb_fade.green;
+                rgb_step[1].blue    = rgb_fade.blue;
+#if DSP_USE_SK6812_RGBW == 1
+                rgb_step[1].white   = rgb_fade.white;
+#endif
+            }
         }
         else
         {
-            n_clock_leds = 0;
+            cnt++;
         }
 
-        if (n_clock_leds)
+        if (display.display_flags & DISPLAY_FLAGS_FADE_CLOCK_SECONDS)               // calculate steps only if fading enabled
         {
-            if (led_idx >= n_clock_leds)                                    // wrap around
+            if (rgb_step[0].red   + ambi_red_step   <= rgb_fade.red)
             {
-                led_idx -= n_clock_leds;
+                rgb_step[0].red   += ambi_red_step;
+            }
+            else
+            {
+                rgb_step[0].red   = rgb_fade.red;
             }
 
-            if ((display.ambilight_modes[AMBILIGHT_MODE_CLOCK].flags & AMBILIGHT_FLAG_SECONDS_MARKER) && n_clock_leds == 60)
-            {                                                               // show 5-second markers, but only if we have at least 60 LEDs
-                DSP_COLORS  dsp_marker_rgb = DSP_CYAN_COLOR;
-                DSP_COLORS  dsp_marker_dimmed;
+            if (rgb_step[0].green + ambi_green_step <= rgb_fade.green)
+            {
+                rgb_step[0].green += ambi_green_step;
+            }
+            else
+            {
+                rgb_step[0].green = rgb_fade.green;
+            }
 
-                calc_dimmed_colors (&dsp_marker_dimmed, &dsp_marker_rgb, display.ambilight_brightness, TRUE);
-                CALC_LED_RGB(marker_rgb, dsp_marker_dimmed);
+            if (rgb_step[0].blue  + ambi_blue_step  <= rgb_fade.blue )
+            {
+                rgb_step[0].blue  += ambi_blue_step;
+            }
+            else
+            {
+                rgb_step[0].blue  = rgb_fade.blue;
+            }
+
+#if DSP_USE_SK6812_RGBW == 1
+            if (rgb_step[0].white  + ambi_white_step  <= rgb_fade.white )
+            {
+                rgb_step[0].white  += ambi_white_step;
+            }
+            else
+            {
+                rgb_step[0].white  = rgb_fade.white;
+            }
+#endif
+
+            if (rgb_step[1].red   - ambi_red_step   >= 0)
+            {
+                rgb_step[1].red   -= ambi_red_step;
+            }
+            else
+            {
+                rgb_step[1].red   = 0;
+            }
+
+            if (rgb_step[1].green - ambi_green_step >= 0)
+            {
+                rgb_step[1].green -= ambi_green_step;
+            }
+            else
+            {
+                rgb_step[1].green = 0;
+            }
+
+            if (rgb_step[1].blue  - ambi_blue_step  >= 0)
+            {
+                rgb_step[1].blue  -= ambi_blue_step;
+            }
+            else
+            {
+                rgb_step[1].blue  = 0;
+            }
+
+#if DSP_USE_SK6812_RGBW == 1
+            if (rgb_step[1].white  - ambi_white_step  >= 0)
+            {
+                rgb_step[1].white  -= ambi_white_step;
+            }
+            else
+            {
+                rgb_step[1].white  = 0;
+            }
+#endif
+        }
+
+        if (display.ambilight_mode == AMBILIGHT_MODE_CLOCK)
+        {
+            display_show_ambilight_off (0);                                     // switch all ambilight LEDs off, but don't refresh here
+
+            // markers only if 60 ambiligh LEDs
+            if ((display.ambilight_modes[AMBILIGHT_MODE_CLOCK].flags & AMBILIGHT_FLAG_SECONDS_MARKER) && display.ambilight_leds == 60)
+            {                                                                   // show 5-second markers, but only if we have at least 60 LEDs
+                LED_RGB         marker_rgb;
+
+                if (display.display_flags & DISPLAY_FLAGS_SYNC_CLOCK_MARKERS)
+                {
+                    CALC_LED_RGB(marker_rgb, dimmed_display_colors);
+                }
+                else
+                {
+                    CALC_LED_RGB(marker_rgb, dimmed_ambilight_marker_colors);
+                }
 
                 for (idx = 0; idx < 60; idx += 5)
                 {
-                    marker_idx = idx + display.ambilight_led_offset;
-
-                    if (marker_idx >= n_clock_leds)                         // wrap around
-                    {
-                        marker_idx -= n_clock_leds;
-                    }
-                    display_set_ambilight_led (marker_idx, &marker_rgb, 0);
+                    display_set_ambilight_led (idx, &marker_rgb, 0);
                 }
             }
 
-            CALC_LED_RGB(rgb, dimmed_ambilight_colors);
-            display_set_ambilight_led (led_idx, &rgb, 0);
-
-            if (display.ambilight_power_is_on)
+            if (display.display_flags & DISPLAY_FLAGS_FADE_CLOCK_SECONDS)
             {
-                display_refresh_ambilight_leds();                           // refresh here
-            }
-        }
-    }
-    else if (display.ambilight_mode == AMBILIGHT_MODE_CLOCK2)
-    {
-        LED_RGB rgb;
-
-        if (seconds == 0)
-        {
-            if (ambilight_clock_increasing)
-            {
-                ambilight_clock_increasing = 0;
-            }
-            else
-            {
-                ambilight_clock_increasing = 1;
-            }
-        }
-
-        display_show_ambilight_off (0);                                     // switch all ambilight LEDs off, but don't refresh here
-
-        if (display.ambilight_leds >= 60)
-        {
-            led_idx = seconds;
-            n_clock_leds = 60;
-        }
-        else if (display.ambilight_leds >= 30)
-        {
-            led_idx = seconds / 2;
-            n_clock_leds = 30;
-        }
-        else if (display.ambilight_leds >= 20)
-        {
-            led_idx = seconds / 3;
-            n_clock_leds = 20;
-        }
-        else
-        {
-            n_clock_leds = 0;
-        }
-
-        if (n_clock_leds)
-        {
-            CALC_LED_RGB(rgb, dimmed_ambilight_colors);
-
-            if (ambilight_clock_increasing)
-            {
-                for (idx = 0; idx <= led_idx; idx++)
+                for (i = (int) led_idx, ii = 0; ii < 2; i--, ii++)
                 {
-                    uint_fast8_t i = idx + display.ambilight_led_offset;
-
-                    if (i >= n_clock_leds)                                  // wrap around
+                    if (i >= 0)
                     {
-                        i -= n_clock_leds;
+                        display_set_ambilight_led (i, rgb_step + ii, 0);
                     }
-
-                    display_set_ambilight_led (i, &rgb, 0);                 // switch LED on
+                    else
+                    {
+                        display_set_ambilight_led (i + display.ambilight_leds, rgb_step + ii, 0);
+                    }
                 }
             }
             else
             {
-                for (idx = led_idx; idx < n_clock_leds; idx++)
+                display_set_ambilight_led (led_idx, &rgb_fade, 0);
+            }
+        }
+        else // if (display.ambilight_mode == AMBILIGHT_MODE_CLOCK2)
+        {
+            uint_fast8_t    ambilight_clock_increasing;
+
+            if (gmain.minute & 0x01)                                                    // odd minute
+            {
+                ambilight_clock_increasing = 0;                                         // decrease ambilight LEDs
+            }
+            else
+            {
+                ambilight_clock_increasing = 1;                                         // increase ambilight LEDs
+            }
+
+            display_show_ambilight_off (0);                                             // switch all ambilight LEDs off, but don't refresh here
+
+            if (ambilight_clock_increasing)
+            {
+                for (idx = 0; idx < led_idx; idx++)
                 {
-                    uint_fast8_t i = idx + display.ambilight_led_offset;
+                    display_set_ambilight_led (idx, &rgb_fade, 0);                      // switch LED on
+                }
 
-                    if (i >= n_clock_leds)                                  // wrap around
-                    {
-                        i -= n_clock_leds;
-                    }
-
-                    display_set_ambilight_led (i, &rgb, 0);                 // switch LED off
+                if (display.display_flags & DISPLAY_FLAGS_FADE_CLOCK_SECONDS)
+                {
+                    display_set_ambilight_led (led_idx, rgb_step + 0, 0);               // fade LED on
+                }
+                else
+                {
+                    display_set_ambilight_led (led_idx, &rgb_fade, 0);                  // switch LED on
                 }
             }
-
-            if (display.ambilight_power_is_on)
+            else
             {
-                display_refresh_ambilight_leds();                           // refresh here
+                if (display.display_flags & DISPLAY_FLAGS_FADE_CLOCK_SECONDS)
+                {
+                    display_set_ambilight_led (led_idx, rgb_step + 1, 0);               // fade LED off
+                }
+                else
+                {
+                    display_set_ambilight_led (led_idx, &rgb_fade, 0);                  // switch LED off
+                }
+
+                for (idx = led_idx + 1; idx < display.ambilight_leds; idx++)
+                {
+                    display_set_ambilight_led (idx, &rgb_fade, 0);                      // switch LED off
+                }
             }
+        }
+
+        if (display.ambilight_power_is_on)
+        {
+            display_refresh_ambilight_leds();                                   // refresh here
         }
     }
 }
@@ -4155,7 +4764,7 @@ display_ticker (void)
 void
 display_set_ticker (const unsigned char * ticker, uint_fast8_t do_wait)
 {
-    if (display.power_is_on)
+    if (display.display_power_is_on)
     {
         ticker_str[0] = ' ';
         ticker_str[1] = ' ';
@@ -4229,13 +4838,14 @@ static void
 display_icon (void)
 {
     static uint_fast8_t     state = DISPLAY_ICON_STATE_CLEAR_DISPLAY;
-    static uint_fast8_t     animation_len;
+    static uint_fast8_t     animation_on_len;
+    static uint_fast8_t     animation_off_len;
     static uint_fast16_t    cnt;
     static uint_fast16_t    duration;
     static uint_fast8_t     row_offset;
     static uint_fast8_t     col_offset;
 
-    uint_fast16_t           n;
+    uint_fast16_t           idx;
     uint_fast8_t            row;
     uint_fast8_t            col;
     uint_fast8_t            color_idx;
@@ -4243,7 +4853,7 @@ display_icon (void)
     DSP_COLORS              dsp_rgb_dimmed;
     LED_RGB                 led_rgb;
 
-    if (display.power_is_on)
+    if (display.display_power_is_on)
     {
         LED_RGB             led_rgb0;
 
@@ -4251,17 +4861,18 @@ display_icon (void)
 
         if (state == DISPLAY_ICON_STATE_CLEAR_DISPLAY)                                                       // 1st show icon
         {
-            for (n = 0; n < DSP_DISPLAY_LEDS; n++)
+            for (idx = 0; idx < DSP_DISPLAY_LEDS; idx++)
             {
-                led.state[n] = 0;
-                display_set_display_led (n, &led_rgb0, 0);
+                led.state[idx] = 0;
+                display_set_display_led (idx, &led_rgb0, 0);
             }
 
             display_refresh_display_leds ();
 
             row_offset = (WC_ROWS - display_icon_st.rows) / 2;
             col_offset = (WC_COLUMNS - display_icon_st.cols) / 2;
-            animation_len = strlen (display_icon_st.animation);
+            animation_on_len = strlen (display_icon_st.animation_on);
+            animation_off_len = strlen (display_icon_st.animation_off);
 
             if (display_icon_st.duration < 5)
             {
@@ -4296,51 +4907,74 @@ display_icon (void)
                     return;                                     // nothing to do
                 }
 
-                if (brightness <= display.dimmed_colors[display.display_brightness])
+                if (brightness <= display.dimmed_display_colors[display.display_brightness])
                 {
                     do_display = 1;
                 }
-                else if (animation_len > 0)
+                else if (animation_on_len > 0)
                 {
                     do_display = 1;
-                    brightness = display.dimmed_colors[display.display_brightness];
+                    brightness = display.dimmed_display_colors[display.display_brightness];
                 }
 
                 if (do_display)
                 {
-                    uint_fast8_t animation_step;
+                    uint_fast16_t animation_on_step;
+                    uint_fast16_t animation_off_step;
 
-                    n = 0;
+                    idx = 0;
 
                     for (row = 0; row < display_icon_st.rows; row++)
                     {
                         for (col = 0; col < display_icon_st.cols; col++)
                         {
-                            if (n < animation_len)
+                            if (idx < animation_on_len)
                             {
-                                animation_step = display_icon_st.animation[n];
+                                animation_on_step = display_icon_st.animation_on[idx];
 
-                                if (animation_step >= 'A')
+                                if (animation_on_step >= 'A')
                                 {
-                                    animation_step -= 'A';
+                                    animation_on_step -= 'A';
                                 }
                                 else
                                 {
-                                    animation_step = 0;
+                                    animation_on_step = 0;
                                 }
                             }
                             else
                             {
-                                animation_step = 0;
+                                animation_on_step = 0;
                             }
 
-                            if ((cnt >> 2) >= animation_step)
+                            if (idx < animation_off_len)
+                            {
+                                animation_off_step = display_icon_st.animation_off[idx];
+
+                                if (animation_off_step >= 'A')
+                                {
+                                    animation_off_step -= 'A';
+                                }
+                                else
+                                {
+                                    animation_off_step = 0xFFFF;
+                                }
+                            }
+                            else
+                            {
+                                animation_off_step = 0xFFFF;
+                            }
+
+                            if ((cnt >> 2) >= animation_off_step)
+                            {
+                                display_set_display_led ((row + row_offset) * WC_COLUMNS + (col + col_offset), &led_rgb0, 0);
+                            }
+                            else if ((cnt >> 2) >= animation_on_step)
                             {
                                 if (brightness > 0)
                                 {
-                                    color_idx = display_icon_st.colors[n] - '0';
+                                    color_idx = display_icon_st.colors[idx] - '0';
                                     SET_DSP_RGB(dsp_rgb, icon_colors[color_idx].red, icon_colors[color_idx].green, icon_colors[color_idx].blue, 0);
-                                    calc_dimmed_colors (&dsp_rgb_dimmed, &dsp_rgb, brightness, TRUE);
+                                    display_dim_display_dsp_colors (&dsp_rgb_dimmed, &dsp_rgb, brightness, TRUE);
                                     CALC_LED_RGB(led_rgb, dsp_rgb_dimmed);
                                     display_set_display_led ((row + row_offset) * WC_COLUMNS + (col + col_offset), &led_rgb, 0);
                                 }
@@ -4350,7 +4984,7 @@ display_icon (void)
                                 }
                             }
 
-                            n++;
+                            idx++;
                         }
                     }
                     display_refresh_display_leds ();
@@ -4437,7 +5071,33 @@ display_animation (void)
     }
     else
     {
-        if (display.animation_mode < ANIMATION_MODES && (display.power_is_on || display.animation_start_flag || ! display.animation_stop_flag))
+#if DSP_MINUTE_LEDS != 0
+        uint_fast8_t do_refresh_minute_leds = 0;
+
+        if (display.display_power_is_on || minutes_fade_start_flag || ! minutes_fade_stop_flag)
+        {                                                       // if power is off, display only animation if started or yet not stopped
+            if (minutes_fade_start_flag)
+            {
+                display_minutes_fade ();
+                do_refresh_minute_leds = 1;
+            }
+            else if (! minutes_fade_stop_flag)
+            {
+                static uint_fast16_t    min_deceleration_cnt;
+
+                min_deceleration_cnt++;
+
+                if (min_deceleration_cnt >= display.animations[ANIMATION_MODE_FADE].deceleration)
+                {
+                    min_deceleration_cnt = 0;
+                    display_minutes_fade ();
+                    do_refresh_minute_leds = 1;
+                }
+            }
+        }
+#endif
+        if (display.animation_mode < ANIMATION_MODES &&
+            (display.display_power_is_on || display.animation_start_flag || ! display.animation_stop_flag))
         {                                                       // if power is off, display only animation if started or yet not stopped
             if (display.animation_start_flag)
             {
@@ -4448,6 +5108,9 @@ display_animation (void)
                 if (display.animation_mode == ANIMATION_MODE_RANDOM)    // random makes its own animation dependant deceleration
                 {
                     display.animations[display.animation_mode].func ();
+#if DSP_MINUTE_LEDS != 0
+                    do_refresh_minute_leds = 0;                         // animation already refreshed minute leds
+#endif
                 }
                 else
                 {
@@ -4459,10 +5122,20 @@ display_animation (void)
                     {
                         deceleration_cnt = 0;
                         display.animations[display.animation_mode].func ();
+#if DSP_MINUTE_LEDS != 0
+                        do_refresh_minute_leds = 0;                     // animation already refreshed minute leds
+#endif
                     }
                 }
             }
         }
+
+#if DSP_MINUTE_LEDS != 0
+        if (do_refresh_minute_leds)
+        {
+            display_refresh_minute_leds ();
+        }
+#endif
 
         if (display.animation_stop_flag)                                            // animation stopped
         {
@@ -4574,6 +5247,16 @@ display_animation (void)
                     }
                 }
             }
+            else if (display.color_animation_mode == COLOR_ANIMATION_MODE_DAYLIGHT)
+            {
+                static uint_fast8_t     last_hour = 0xFF;
+
+                if (gmain.hour != last_hour)
+                {
+                    last_hour = gmain.hour;
+                    display_init_color_animation_daylight ();
+                }
+            }
 
             if (display.ambilight_mode == AMBILIGHT_MODE_RAINBOW)
             {
@@ -4683,8 +5366,18 @@ display_animation (void)
                     }
                 }
             }
+            else if (display.ambilight_mode == AMBILIGHT_MODE_DAYLIGHT)
+            {
+                static uint_fast8_t     last_hour = 0xFF;
 
-            if (! display.power_is_on)
+                if (gmain.hour != last_hour)
+                {
+                    last_hour = gmain.hour;
+                    display_init_ambilight_mode_daylight ();
+                }
+            }
+
+            if (! display.display_power_is_on && ! display.ambilight_power_is_on)
             {
                 power_off ();
             }
@@ -5010,6 +5703,7 @@ display_set_ambilight_brightness (uint_fast8_t new_brightness, uint_fast8_t do_s
 
         if (do_save)
         {
+            display.saved_ambilight_brightness = display.ambilight_brightness;
             display_save_ambilight_brightness  ();
         }
     }
@@ -5265,8 +5959,21 @@ void
 display_set_ambilight_colors (DSP_COLORS * rgb)
 {
     COPY_DSP_RGB_SAFE (display.ambilight_colors, rgb);
+    COPY_DSP_RGB (display.saved_ambilight_colors, display.ambilight_colors);
     display_calc_dimmed_ambilight_colors ();
     display_save_ambilight_colors ();
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set ambilight marker colors
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+display_set_ambilight_marker_colors (DSP_COLORS * rgb)
+{
+    COPY_DSP_RGB_SAFE (display.ambilight_marker_colors, rgb);
+    display_calc_dimmed_ambilight_marker_colors ();
+    display_save_ambilight_marker_colors ();
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -5379,6 +6086,55 @@ display_test (void)
 
 #if WCLOCK24H == 1
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * display Campuswoche week counter
+ *
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+display_cw_cnt (uint_fast8_t weeks)
+{
+    if (display.display_power_is_on)
+    {
+        if (tables.complete)
+        {
+            if (weeks < 60)
+            {
+                const MINUTEDISPLAY *   tbl_minute;
+                uint_fast16_t           idx;
+
+                display_animation_flush (FALSE);
+                tbl_minute  = &(tables.minutes[weeks]);
+
+                display_reset_led_states ();
+
+                display_word_on (9); //IN
+
+                for (idx = 0; idx < tables.max_minute_words && tbl_minute->word_idx[idx] != 0; idx++)
+                {
+                    if(tbl_minute->word_idx[idx]==34)break;//MINUTEN
+                    display_word_on (tbl_minute->word_idx[idx]);
+                }
+
+                display_word_on (40); //WOCHEN
+                display_word_on (81); //IST
+                display_word_on (86); //CAMPUSWOCHE
+
+                display.animation_start_flag = 1;
+            }
+        }
+    }
+}
+
+#else
+void
+display_cw_cnt (uint_fast8_t weeks)
+{
+    ;
+}
+#endif
+
+#if WCLOCK24H == 1
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * display temperature
  *
  *   index ==   0  ->   0°C
@@ -5391,32 +6147,31 @@ display_test (void)
 void
 display_temperature (uint_fast8_t temperature_index)
 {
-    if (display.power_is_on)
+    if (display.display_power_is_on)
     {
-        uint_fast8_t   temp_mode = MODES_COUNT - 1;
-
-        if (temperature_index >= 20 && temperature_index < 80)
+        if (tables.complete)
         {
-            uint8_t                         minute_mode;
-            const struct MinuteDisplay *    tbl_minute;
-            uint_fast16_t                   idx;
-
-            temperature_index -= 20;                                            // subtract 10°C (20 units)
-            display_animation_flush (FALSE);
-            minute_mode = tbl_modes[temp_mode].minute_txt;
-            tbl_minute  = &tbl_minutes[minute_mode][temperature_index];
-
-            display_reset_led_states ();
-
-            display_word_on (WP_ES);
-            display_word_on (WP_IST);
-
-            for (idx = 0; idx < MAX_MINUTE_WORDS && tbl_minute->wordIdx[idx] != 0; idx++)
+            if (temperature_index >= 20 && temperature_index < 80)
             {
-                display_word_on (tbl_minute->wordIdx[idx]);
-            }
+                const MINUTEDISPLAY *   tbl_minute;
+                uint_fast16_t           idx;
 
-            display.animation_start_flag = 1;
+                temperature_index -= 20;                                            // subtract 10°C (20 units)
+                display_animation_flush (FALSE);
+                tbl_minute  = &(tables.temperature[temperature_index]);
+
+                display_reset_led_states ();
+
+                display_word_on (tables.it_is[0]);
+                display_word_on (tables.it_is[1]);
+
+                for (idx = 0; idx < tables.max_minute_words && tbl_minute->word_idx[idx] != 0; idx++)
+                {
+                    display_word_on (tbl_minute->word_idx[idx]);
+                }
+
+                display.animation_start_flag = 1;
+            }
         }
     }
 }
@@ -5433,7 +6188,7 @@ display_temperature (uint_fast8_t temperature_index)
 void
 display_temperature (uint_fast8_t temperature_index)
 {
-    if (display.power_is_on)
+    if (display.display_power_is_on)
     {
         char buf[4];
         uint_fast8_t     temp;
@@ -5455,7 +6210,7 @@ display_temperature (uint_fast8_t temperature_index)
         display_show_ticker_char (start_line, start_col, buf[0], 0, TRUE);
         start_col += TICKER_COLS + 1;                                       // +1 = gap between letters
         display_show_ticker_char (start_line, start_col, buf[1], 0, TRUE);
-        display_minute_leds (display.power_is_on, 2 * temp_fraction);
+        display_minute_leds (2 * temp_fraction);
         display.animation_start_flag = 1;
     }
 }
@@ -5470,148 +6225,184 @@ display_temperature (uint_fast8_t temperature_index)
 void
 display_init (void)
 {
-    display.display_mode            = 10;                                       // display_mode, default is Rhein/Ruhr (12)
-    display.ambilight_mode          = 0,                                        // ambilight_mode
-    display.color_animation_mode    = COLOR_ANIMATION_MODE_RAINBOW;             // color_animation_mode, default is Rainbow
-    display.display_brightness      = MAX_BRIGHTNESS;                           // display brightness, default is maximum brightness
-    display.ambilight_brightness    = MAX_BRIGHTNESS,                           // ambilight brightness, default is maximum brightness
-    display.automatic_brightness    = 0;                                        // automatic brightness, default is off
-    display.ambilight_brightness    = (DISPLAY_FLAGS_PERMANENT_IT_IS |
-                                       DISPLAY_FLAGS_SYNC_AMBILIGHT);           // display_flags
+    int idx;
 
-    display.animation_mode          = ANIMATION_MODE_RANDOM;                    // animation mode, default is Random
-    display.animation_start_flag    = 0;                                        // animation start flag
-    display.animation_stop_flag     = 0;                                        // animation stop flag
-    display.power_is_on             = 1;                                        // power is on
-    display.ambilight_power_is_on   = 1;                                        // ambilight power is on
-    display.do_display_icon         = 0;                                        // don't display icon as default
+    display.display_mode                    = 10;                                       // display_mode, default is Rhein/Ruhr (12)
+    display.ambilight_mode                  = 0,                                        // ambilight_mode
+    display.color_animation_mode            = COLOR_ANIMATION_MODE_RAINBOW;             // color_animation_mode, default is Rainbow
+    display.display_brightness              = BRIGHTNESS_33;                           // display brightness, default is 1/3 brightness
+    display.ambilight_brightness            = BRIGHTNESS_33,                           // ambilight brightness, default is 1/3 brightness
+    display.automatic_brightness            = 0;                                        // automatic brightness, default is off
+    display.display_flags                    = (DISPLAY_FLAGS_PERMANENT_IT_IS |
+                                                DISPLAY_FLAGS_SYNC_AMBILIGHT |
+                                                DISPLAY_FLAGS_SYNC_CLOCK_MARKERS);      // display_flags
 
-    display.ambilight_led_offset    = 22;                                       // ambilight: LED offset
-    display.ambilight_leds          = 60;                                       // ambilight: number of LEDs
+    display.animation_mode                  = ANIMATION_MODE_RANDOM;                    // animation mode, default is Random
+    display.animation_start_flag            = 0;                                        // animation start flag
+    display.animation_stop_flag             = 0;                                        // animation stop flag
+    display.display_power_is_on             = 1;                                        // display power is on
+    display.ambilight_power_is_on           = 1;                                        // ambilight power is on
+    display.do_display_icon                 = 0;                                        // don't display icon as default
 
-    display.display_colors.red      = MAX_COLOR_STEPS / 2;                      // display color, default is red
-    display.ambilight_colors.red    = MAX_COLOR_STEPS / 2;                      // ambilight color, default is red
+    display.ambilight_led_offset            = 22;                                       // ambilight: LED offset
+    display.ambilight_leds                  = 60;                                       // ambilight: number of LEDs
 
-    display.animations[ANIMATION_MODE_NONE].name                        = "None";
-    display.animations[ANIMATION_MODE_NONE].func                        = display_animation_none;
-    display.animations[ANIMATION_MODE_NONE].deceleration                = ANIMATION_NONE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_NONE].default_deceleration        = ANIMATION_NONE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_NONE].flags                       = ANIMATION_FLAG_NONE;
+    display.display_colors.red              = MAX_COLOR_STEPS / 2;                      // display color, default is red
+    display.ambilight_colors.red            = MAX_COLOR_STEPS / 2;                      // ambilight color, default is red
 
-    display.animations[ANIMATION_MODE_FADE].name                        = "Fade";
-    display.animations[ANIMATION_MODE_FADE].func                        = display_animation_fade;
-    display.animations[ANIMATION_MODE_FADE].deceleration                = ANIMATION_FADE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_FADE].default_deceleration        = ANIMATION_FADE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_FADE].flags                       = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.ambilight_marker_colors.green   = MAX_COLOR_STEPS / 2;                      // ambilight marker color, default is cyan (green + blue)
+    display.ambilight_marker_colors.blue    = MAX_COLOR_STEPS / 2;
 
-    display.animations[ANIMATION_MODE_ROLL].name                        = "Roll";
-    display.animations[ANIMATION_MODE_ROLL].func                        = display_animation_roll;
-    display.animations[ANIMATION_MODE_ROLL].deceleration                = ANIMATION_ROLL_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_ROLL].default_deceleration        = ANIMATION_ROLL_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_ROLL].flags                       = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_NONE].name                                    = "None";
+    display.animations[ANIMATION_MODE_NONE].func                                    = display_animation_none;
+    display.animations[ANIMATION_MODE_NONE].deceleration                            = ANIMATION_NONE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_NONE].default_deceleration                    = ANIMATION_NONE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_NONE].flags                                   = ANIMATION_FLAG_NONE;
 
-    display.animations[ANIMATION_MODE_EXPLODE].name                     = "Explode";
-    display.animations[ANIMATION_MODE_EXPLODE].func                     = display_animation_explode;
-    display.animations[ANIMATION_MODE_EXPLODE].deceleration             = ANIMATION_EXPLODE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_EXPLODE].default_deceleration     = ANIMATION_EXPLODE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_EXPLODE].flags                    = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_FADE].name                                    = "Fade";
+    display.animations[ANIMATION_MODE_FADE].func                                    = display_animation_fade;
+    display.animations[ANIMATION_MODE_FADE].deceleration                            = ANIMATION_FADE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_FADE].default_deceleration                    = ANIMATION_FADE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_FADE].flags                                   = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_RANDOM].name                      = "Random";
-    display.animations[ANIMATION_MODE_RANDOM].func                      = display_animation_random;
-    display.animations[ANIMATION_MODE_RANDOM].deceleration              = ANIMATION_RANDOM_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_RANDOM].default_deceleration      = ANIMATION_RANDOM_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_RANDOM].flags                     = ANIMATION_FLAG_NONE;
+    display.animations[ANIMATION_MODE_ROLL].name                                    = "Roll";
+    display.animations[ANIMATION_MODE_ROLL].func                                    = display_animation_roll;
+    display.animations[ANIMATION_MODE_ROLL].deceleration                            = ANIMATION_ROLL_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_ROLL].default_deceleration                    = ANIMATION_ROLL_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_ROLL].flags                                   = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_SNAKE].name                       = "Snake";
-    display.animations[ANIMATION_MODE_SNAKE].func                       = display_animation_snake;
-    display.animations[ANIMATION_MODE_SNAKE].deceleration               = ANIMATION_SNAKE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_SNAKE].default_deceleration       = ANIMATION_SNAKE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_SNAKE].flags                      = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_EXPLODE].name                                 = "Explode";
+    display.animations[ANIMATION_MODE_EXPLODE].func                                 = display_animation_explode;
+    display.animations[ANIMATION_MODE_EXPLODE].deceleration                         = ANIMATION_EXPLODE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_EXPLODE].default_deceleration                 = ANIMATION_EXPLODE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_EXPLODE].flags                                = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_TELETYPE].name                    = "Teletype";
-    display.animations[ANIMATION_MODE_TELETYPE].func                    = display_animation_teletype;
-    display.animations[ANIMATION_MODE_TELETYPE].deceleration            = ANIMATION_TELETYPE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_TELETYPE].default_deceleration    = ANIMATION_TELETYPE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_TELETYPE].flags                   = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_RANDOM].name                                  = "Random";
+    display.animations[ANIMATION_MODE_RANDOM].func                                  = display_animation_random;
+    display.animations[ANIMATION_MODE_RANDOM].deceleration                          = ANIMATION_RANDOM_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_RANDOM].default_deceleration                  = ANIMATION_RANDOM_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_RANDOM].flags                                 = ANIMATION_FLAG_NONE;
 
-    display.animations[ANIMATION_MODE_CUBE].name                        = "Cube";
-    display.animations[ANIMATION_MODE_CUBE].func                        = display_animation_cube;
-    display.animations[ANIMATION_MODE_CUBE].deceleration                = ANIMATION_CUBE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_CUBE].default_deceleration        = ANIMATION_CUBE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_CUBE].flags                       = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_SNAKE].name                                   = "Snake";
+    display.animations[ANIMATION_MODE_SNAKE].func                                   = display_animation_snake;
+    display.animations[ANIMATION_MODE_SNAKE].deceleration                           = ANIMATION_SNAKE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_SNAKE].default_deceleration                   = ANIMATION_SNAKE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_SNAKE].flags                                  = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_MATRIX].name                      = "Matrix";
-    display.animations[ANIMATION_MODE_MATRIX].func                      = display_animation_matrix;
-    display.animations[ANIMATION_MODE_MATRIX].deceleration              = ANIMATION_MATRIX_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_MATRIX].default_deceleration      = ANIMATION_MATRIX_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_MATRIX].flags                     = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_TELETYPE].name                                = "Teletype";
+    display.animations[ANIMATION_MODE_TELETYPE].func                                = display_animation_teletype;
+    display.animations[ANIMATION_MODE_TELETYPE].deceleration                        = ANIMATION_TELETYPE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_TELETYPE].default_deceleration                = ANIMATION_TELETYPE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_TELETYPE].flags                               = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_DROP].name                        = "Drop";
-    display.animations[ANIMATION_MODE_DROP].func                        = display_animation_drop;
-    display.animations[ANIMATION_MODE_DROP].deceleration                = ANIMATION_DROP_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_DROP].default_deceleration        = ANIMATION_DROP_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_DROP].flags                       = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_CUBE].name                                    = "Cube";
+    display.animations[ANIMATION_MODE_CUBE].func                                    = display_animation_cube;
+    display.animations[ANIMATION_MODE_CUBE].deceleration                            = ANIMATION_CUBE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_CUBE].default_deceleration                    = ANIMATION_CUBE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_CUBE].flags                                   = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_SQUEEZE].name                     = "Squeeze";
-    display.animations[ANIMATION_MODE_SQUEEZE].func                     = display_animation_squeeze;
-    display.animations[ANIMATION_MODE_SQUEEZE].deceleration             = ANIMATION_SQUEEZE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_SQUEEZE].default_deceleration     = ANIMATION_SQUEEZE_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_SQUEEZE].flags                    = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_GREEN_MATRIX].name                            = "GreenMatrix";
+    display.animations[ANIMATION_MODE_GREEN_MATRIX].func                            = display_animation_green_matrix;
+    display.animations[ANIMATION_MODE_GREEN_MATRIX].deceleration                    = ANIMATION_GREEN_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_GREEN_MATRIX].default_deceleration            = ANIMATION_GREEN_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_GREEN_MATRIX].flags                           = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.animations[ANIMATION_MODE_FLICKER].name                     = "Flicker";
-    display.animations[ANIMATION_MODE_FLICKER].func                     = display_animation_flicker;
-    display.animations[ANIMATION_MODE_FLICKER].deceleration             = ANIMATION_FLICKER_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_FLICKER].default_deceleration     = ANIMATION_FLICKER_DEFAULT_DEC;
-    display.animations[ANIMATION_MODE_FLICKER].flags                    = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
+    display.animations[ANIMATION_MODE_DROP].name                                    = "Drop";
+    display.animations[ANIMATION_MODE_DROP].func                                    = display_animation_drop;
+    display.animations[ANIMATION_MODE_DROP].deceleration                            = ANIMATION_DROP_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_DROP].default_deceleration                    = ANIMATION_DROP_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_DROP].flags                                   = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.color_animations[COLOR_ANIMATION_MODE_NONE].name                    = "None";
-    display.color_animations[COLOR_ANIMATION_MODE_NONE].deceleration            = 1;
-    display.color_animations[COLOR_ANIMATION_MODE_NONE].default_deceleration    = 1;
-    display.color_animations[COLOR_ANIMATION_MODE_NONE].flags                   = COLOR_ANIMATION_FLAG_NONE;
+    display.animations[ANIMATION_MODE_SQUEEZE].name                                 = "Squeeze";
+    display.animations[ANIMATION_MODE_SQUEEZE].func                                 = display_animation_squeeze;
+    display.animations[ANIMATION_MODE_SQUEEZE].deceleration                         = ANIMATION_SQUEEZE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_SQUEEZE].default_deceleration                 = ANIMATION_SQUEEZE_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_SQUEEZE].flags                                = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].name                 = "Rainbow";
-    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].deceleration         = 4;
-    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].default_deceleration = 4;
-    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].flags                = COLOR_ANIMATION_FLAG_CONFIGURABLE;
+    display.animations[ANIMATION_MODE_FLICKER].name                                 = "Flicker";
+    display.animations[ANIMATION_MODE_FLICKER].func                                 = display_animation_flicker;
+    display.animations[ANIMATION_MODE_FLICKER].deceleration                         = ANIMATION_FLICKER_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_FLICKER].default_deceleration                 = ANIMATION_FLICKER_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_FLICKER].flags                                = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].name                         = "Normal";
-    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].deceleration                 = 0;
-    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].default_deceleration         = 0;
-    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].flags                        = AMBILIGHT_FLAG_NONE;
+    display.animations[ANIMATION_MODE_MATRIX].name                                  = "Matrix";
+    display.animations[ANIMATION_MODE_MATRIX].func                                  = display_animation_matrix;
+    display.animations[ANIMATION_MODE_MATRIX].deceleration                          = ANIMATION_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_MATRIX].default_deceleration                  = ANIMATION_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_MATRIX].flags                                 = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].name                          = "Clock";
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].deceleration                  = 0;
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].default_deceleration          = 0;
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].flags                         = AMBILIGHT_FLAG_NONE;
+    display.animations[ANIMATION_MODE_RED_MATRIX].name                              = "RedMatrix";
+    display.animations[ANIMATION_MODE_RED_MATRIX].func                              = display_animation_red_matrix;
+    display.animations[ANIMATION_MODE_RED_MATRIX].deceleration                      = ANIMATION_RED_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_RED_MATRIX].default_deceleration              = ANIMATION_RED_MATRIX_DEFAULT_DEC;
+    display.animations[ANIMATION_MODE_RED_MATRIX].flags                             = ANIMATION_FLAG_CONFIGURABLE | ANIMATION_FLAG_FAVOURITE;
 
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].name                          = "Clock2";
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].deceleration                  = 0;
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].default_deceleration          = 0;
-    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].flags                         = AMBILIGHT_FLAG_NONE;
+    display.color_animations[COLOR_ANIMATION_MODE_NONE].name                        = "None";
+    display.color_animations[COLOR_ANIMATION_MODE_NONE].deceleration                = 1;
+    display.color_animations[COLOR_ANIMATION_MODE_NONE].default_deceleration        = 1;
+    display.color_animations[COLOR_ANIMATION_MODE_NONE].flags                       = COLOR_ANIMATION_FLAG_NONE;
 
-    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].name                         = "Rainbow";
-    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].deceleration                 = 4;
-    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].default_deceleration         = 4;
-    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].flags                        = AMBILIGHT_FLAG_CONFIGURABLE;
+    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].name                     = "Rainbow";
+    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].deceleration             = 4;
+    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].default_deceleration     = 4;
+    display.color_animations[COLOR_ANIMATION_MODE_RAINBOW].flags                    = COLOR_ANIMATION_FLAG_CONFIGURABLE;
 
-    display.dimmed_colors[0]        = 8;
-    display.dimmed_colors[1]        = 8;
-    display.dimmed_colors[2]        = 9;
-    display.dimmed_colors[3]        = 9;
-    display.dimmed_colors[4]        = 10;
-    display.dimmed_colors[5]        = 10;
-    display.dimmed_colors[6]        = 11;
-    display.dimmed_colors[7]        = 11;
-    display.dimmed_colors[8]        = 12;
-    display.dimmed_colors[9]        = 12;
-    display.dimmed_colors[10]       = 13;
-    display.dimmed_colors[11]       = 13;
-    display.dimmed_colors[12]       = 14;
-    display.dimmed_colors[13]       = 14;
-    display.dimmed_colors[14]       = 15;
-    display.dimmed_colors[15]       = MAX_BRIGHTNESS;
+    display.color_animations[COLOR_ANIMATION_MODE_DAYLIGHT].name                    = "Daylight";
+    display.color_animations[COLOR_ANIMATION_MODE_DAYLIGHT].deceleration            = 4;
+    display.color_animations[COLOR_ANIMATION_MODE_DAYLIGHT].default_deceleration    = 0;
+    display.color_animations[COLOR_ANIMATION_MODE_DAYLIGHT].flags                   = COLOR_ANIMATION_FLAG_NONE;
+
+    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].name                             = "Normal";
+    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].deceleration                     = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].default_deceleration             = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_NORMAL].flags                            = AMBILIGHT_FLAG_NONE;
+
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].name                              = "Clock";
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].deceleration                      = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].default_deceleration              = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK].flags                             = AMBILIGHT_FLAG_NONE;
+
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].name                             = "Clock2";
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].deceleration                     = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].default_deceleration             = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_CLOCK2].flags                            = AMBILIGHT_FLAG_NONE;
+
+    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].name                            = "Rainbow";
+    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].deceleration                    = 4;
+    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].default_deceleration            = 4;
+    display.ambilight_modes[AMBILIGHT_MODE_RAINBOW].flags                           = AMBILIGHT_FLAG_CONFIGURABLE;
+
+    display.ambilight_modes[AMBILIGHT_MODE_DAYLIGHT].name                           = "Daylight";
+    display.ambilight_modes[AMBILIGHT_MODE_DAYLIGHT].deceleration                   = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_DAYLIGHT].default_deceleration           = 0;
+    display.ambilight_modes[AMBILIGHT_MODE_DAYLIGHT].flags                          = AMBILIGHT_FLAG_NONE;
+
+    display.dimmed_display_colors[0]    = 0;
+    display.dimmed_display_colors[1]    = 1;
+    display.dimmed_display_colors[2]    = 2;
+    display.dimmed_display_colors[3]    = 3;
+    display.dimmed_display_colors[4]    = 4;
+    display.dimmed_display_colors[5]    = 5;
+    display.dimmed_display_colors[6]    = 6;
+    display.dimmed_display_colors[7]    = 7;
+    display.dimmed_display_colors[8]    = 8;
+    display.dimmed_display_colors[9]    = 9;
+    display.dimmed_display_colors[10]   = 10;
+    display.dimmed_display_colors[11]   = 11;
+    display.dimmed_display_colors[12]   = 12;
+    display.dimmed_display_colors[13]   = 13;
+    display.dimmed_display_colors[14]   = 14;
+    display.dimmed_display_colors[15]   = MAX_BRIGHTNESS;
+
+    for (idx = 0; idx < 15; idx++)
+    {
+        display.dimmed_ambilight_colors[idx] = idx;
+    }
+
+    display.dimmed_ambilight_colors[15] = MAX_BRIGHTNESS;
 
     display.ticker_deceleration     = DEFAULT_TICKER_DECELERATION;                      // ticker deceleration
+    strcpy ((char *) display.date_ticker_format, "D.M.Y");
 
     led_init ();
 }

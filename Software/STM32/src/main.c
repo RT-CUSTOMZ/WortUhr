@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * main.c - main routines of wclock24h
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * System Clocks configured on STM32F103 Mini development board:
  *
@@ -49,52 +49,52 @@
  *
  * Internal devices used:
  *
- *    +-------------------------+-----------------------------------+-----------------------------------+
- *    | Device                  | STM32F4x1 Nucleo                  | STM32F103C8T6                     |
- *    +-------------------------+-----------------------------------+-----------------------------------+
- *    | User button             | GPIO:   PC13                      | GPIO:   PA6                       |
- *    | Board LED               | GPIO:   PA5                       | GPIO:   PC13                      |
- *    +-------------------------+-----------------------------------+-----------------------------------+
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | Device                  | STM32F4x1 Nucleo                      | STM32F103C8T6                     | Remarks                       |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | User button             | GPIO:          PC13                   | GPIO:      PA6                    |                               |
+ *    | Board LED               | GPIO:          PA5                    | GPIO:      PC13                   |                               |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
  *
  * External devices:
  *
- *    +-----------------------+---------------------------------------+-----------------------------------+-------------------------------+
- *    | Device                | STM32F4x1 Nucleo                      | STM32F103C8T6                     | Remarks                       |
- *    +-----------------------+---------------------------------------+-----------------------------------+-------------------------------+
- *    | TSOP31238 (IRMP)      | GPIO:          PC10                   | GPIO:      PB3                    |                               |
- *    | DS18xx (OneWire)      | GPIO:          PD2                    | GPIO:      PB5                    |                               |
- *    | Logger (Nucleo: USB)  | USART2:        TX=PA2  RX=PA3         | USART1:    TX=PA9  RX=PA10        |                               |
- *    | WPS button            | GPIO:          PC5                    | GPIO:      PA7                    |                               |
- *    | ESP8266 USART         | USART6:        TX=PA11 RX=PA12        | USART2:    TX=PA2  RX=PA3         |                               |
- *    | ESP8266 RST/CH_PD     | GPIO:          RST=PA7 CH_PD=PA6      | GPIO:      RST=PA0 CH_PD=PA1      |                               |
- *    | ESP8266 GPIO0         | GPIO:          FLASH=PA4              | GPIO:      FLASH=PA4              |                               |
- *    | ESP8266 GPIO13/GPIO15 | USART1:        GPIO13=PA9 GPIO15=PA10 | USART1:    GPIO13=PA9 GPIO15=PA10 | Only in STM32 bootloader mode |
- *    | ESP8266 GPIO14        | GPIO:          GPIO14=RESET           | GPIO:      GPIO14=RESET           |                               |
- *    | ESP8266 GPIO4         | GPIO:          GPIO4=BOOT0            | GPIO:      GPIO4=BOOT0            |                               |
- *    | DCF77                 | GPIO:          DATA=PC11 PON=PC12     | GPIO:      DATA=PB8  PON=PB9      |                               |
- *    | I2C DS3231 & EEPROM   | I2C3:          SCL=PA8 SDA=PC9        | I2C1:      SCL=PB6 SDA=PB7        |                               |
- *    | LDR                   | ADC:           ADC1_IN14=PC4          | ADC:       ADC12_IN5=PA5          |                               |
- *    | WS2812 / SK6812       | TIM3/DMA1:     PC6                    | TIM1/DMA1: PA8                    |                               |
- *    | APA102                | SPI2/DMA1:     SCK=PB13 MOSI=PB15     | SPI2/DMA1: SCK=PB13 MOSI=PB15     |                               |
- *    | Power switch          | GPIO:          PC8                    | GPIO:      PB0                    |                               |
- *    | Beeper                | PWM:           PB1 TIM3/CH4           | PWM:       PB1 TIM3/CH4           |                               |
- *    | DFPlayer              | USART1 (ALT1): TX=PB6  RX=PB7         | USART3:    TX=PB10  RX=PB11       |                               |
- *    +-----------------------+---------------------------------------+-----------------------------------+-------------------------------+
- *    | Free Port A           | PA0 PA1 PA15                          | PA11 PA12 PA15                    |                               |
- *    | Free Port B           | PB0 PB2 PB4  PB5 PB12 PB14            | PB4  PB12 PB14                    |                               |
- *    | Free Port C           | PC3 PC7 PC14 PC15                     | PC14 PC15                         |                               |
- *    +-----------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | Device                  | STM32F4x1 Nucleo                      | STM32F103C8T6                     | Remarks                       |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | TSOP31238 (IRMP)        | GPIO:          PC10                   | GPIO:      PB3                    |                               |
+ *    | DS18xx (OneWire)        | GPIO:          PD2                    | GPIO:      PB5                    |                               |
+ *    | Logger (Nucleo: USB)    | USART2:        TX=PA2  RX=PA3         | USART1:    TX=PA9  RX=PA10        |                               |
+ *    | WPS button              | GPIO:          PC5                    | GPIO:      PA7                    |                               |
+ *    | ESP8266 USART           | USART6:        TX=PA11 RX=PA12        | USART2:    TX=PA2  RX=PA3         |                               |
+ *    | ESP8266 RST/CH_PD       | GPIO:          RST=PA7 CH_PD=PA6      | GPIO:      RST=PA0 CH_PD=PA1      |                               |
+ *    | ESP8266 GPIO0           | GPIO:          FLASH=PA4              | GPIO:      FLASH=PA4              |                               |
+ *    | ESP8266 GPIO13/GPIO15   | USART1:        GPIO13=PA9 GPIO15=PA10 | USART1:    GPIO13=PA9 GPIO15=PA10 | Only in STM32 bootloader mode |
+ *    | ESP8266 GPIO14          | GPIO:          GPIO14=RESET           | GPIO:      GPIO14=RESET           |                               |
+ *    | ESP8266 GPIO4           | GPIO:          GPIO4=BOOT0            | GPIO:      GPIO4=BOOT0            |                               |
+ *    | DCF77                   | GPIO:          DATA=PC11 PON=PC12     | GPIO:      DATA=PB8  PON=PB9      |                               |
+ *    | I2C DS3231 & EEPROM     | I2C3:          SCL=PA8 SDA=PC9        | I2C1:      SCL=PB6 SDA=PB7        |                               |
+ *    | LDR                     | ADC:           ADC1_IN14=PC4          | ADC:       ADC12_IN5=PA5          |                               |
+ *    | WS2812 / SK6812         | TIM3/DMA1:     PC6                    | TIM1/DMA1: PA8                    |                               |
+ *    | APA102                  | SPI2/DMA1:     SCK=PB13 MOSI=PB15     | SPI2/DMA1: SCK=PB13 MOSI=PB15     |                               |
+ *    | Power switch            | GPIO:          PC8                    | GPIO:      PB0                    |                               |
+ *    | Beeper                  | PWM:           PB1 TIM3/CH4           | PWM:       PB1 TIM3/CH4           |                               |
+ *    | DFPlayer                | USART1 (ALT1): TX=PB6  RX=PB7         | USART3:    TX=PB10  RX=PB11       |                               |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | Free Port A             | PA0 PA1 PA15                          | PA11 PA12 PA15                    |                               |
+ *    | Free Port B             | PB0 PB2 PB4  PB5 PB12 PB14            | PB4  PB12 PB14                    |                               |
+ *    | Free Port C             | PC3 PC7 PC14 PC15                     | PC14 PC15                         |                               |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
  *
  * Timers:
  *
- *    +-------------------------+-----------------------------------+-----------------------------------+
- *    | Device                  | STM32F4x1 Nucleo                  | STM32F103C8T6                     |
- *    +-------------------------+-----------------------------------+-----------------------------------+
- *    | General (IRMP etc.)     | TIM2                              | TIM2                              |
- *    | WS2812                  | TIM3                              | TIM1                              |
- *    | Beeper                  | TIM4                              | TIM4                              |
- *    | DS18xx (OneWire)        | Systick (see delay.c)             | Systick (see delay.c)             |
- *    +-------------------------+-----------------------------------+-----------------------------------+
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | Device                  | STM32F4x1 Nucleo                      | STM32F103C8T6                     | Remarks                       |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
+ *    | General (IRMP etc.)     | TIM2                                  | TIM2                              |                               |
+ *    | WS2812                  | TIM3                                  | TIM1                              |                               |
+ *    | Beeper                  | TIM4                                  | TIM4                              |                               |
+ *    | DS18xx (OneWire)        | Systick (see delay.c)                 | Systick (see delay.c)             |                               |
+ *    +-------------------------+---------------------------------------+-----------------------------------+-------------------------------+
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,20 +134,17 @@
 #include "weather.h"
 #include "vars.h"
 #include "dfplayer.h"
-#if WCLOCK24H == 1
 #include "tables.h"
-#else
-#include "tables12h.h"
-#endif
-
 #include "tetris.h"
+#include "snake.h"
 #include "log.h"
-#include "nic.h"
-#include "nici.h"
 #include "main.h"
 
 #define DEFAULT_UPDATE_HOST     "wortuhr.42volt.de"
 #define DEFAULT_UPDATE_PATH     "update"
+
+#define STATUS_LED_FLASH_TIME   50                                      // status LED: time of flash
+#define MAX_DATE_TICKER_LEN     32                                      // date ticker overlay: buffer len
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * global public variables
@@ -178,6 +175,7 @@ static volatile uint_fast8_t    read_rtc_temperature_flag   = 0;        // flag:
 static volatile uint_fast8_t    show_time_flag              = 0;        // flag: update time on display, set every full minute
 static volatile uint_fast8_t    half_minute_flag            = 0;        // flag: it is hh:mm:30
 volatile uint32_t               uptime                      = 0;        // uptime in seconds
+#if 0
 static volatile uint_fast8_t    wday                        = 0;        // current weekday, 0=Sunday
 static volatile uint_fast16_t   year                        = 0;        // current year;
 static volatile uint_fast8_t    month                       = 0;        // current month;
@@ -185,7 +183,13 @@ static volatile uint_fast8_t    mday                        = 0;        // curre
 static volatile uint_fast8_t    hour                        = 0;        // current hour
 static volatile uint_fast8_t    minute                      = 0;        // current minute
 static volatile uint_fast8_t    second                      = 0;        // current second
+#endif
 static volatile uint_fast8_t    dcf77_enabled               = 0;        // flag: DCF77 enabled (disabled if power is on)
+static volatile uint32_t        ambilight_clock_wait_cycles = 0;        // number of wait cycles before changing ambilight LED in clock/clock2
+static volatile uint32_t        ambilight_clock_wait_cnt    = 0;        // wait counter: counts from 0 to ambilight_clock_wait_cycles
+static volatile uint32_t        ambilight_clock_led_idx     = 0;        // ambilight led index for clock/clock2
+static volatile uint_fast8_t    ambilight_clock_tick        = 0;        // flag: call 20 times per ambilight LED in clock/clock2 mode
+
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * timer definitions:
  *
@@ -218,7 +222,7 @@ static volatile uint_fast8_t    dcf77_enabled               = 0;        // flag:
 #define TIM_CLK                 100000000L                                  // 100 MHz
 #define TIM_PERIOD              100
 
-#elif defined (STM32F446RE)                                                 // STM32F411 Nucleo Board
+#elif defined (STM32F446RE)                                                 // STM32F446 Nucleo Board
 #define TIM_CLK                 180000000L                                  // 180 MHz
 #define TIM_PERIOD              11
 
@@ -230,9 +234,6 @@ static volatile uint_fast8_t    dcf77_enabled               = 0;        // flag:
 #endif
 
 #define TIM_PRESCALER           ((TIM_CLK / F_INTERRUPTS) / (TIM_PERIOD + 1) - 1)
-
-#define STATUS_LED_FLASH_TIME   50                                          // status LED: time of flash
-
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * initialize timer2
@@ -265,6 +266,25 @@ timer2_init (void)
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set number of wait cycles for ambilight modes clock & clock2
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+main_set_ambilight_clock_wait_cycles (void)
+{
+    if (display.ambilight_leds)
+    {
+        ambilight_clock_wait_cycles = (60 * F_INTERRUPTS) / ((AMBILIGHT_CLOCK_TICK_COUNT_PER_LED * display.ambilight_leds));
+        ambilight_clock_led_idx     = (gmain.second * display.ambilight_leds) / 60;
+    }
+    else
+    {
+        ambilight_clock_wait_cycles = 0;
+        ambilight_clock_led_idx     = 0;
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
  * timer2 IRQ handler for IRMP, soft clock, dcf77, animations, several timeouts
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
@@ -273,13 +293,14 @@ extern void TIM2_IRQHandler (void);                                     // keep 
 void
 TIM2_IRQHandler (void)
 {
-    static uint_fast8_t  last_minute_of_ds3231_flag = 0xFF;
-    static uint_fast16_t ldr_cnt;
-    static uint_fast16_t animation_cnt;
-    static uint_fast16_t clk_cnt;
-    static uint_fast16_t dcf77_cnt;
-    static uint_fast16_t net_time_cnt;
-    static uint_fast16_t eeprom_cnt;
+    static uint_fast8_t     last_minute_of_ds3231_flag = 0xFF;
+    static uint_fast16_t    ldr_cnt;
+    static uint_fast16_t    animation_cnt;
+    static uint_fast16_t    clk_cnt;
+    static uint_fast16_t    dcf77_cnt;
+    static uint_fast16_t    net_time_cnt;
+    static uint_fast16_t    eeprom_cnt;
+    static uint_fast8_t     ambi_tick_cnt = 0;
 
     TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 
@@ -331,75 +352,98 @@ TIM2_IRQHandler (void)
         eeprom_cnt = 0;
     }
 
+    if (ambilight_clock_wait_cycles)                            // wait cycles for ambilight mode clock & clock2
+    {
+        ambilight_clock_wait_cnt++;
+
+        if (ambilight_clock_wait_cnt >= ambilight_clock_wait_cycles)
+        {
+            ambilight_clock_wait_cnt = 0;
+
+            ambi_tick_cnt++;
+
+            if (ambi_tick_cnt == AMBILIGHT_CLOCK_TICK_COUNT_PER_LED)
+            {
+                ambilight_clock_led_idx++;
+                ambi_tick_cnt = 0;
+            }
+
+            ambilight_clock_tick = 1;                           // set AMBILIGHT_CLOCK_TICK_COUNT_PER_LED times per ambilight LED
+        }
+    }
+
     clk_cnt++;
 
     if (clk_cnt == F_INTERRUPTS)                                // increment internal clock every second
     {
-        clk_cnt = 0;
-        seconds_flag = 1;
+        clk_cnt         = 0;
+        seconds_flag    = 1;
 
         uptime++;
-        second++;
+        gmain.second++;
 
-        if (second == 45)                                       // get rtc time at hh:mm:45, but not twice in same minute
+        if (gmain.second == 45)                                 // get rtc time at hh:mm:45, but not twice in same minute
         {
-            if (last_minute_of_ds3231_flag != minute)
+            if (last_minute_of_ds3231_flag != gmain.minute)
             {
-                last_minute_of_ds3231_flag = minute;
+                last_minute_of_ds3231_flag = gmain.minute;
                 ds3231_flag = 1;
             }
         }
-        else if (second == 49)
+        else if (gmain.second == 49)
         {
             measure_temperature_flag = 1;                       // start ADC conversion of DS18xx
         }
-        else if (second == 50)
+        else if (gmain.second == 50)
         {
             read_temperature_flag = 1;                          // read temperature data of DS18xx
         }
-        else if (second == 51)
+        else if (gmain.second == 51)
         {
             read_rtc_temperature_flag = 1;                      // read temperature data of RTC
         }
-        else if (second == 60)
+        else if (gmain.second == 60)
         {
-            second = 0;
-            minute++;
+            gmain.second             = 0;
+            ambilight_clock_wait_cnt = 0;                       // fix rounding errors by resetting wait_cnt every minute
+            ambilight_clock_led_idx  = 0;                       // reset led index, too
+            ambi_tick_cnt            = 0;
+            gmain.minute++;
 
             show_time_flag = 1;
 
-            if (minute == 60)
+            if (gmain.minute == 60)
             {
-                minute = 0;
-                hour++;
+                gmain.minute = 0;
+                gmain.hour++;
 
-                if (hour == 24)
+                if (gmain.hour == 24)
                 {
-                    hour = 0;
-                    wday++;
+                    gmain.hour = 0;
+                    gmain.wday++;
 
-                    if (wday == 7)
+                    if (gmain.wday == 7)
                     {
-                        wday = 0;
+                        gmain.wday = 0;
                     }
 
-                    mday++;
+                    gmain.mday++;
 
-                    if (mday > days_of_month (month, year))
+                    if (gmain.mday > days_of_month (gmain.month, gmain.year))
                     {
-                        mday = 1;
-                        month++;
+                        gmain.mday = 1;
+                        gmain.month++;
 
-                        if (month >= 13)
+                        if (gmain.month >= 13)
                         {
-                            month = 1;
-                            year++;
+                            gmain.month = 1;
+                            gmain.year++;
                         }
                     }
                 }
             }
         }
-        else if (second == 30)
+        else if (gmain.second == 30)
         {
             half_minute_flag = 1;
         }
@@ -408,7 +452,7 @@ TIM2_IRQHandler (void)
         {
             net_time_countdown--;
 
-            if (net_time_countdown == 0)                                // trigger net time update
+            if (net_time_countdown == 0)                        // trigger net time update
             {
                 net_time_flag = 1;
             }
@@ -587,8 +631,9 @@ read_configuration_from_eeprom (void)
     if (eeprom_is_up)
     {
         log_message ("eeprom is online");
-        display_set_status_or_minute_leds (0, 1, 0);                                       // show green status or minute LEDs
+        display_set_status_or_minute_leds (0, 1, 0);                                        // show green status or minute LEDs
         read_version_from_eeprom ();
+        //eeprom_version = 0x00000000;                                                      // hack: reset EEPROM to default values
         log_printf ("current eeprom version: 0x%08x\r\n", eeprom_version);
 
         if ((eeprom_version & 0xFF0000FF) == 0x00000000 &&
@@ -666,123 +711,129 @@ upgrade_eeprom_version (void)
     {
         if (eeprom_version != EEPROM_VERSION)
         {
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
             log_printf ("updating EEPROM to version 0x%08x... ", EEPROM_VERSION);
 
             eeprom_version = EEPROM_VERSION;
 
-            if (! write_version_to_eeprom ())
-            {
-                log_eeprom_error ("version");
-            }
-
-            display_set_status_or_minute_leds (0, 0, 0);                                       // clear status or minute LEDs
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
 
             if (! remote_ir_write_codes_to_eeprom ())
             {
                 log_eeprom_error ("IR codes");
             }
 
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
 
             if (! display_write_config_to_eeprom ())
             {
                 log_eeprom_error ("display configuration");
             }
 
-            display_set_status_or_minute_leds (0, 0, 0);                                       // clear status or minute LEDs
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
 
             if (! overlay_write_config_to_eeprom ())
             {
                 log_eeprom_error ("overlay configuration");
             }
 
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
 
             if (! timeserver_write_data_to_eeprom ())
             {
                 log_eeprom_error ("timeserver configuration");
             }
 
-            display_set_status_or_minute_leds (0, 0, 0);                                       // clear status or minute LEDs
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
 
             if (! night_write_data_to_eeprom ())
             {
                 log_eeprom_error ("night time configuration");
             }
 
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
 
             if (! alarm_write_data_to_eeprom ())
             {
                 log_eeprom_error ("alarm time configuration");
             }
 
-            display_set_status_or_minute_leds (0, 0, 0);                                       // clear status or minute LEDs
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
 
             if (! temp_write_config_to_eeprom ())
             {
                 log_eeprom_error ("temperature configuration");
             }
 
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
 
             if (! rtc_write_config_to_eeprom ())
             {
                 log_eeprom_error ("RTC configuration");
             }
 
-            display_set_status_or_minute_leds (0, 0, 0);                                       // clear status or minute LEDs
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
 
             if (! ldr_write_config_to_eeprom ())
             {
                 log_eeprom_error ("LDR configuration");
             }
 
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
 
             if (! weather_write_config_to_eeprom ())
             {
                 log_eeprom_error ("weather configuration");
             }
 
-            display_set_status_or_minute_leds (0, 0, 0);                                       // clear status or minute LEDs
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
 
             if (! dfplayer_write_config_to_eeprom ())
             {
                 log_eeprom_error ("dfplayer configuration");
             }
 
-            display_set_status_or_minute_leds (1, 0, 0);                                       // show red status or minute LEDs
+            display_set_status_or_minute_leds (1, 0, 0);                                        // show red status or minute LEDs
 
             if (! write_main_parameters_to_eeprom ())
             {
                 log_eeprom_error ("update main parameters configuration");
             }
 
-            display_set_status_or_minute_leds (0, 0, 0);                                       // switch status or minute LEDs off
+            display_set_status_or_minute_leds (1, 1, 0);                                        // show yellow status or minute LEDs
+
+            if (! write_version_to_eeprom ())                                                   // at least, write new eeprom version
+            {
+                log_eeprom_error ("version");
+            }
 
             log_message ("done");
             eeprom_version = EEPROM_VERSION;
+
+            display_set_status_or_minute_leds (0, 0, 0);                                        // switch off status or minute LEDs
         }
     }
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * toggle power
+ * set display power
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 static uint_fast8_t
-toggle_power (uint_fast8_t do_sync)
+set_display_power (uint_fast8_t new_power_is_on, uint_fast8_t do_sync_ambilight)
 {
-    uint_fast8_t            display_clock_flag;
+    uint_fast8_t    display_clock_flag;
 
-    display.power_is_on = ! display.power_is_on;
-    display_set_ambilight_power(display.power_is_on);
+    display.display_power_is_on = new_power_is_on;
+
+    if (do_sync_ambilight)
+    {
+        display_set_ambilight_power (display.display_power_is_on);
+    }
 
     display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
 
-    if (display.power_is_on)
+    if (display.display_power_is_on)
     {
         display_clock_flag |= DISPLAY_CLOCK_FLAG_POWER_ON;
     }
@@ -791,47 +842,12 @@ toggle_power (uint_fast8_t do_sync)
         display_clock_flag |= DISPLAY_CLOCK_FLAG_POWER_OFF;
     }
 
-    if (do_sync && esp8266.is_online)
+    if (esp8266.is_online)
     {
         var_send_display_power ();
     }
 
-    if (display.power_is_on)
-    {
-        dcf77_enabled = FALSE;
-    }
-    else
-    {
-        dcf77_enabled = TRUE;
-    }
-
-    return display_clock_flag;
-}
-
-/*-------------------------------------------------------------------------------------------------------------------------------------------
- * set power
- *-------------------------------------------------------------------------------------------------------------------------------------------
- */
-static uint_fast8_t
-set_power (uint_fast8_t new_power_is_on)
-{
-    uint_fast8_t            display_clock_flag;
-
-    display.power_is_on = new_power_is_on;
-    display_set_ambilight_power(display.power_is_on);
-
-    display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-
-    if (display.power_is_on)
-    {
-        display_clock_flag |= DISPLAY_CLOCK_FLAG_POWER_ON;
-    }
-    else
-    {
-        display_clock_flag |= DISPLAY_CLOCK_FLAG_POWER_OFF;
-    }
-
-    if (display.power_is_on)
+    if (display.display_power_is_on || display.ambilight_power_is_on)
     {
         dcf77_enabled = FALSE;
     }
@@ -850,86 +866,35 @@ set_power (uint_fast8_t new_power_is_on)
 static void
 speak (uint_fast8_t hh, uint_fast8_t mm)
 {
-    static uint8_t                  words[WP_COUNT];
-    uint_fast8_t                    hour_mode;
-    uint_fast8_t                    minute_mode;
-    uint_fast8_t                    it_is_mode;
-#if WCLOCK24H == 1
-    const struct MinuteDisplay *    tbl_minute;
-#else
-    const struct MinuteDisplay12 *  tbl_minute;
+    static uint8_t  words[WP_COUNT];
+    uint_fast8_t    do_show_it_is = 0;
+    uint_fast16_t   idx;
+
+    if (tables.complete)
+    {
+#if WCLOCK24H == 0
+        mm /= 5;
 #endif
-    const uint8_t *                 word_idx_p;
-    uint_fast16_t                   idx;
-
-#if WCLOCK24H == 1
-    minute_mode = tbl_modes[display.display_mode].minute_txt;
-    tbl_minute  = &tbl_minutes[minute_mode][mm];
-    hour_mode   = tbl_modes[display.display_mode].hour_txt;
-#else
-    minute_mode = display.display_mode;
-    tbl_minute  = &tbl_minutes[minute_mode][mm / 5];
-    hour_mode   = tbl_minute->hour_mode;
-#endif
-
-    memset (words, 0, WP_COUNT);
-
-    it_is_mode = tbl_minute->flags & MDF_IT_IS_MASK;
-    word_idx_p = tbl_it_is[it_is_mode];
-    words[word_idx_p[0]] = 1;
-    words[word_idx_p[1]] = 1;
-
-    for (idx = 0; idx < MAX_MINUTE_WORDS && tbl_minute->wordIdx[idx] != 0; idx++)
-    {
-        words[tbl_minute->wordIdx[idx]] = 1;
-    }
-
-#if WCLOCK24H == 0                                              // WC12h: we have only 12 hours
-    if (hh >= HOUR_COUNT)
-    {
-        hh -= HOUR_COUNT;
-    }
-#endif
-
-    if (tbl_minute->flags & MDF_HOUR_OFFSET_MASK)
-    {
-        hh += 1;                                                // correct hour offset
-    }
-
-    if (hh >= HOUR_COUNT)
-    {
-        hh -= HOUR_COUNT;
-    }
-
-    word_idx_p = tbl_hours[hour_mode][hh];                      // get the hour words from hour table
-
-    for (idx = 0; idx < MAX_HOUR_WORDS && word_idx_p[idx] != 0; idx++)
-    {
-#if WCLOCK24H == 1                                              // WC24h:
-        if (mm == 0 && word_idx_p[idx] == WP_EINS_2)            // fm hack, because it cannot be handled by table:
-        {                                                       // patch "ES IST EINS UHR" to "ES IST EIN UHR" at 01:00 & 13:00
-            words[WP_EIN_4] = 1;
-        }
-        else
+        if ((display.display_flags & DISPLAY_FLAGS_PERMANENT_IT_IS) || mm == 0 || mm == MINUTE_COUNT / 2)
         {
-            words[word_idx_p[idx]] = 1;
+            do_show_it_is = 1;
         }
-#else
-        words[word_idx_p[idx]] = 1;
-#endif
-    }
 
-    dfplayer_flush_queue ();
-
-    for (idx = 0; idx < WP_COUNT; idx++)
-    {
-        if (words[idx])
+        if (tables_fill_words (words, hh, mm, do_show_it_is))
         {
-            dfplayer_enqueue (idx);
+            dfplayer_flush_queue ();
+
+            for (idx = 0; idx < WP_COUNT; idx++)
+            {
+                if (words[idx])
+                {
+                    dfplayer_enqueue (idx);
+                }
+            }
+
+            dfplayer_start_queue ();
         }
     }
-
-    dfplayer_start_queue ();
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -940,11 +905,1211 @@ static uint_fast8_t     show_temperature            = 0;
 static uint_fast8_t     display_clock_flag          = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
 static uint_fast8_t     show_date                   = 0;
 static uint_fast8_t     last_ldr_value              = 0xFF;
-static uint_fast8_t     show_overlay_idx            = 0xFF;
+static uint_fast8_t     show_overlay_idx            = MAX_OVERLAYS;
 static uint_fast8_t     icon_duration               = 0;
+static uint_fast8_t     show_cw_cnt                 = 0;
 static uint32_t         show_icon_stop_time         = 0;
 static uint32_t         local_uptime                = 0;
 
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * set_overlay_idx () - used by external NIC function wc_display_overlay()
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+set_overlay_idx (uint_fast8_t idx)
+{
+    if (idx < MAX_OVERLAYS)
+    {
+        show_overlay_idx = idx;
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * show_icon () - used by external NIC function wc_display_icon()
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void
+show_icon (const char * icon, uint_fast8_t duration)
+{
+    display_get_icon (icon, duration);
+    icon_duration = duration;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * get_date () - used by external NIC function wc_wordclock_date()
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+char *
+get_date (void)
+{
+    static char date[16];
+
+    sprintf (date, "%4d-%02d-%02d", gmain.year, gmain.month, gmain.mday);
+    return date;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * get_time () - used by external NIC function wc_wordclock_time()
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+char *
+get_time (void)
+{
+    static char tim[16];
+
+    sprintf (tim, "%02d:%02d:%02d", gmain.hour, gmain.minute, gmain.second);
+    return tim;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_remote_procedure () - schedule remote procedure calls by ESP8266
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_remote_procedure (char * parameters)
+{
+    uint_fast8_t        var_idx;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (var_idx)
+    {
+        case LDR_MIN_VALUE_RPC_VAR:
+        {
+            debug_log_message ("rpc: set LDR value as minimum");
+            ldr_set_min_value ();
+            var_send_ldr_min_value ();
+            break;
+        }
+
+        case LDR_MAX_VALUE_RPC_VAR:
+        {
+            debug_log_message ("rpc: set LDR value as maximum");
+            ldr_set_max_value ();
+            var_send_ldr_max_value ();
+            break;
+        }
+
+        case LEARN_IR_RPC_VAR:
+        {
+            debug_log_message ("rpc: learn IR codes");
+
+            if (remote_ir_learn ())
+            {
+                remote_ir_write_codes_to_eeprom ();
+            }
+            break;
+        }
+
+        case GET_NET_TIME_RPC_VAR:
+        {
+            net_time_flag = 1;
+            debug_log_message ("rpc: start net time request");
+            break;
+        }
+
+        case DISPLAY_TEMPERATURE_RPC_VAR:
+        {
+            show_temperature = 1;
+            debug_log_message ("rpc: show temperature");
+            break;
+        }
+
+        case TEST_DISPLAY_RPC_VAR:
+        {
+            debug_log_message ("rpc: start display test");
+            display_test ();
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            break;
+        }
+
+        case GET_WEATHER_RPC_VAR:
+        {
+            weather_query (WEATHER_QUERY_ID_TEXT);
+            debug_log_message ("rpc: get weather");
+            break;
+        }
+
+        case GET_WEATHER_FC_RPC_VAR:
+        {
+            weather_query (WEATHER_QUERY_ID_TEXT_FC);
+            debug_log_message ("rpc: get weather forecast");
+            break;
+        }
+
+        case RESET_EEPROM_RPC_VAR:
+        {
+            eeprom_version = EEPROM_VERSION_0_0;
+            write_version_to_eeprom ();
+            debug_log_message ("rpc: reset EEPROM");
+            break;
+        }
+
+        case DISPLAY_DATE_RPC_VAR:
+        {
+            show_date = 1;
+            debug_log_message ("rpc: show date");
+            break;
+        }
+
+        case DISPLAY_CW_CNT_RPC_VAR:
+        {
+            var_idx = ((*parameters++)-'0');
+            if(*parameters){
+                var_idx*=10;
+                var_idx+=((*parameters++)-'0');
+            }
+
+            show_cw_cnt = var_idx;
+            debug_log_message ("rpc: show cw cnt");
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_numeric_variable () - schedule ESP8266 numeric variables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_numeric_variable (char * parameters)
+{
+    uint_fast8_t    var_idx;
+    uint_fast8_t    lo;
+    uint_fast8_t    hi;
+    uint_fast16_t   val;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    lo      = htoi (parameters, 2);
+    parameters += 2;
+    hi      = htoi (parameters, 2);
+    parameters += 2;
+
+    val     = (hi << 8) | lo;
+
+    switch (var_idx)
+    {
+        case EEPROM_IS_UP_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set eeprom_is_up = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case HARDWARE_CONFIGURATION_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set hardware_configuration = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case RTC_IS_UP_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set rtc_is_up = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case DISPLAY_POWER_NUM_VAR:
+        {
+            if (display.display_power_is_on != val)
+            {
+                display_clock_flag = set_display_power (val, TRUE);
+                debug_log_printf ("cmd: set power_is_on = %d\r\n", val);
+            }
+            break;
+        }
+
+        case DISPLAY_AMBILIGHT_POWER_NUM_VAR:
+        {
+            if (display.ambilight_power_is_on != val)
+            {
+                display_set_ambilight_power (val);
+                debug_log_printf ("cmd: set power_is_on = %d\r\n", val);
+            }
+            break;
+        }
+
+        case DISPLAY_MODE_NUM_VAR:
+        {
+            if (display.display_mode != val)
+            {
+                display_set_display_mode (val, FALSE);
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+                debug_log_printf ("cmd: set display_mode = %d\r\n", val);
+            }
+            break;
+        }
+
+        case DISPLAY_BRIGHTNESS_NUM_VAR:
+        {
+            if (display.automatic_brightness)
+            {
+                last_ldr_value = 0xFF;
+                display_set_automatic_brightness (0, FALSE);
+            }
+            display_set_display_brightness (val, FALSE, TRUE);
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
+            debug_log_printf ("cmd: set display_brightness = %d, disable autmomatic brightness control per LDR\r\n", val);
+            break;
+        }
+
+        case DISPLAY_FLAGS_NUM_VAR:
+        {
+            display_set_display_flags (val);
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            debug_log_printf ("cmd: set display_flags = 0x%02x\r\n", val);
+            break;
+        }
+
+        case DISPLAY_AUTOMATIC_BRIGHTNESS_ACTIVE_NUM_VAR:
+        {
+            last_ldr_value = 0xFF;
+
+            if (val)
+            {
+                display_set_automatic_brightness (1, FALSE);
+            }
+            else
+            {
+                display_set_automatic_brightness (0, FALSE);
+            }
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
+
+            debug_log_printf ("cmd: set automatic_brightness = %d\r\n", val);
+            break;
+        }
+
+        case ANIMATION_MODE_NUM_VAR:
+        {
+            if (display.animation_mode != val)
+            {
+                display_set_animation_mode (val, FALSE);
+                animation_flag = 0;
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            }
+            debug_log_printf ("cmd: set animation_mode = %d\r\n", val);
+            break;
+        }
+
+        case AMBILIGHT_MODE_NUM_VAR:
+        {
+            if (display.ambilight_mode != val)
+            {
+                display_set_ambilight_mode (val, FALSE);
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            }
+            debug_log_printf ("cmd: set ambilight_mode = %d\r\n", val);
+            break;
+        }
+
+        case AMBILIGHT_LEDS_NUM_VAR:
+        {
+            display_set_number_of_ambilight_leds (val);
+            debug_log_printf ("cmd: set number of ambilight leds = %d\r\n", val);
+            break;
+        }
+
+        case AMBILIGHT_OFFSET_NUM_VAR:
+        {
+            display_set_ambilight_led_offset (val);
+            debug_log_printf ("cmd: set ambilight led offset = %d\r\n", val);
+            break;
+        }
+
+        case AMBILIGHT_BRIGHTNESS_NUM_VAR:
+        {
+            display_set_ambilight_brightness (val, FALSE, TRUE);
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
+            debug_log_printf ("cmd: set ambilight brightness = %d\r\n", val);
+            break;
+        }
+
+        case COLOR_ANIMATION_MODE_NUM_VAR:
+        {
+            if (display.color_animation_mode != val)
+            {
+                display_set_color_animation_mode (val, FALSE);
+            }
+            debug_log_printf ("cmd: set color animation_mode = %d\r\n", display.color_animation_mode);
+            break;
+        }
+
+        case LDR_RAW_VALUE_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set ldr_raw_value = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case LDR_MIN_VALUE_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set ldr_min_value = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case LDR_MAX_VALUE_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set ldr_max_value = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case TIMEZONE_NUM_VAR:
+        {
+            int_fast16_t tz = val & 0xFF;
+
+            if (val & 0x100)
+            {
+                tz = -tz;
+            }
+
+            debug_log_printf ("cmd: set timezone = %d\r\n", tz);
+            timeserver_set_timezone (tz);
+            break;
+        }
+
+        case DS18XX_IS_UP_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set ds18xx_is_up = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case RTC_TEMP_INDEX_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set rtc_temp_index = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case RTC_TEMP_CORRECTION_NUM_VAR:
+        {
+            rtc_set_temp_correction (val);
+            read_rtc_temperature_flag = 1;
+            debug_log_printf ("cmd: set rtc_temp_correction = %d\r\n", val);
+            break;
+        }
+
+        case DS18XX_TEMP_INDEX_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set ds18xx_temp_index = %d, but it's readonly\r\n", val);
+            break;
+        }
+
+        case DS18XX_TEMP_CORRECTION_NUM_VAR:
+        {
+            temp_set_temp_correction (val);
+            measure_temperature_flag = 1;                                           // measure & read
+            read_temperature_flag = 1;
+            debug_log_printf ("cmd: set ds18xx_temp_correction = %d\r\n", val);
+            break;
+        }
+
+        case TICKER_DECELRATION_NUM_VAR:
+        {
+            display_set_ticker_deceleration (val);
+            debug_log_printf ("cmd: set ticker_deceleration = %d\r\n", val);
+            break;
+        }
+        case DFPLAYER_IS_UP_NUM_VAR:
+        {
+            debug_log_printf ("cmd: set TABLE_MODDES_COUNT = %d, but it's readonly\r\n", val);
+            break;
+        }
+        case DFPLAYER_VOLUME_NUM_VAR:
+        {
+            dfplayer_set_new_volume (val);
+            debug_log_printf ("cmd: set dfplayer volume = %d\r\n", val);
+            break;
+        }
+        case DFPLAYER_SILENCE_START_NUM_VAR:
+        {
+            dfplayer_set_silence_start (val);
+            debug_log_printf ("cmd: set dfplayer silence start = %d\r\n", val);
+            break;
+        }
+        case DFPLAYER_SILENCE_STOP_NUM_VAR:
+        {
+            dfplayer_set_silence_stop (val);
+            debug_log_printf ("cmd: set dfplayer silence stop = %d\r\n", val);
+            break;
+        }
+        case DFPLAYER_MODE_NUM_VAR:
+        {
+            dfplayer_set_mode (val);
+            debug_log_printf ("cmd: set dfplayer mode = %d\r\n", val);
+            break;
+        }
+        case DFPLAYER_BELL_FLAGS_NUM_VAR:
+        {
+            dfplayer_set_bell_flags (val);
+            debug_log_printf ("cmd: set dfplayer bell flags = %d\r\n", val);
+            break;
+        }
+        case DFPLAYER_SPEAK_CYCLE_NUM_VAR:
+        {
+            dfplayer_set_speak_cycle (val);
+            debug_log_printf ("cmd: set dfplayer speak cycle = %d\r\n", val);
+            break;
+        }
+        default:
+        {
+            log_printf ("cmd: set unknown num var idx %d: %d\r\n", var_idx, val);
+            break;
+        }
+        case DFPLAYER_PLAY_FOLDER_TRACK_NUM_VAR:
+        {
+            uint_fast8_t    folder;
+            uint_fast8_t    track;
+            folder = (val >> 8) & 0xFF;
+            track  = val & 0xFF;
+
+            dfplayer_play_folder (folder, track);
+            debug_log_printf ("cmd: play folder %d track %d\r\n", folder, track);
+            break;
+        }
+        case DISPLAY_OVERLAY_NUM_VAR:
+        {
+            show_overlay_idx = val;
+            debug_log_printf ("cmd: display overlay %d\r\n", val);
+            break;
+        }
+        case OVERLAY_N_OVERLAYS_NUM_VAR:
+        {
+            overlay_set_n_overlays (val);
+            debug_log_printf ("cmd: set number of overlays %d\r\n", val);
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_numeric_array () - schedule ESP8266 numeric arrays
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_numeric_array (char * parameters)
+{
+    uint_fast8_t    var_idx;
+    uint_fast8_t    n;
+    uint_fast8_t    val;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    n = htoi (parameters, 2);
+    parameters += 2;
+
+    val = htoi (parameters, 2);
+
+    switch (var_idx)
+    {
+        case DISPLAY_DIMMED_DISPLAY_COLORS:
+        {
+            if (n < sizeof (display.dimmed_display_colors))
+            {
+                if (val <= MAX_BRIGHTNESS)
+                {
+                    display_set_dimmed_display_color (n, val);
+                    display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
+                    debug_log_printf ("cmd: set dimmed_display_colors[%d] = %d\r\n", n, val);
+                }
+            }
+            else
+            {
+                debug_log_printf ("cmd: set dimmed_display_colors[%d] = %d, but n exceeds array size %d\r\n",
+                                  sizeof (display.dimmed_display_colors), n, val);
+            }
+            break;
+        }
+        case DISPLAY_DIMMED_AMBILIGHT_COLORS:
+        {
+            if (n < sizeof (display.dimmed_ambilight_colors))
+            {
+                if (val <= MAX_BRIGHTNESS)
+                {
+                    display_set_dimmed_ambilight_color (n, val);
+                    display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
+                    debug_log_printf ("cmd: set dimmed_ambilight_colors[%d] = %d\r\n", n, val);
+                }
+            }
+            else
+            {
+                debug_log_printf ("cmd: set dimmed_ambilight_colors[%d] = %d, but n exceeds array size %d\r\n",
+                                  sizeof (display.dimmed_ambilight_colors), n, val);
+            }
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_string_variable () - schedule ESP8266 string variables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_string_variable (char * parameters)
+{
+    uint_fast8_t    var_idx;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (var_idx)
+    {
+        case TICKER_TEXT_STR_VAR:
+        {
+            display_set_ticker ((unsigned char *) parameters, 1);
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            debug_log_printf ("cmd: print ticker: '%s'\r\n", parameters);
+            break;
+        }
+
+        case VERSION_STR_VAR:
+        {
+            debug_log_printf ("cmd: set VERSION = '%s', but it's readonly\r\n", parameters);
+            break;
+        }
+
+        case EEPROM_VERSION_STR_VAR:
+        {
+            debug_log_printf ("cmd: set eeprom_version = '%s', but it's readonly\r\n", parameters);
+            break;
+        }
+
+        case ESP8266_VERSION_STR_VAR:
+        {
+            debug_log_printf ("cmd: set esp8266_version = '%s', but it's readonly\r\n", parameters);
+            break;
+        }
+
+        case TIMESERVER_STR_VAR:
+        {
+            timeserver_set_timeserver (parameters);
+            debug_log_printf ("cmd: set timeserver = '%s'\r\n", parameters);
+            break;
+        }
+
+        case WEATHER_APPID_STR_VAR:
+        {
+            weather_set_appid (parameters);
+            debug_log_printf ("cmd: set weather appid = '%s'\r\n", parameters);
+            break;
+        }
+
+        case WEATHER_CITY_STR_VAR:
+        {
+            weather_set_city (parameters);
+            debug_log_printf ("cmd: set weather city = '%s'\r\n", parameters);
+            break;
+        }
+
+        case WEATHER_LON_STR_VAR:
+        {
+            weather_set_lon (parameters);
+            debug_log_printf ("cmd: set weather lon = '%s'\r\n", parameters);
+            break;
+        }
+
+        case WEATHER_LAT_STR_VAR:
+        {
+            weather_set_lat (parameters);
+            debug_log_printf ("cmd: set weather lat = '%s'\r\n", parameters);
+            break;
+        }
+
+        case UPDATE_HOST_VAR:
+        {
+            strncpy (gmain.update_host, parameters, EEPROM_MAX_HOSTNAME_LEN - 1);
+            write_update_host_to_eeprom ();
+            debug_log_printf ("cmd: set update host = '%s'\r\n", parameters);
+            break;
+        }
+
+        case UPDATE_PATH_VAR:
+        {
+            strncpy (gmain.update_path, parameters, EEPROM_MAX_UPDATE_PATH_LEN - 1);
+            write_update_path_to_eeprom ();
+            debug_log_printf ("cmd: set update path = '%s'\r\n", parameters);
+            break;
+        }
+
+        case DATE_TICKER_FORMAT_VAR:
+        {
+            display_set_date_ticker_format (parameters);
+            debug_log_printf ("cmd: set date ticker format = '%s'\r\n", parameters);
+            break;
+        }
+
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_time_variable () - schedule ESP8266 time tables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_time_variable (char * parameters)
+{
+    uint_fast8_t    var_idx;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (var_idx)
+    {
+        case CURRENT_TM_VAR:
+        {
+            // struct tm tmtemp;
+            gmain.tm.tm_year = 1000 * (parameters[0]  - '0') +
+                                100 * (parameters[1]  - '0') +
+                                 10 * (parameters[2]  - '0') +
+                                  1 * (parameters[3]  - '0');
+            gmain.tm.tm_mon  =   10 * (parameters[4]  - '0') +
+                                  1 * (parameters[5]  - '0');
+            gmain.tm.tm_mday =   10 * (parameters[6]  - '0') +
+                                  1 * (parameters[7]  - '0');
+            gmain.tm.tm_hour =   10 * (parameters[8]  - '0') +
+                                  1 * (parameters[9]  - '0');
+            gmain.tm.tm_min  =   10 * (parameters[10] - '0') +
+                                  1 * (parameters[11] - '0');
+            gmain.tm.tm_sec =    10 * (parameters[12] - '0') +
+                                  1 * (parameters[13] - '0');
+
+            gmain.tm.tm_wday = dayofweek (gmain.tm.tm_mday, gmain.tm.tm_mon + 1, gmain.tm.tm_year + 1900);
+
+            if (grtc.rtc_is_up)
+            {
+                rtc_set_date_time (&(gmain.tm));
+            }
+
+            if (gmain.hour != (uint_fast8_t) gmain.tm.tm_hour || gmain.minute != (uint_fast8_t) gmain.tm.tm_min)
+            {
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            }
+
+            gmain.year    = gmain.tm.tm_year + 1900;
+            gmain.month   = gmain.tm.tm_mon  + 1;
+            gmain.mday    = gmain.tm.tm_mday;
+            gmain.wday    = gmain.tm.tm_wday;
+            gmain.hour    = gmain.tm.tm_hour;
+            gmain.minute  = gmain.tm.tm_min;
+            gmain.second  = gmain.tm.tm_sec;
+
+            debug_log_printf ("cmd: set time = %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
+                                wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
+                                gmain.tm.tm_hour, gmain.tm.tm_min, gmain.tm.tm_sec);
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_display_variable () - schedule ESP8266 display variables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_display_variable (char * parameters)
+{
+    uint_fast8_t        var_idx;
+    uint_fast8_t        cmd_code;
+
+    cmd_code = *parameters++;
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (cmd_code)
+    {
+        case 'N':                                       // DN: Display mode Name
+        {
+            debug_log_printf ("cmd: set display_mode_name[%d] = '%s', but it's readonly\r\n", var_idx, parameters);
+            break;
+        }
+
+        case 'C':                                       // DC: Display Color
+        {
+            DSP_COLORS rgb;
+
+            rgb.red = htoi (parameters, 2);
+            parameters += 2;
+            rgb.green = htoi (parameters, 2);
+            parameters += 2;
+            rgb.blue = htoi (parameters, 2);
+            parameters += 2;
+#if DSP_USE_SK6812_RGBW == 1
+            rgb.white = htoi (parameters, 2);
+            parameters += 2;
+#endif
+
+            if (var_idx == DISPLAY_DSP_COLOR_VAR)
+            {
+                display_set_display_colors (&(rgb));
+#if DSP_USE_SK6812_RGBW == 1
+                debug_log_printf ("cmd: set display_colors = %d %d %d %d\r\n", rgb.red, rgb.green, rgb.blue, rgb.white);
+#else
+                debug_log_printf ("cmd: set display_colors = %d %d %d\r\n", rgb.red, rgb.green, rgb.blue);
+#endif
+            }
+            else if (var_idx == AMBILIGHT_DSP_COLOR_VAR)
+            {
+                display_set_ambilight_colors (&(rgb));
+#if DSP_USE_SK6812_RGBW == 1
+                debug_log_printf ("cmd: set ambilight_colors = %d %d %d %d\r\n", rgb.red, rgb.green, rgb.blue, rgb.white);
+#else
+                debug_log_printf ("cmd: set ambilight_colors = %d %d %d\r\n", rgb.red, rgb.green, rgb.blue);
+#endif
+            }
+            else if (var_idx == AMBILIGHT_MARKER_DSP_COLOR_VAR)
+            {
+                display_set_ambilight_marker_colors (&(rgb));
+#if DSP_USE_SK6812_RGBW == 1
+                debug_log_printf ("cmd: set ambilight_marker_colors = %d %d %d %d\r\n", rgb.red, rgb.green, rgb.blue, rgb.white);
+#else
+                debug_log_printf ("cmd: set ambilight_marker_colors = %d %d %d\r\n", rgb.red, rgb.green, rgb.blue);
+#endif
+            }
+            else
+            {
+                debug_log_printf ("DC: invalid var_idx: %d\r\n", var_idx);
+            }
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_animation_variable () - schedule ESP8266 animation variables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_animation_variable (char * parameters)
+{
+    uint_fast8_t        cmd_code;
+    uint_fast8_t        var_idx;
+
+    cmd_code = *parameters++;
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (cmd_code)
+    {
+        case 'N':                                                       // AN: Animation mode Name
+        {
+            debug_log_printf ("cmd: set animation_mode_name[%d] = '%s', but it's readonly\r\n", var_idx, parameters);
+            break;
+        }
+
+        case 'D':                                                       // AD: Animation Deceleration
+        {
+            uint_fast8_t deceleration = htoi (parameters, 2);
+            parameters += 2;
+            display_set_animation_deceleration (var_idx, deceleration);
+            debug_log_printf ("cmd: set animation_deceleration[%d] = %d\r\n", var_idx, deceleration);
+            break;
+        }
+
+        case 'E':                                                       // AE: Animation default deceleration
+        {
+            debug_log_message ("cmd: set animation_default_deceleration, but it's readonly\r\n");
+            break;
+        }
+
+        case 'F':                                                       // AF: Animation Flags
+        {
+            uint_fast8_t flags = htoi (parameters, 2);
+            parameters += 2;
+            display_set_animation_flags (var_idx, flags);
+            debug_log_printf ("cmd: set animation_flags[%d] = 0x%02x\r\n", var_idx, flags);
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_color_animation_variable () - schedule ESP8266 color animation variables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_color_animation_variable (char * parameters)
+{
+    uint_fast8_t        cmd_code;
+    uint_fast8_t        var_idx;
+
+    cmd_code = *parameters++;
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (cmd_code)
+    {
+        case 'N':                                                       // CNiis: Color animation Name
+        {
+            debug_log_printf ("cmd: set color_animation_name[%d] = '%s', but it's readonly\r\n", var_idx, parameters);
+            break;
+        }
+
+        case 'D':                                                       // CDiid: Color animation Deceleration
+        {
+            uint_fast8_t deceleration = htoi (parameters, 2);
+            parameters += 2;
+            display_set_color_animation_deceleration (var_idx, deceleration);
+            debug_log_printf ("cmd: set color_animation_deceleration[%d] = %d\r\n", var_idx, deceleration);
+            break;
+        }
+
+        case 'E':                                                       // CEiid: Color animation default deceleration
+        {
+            debug_log_message ("cmd: set color_animation_default_deceleration, but it's readonly\r\n");
+            break;
+        }
+
+        case 'F':                                                       // CFiif: Color animation Flags
+        {
+            debug_log_message ("cmd: set color_animation_flags, but it's readonly");
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_ambilight_mode () - schedule ESP8266 ambilight modes
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_ambilight_mode (char * parameters)
+{
+    uint_fast8_t        cmd_code;
+    uint_fast8_t        var_idx;
+
+    cmd_code = *parameters++;
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (cmd_code)
+    {
+        case 'N':                                                       // MN: Ambilight mode Name
+        {
+            debug_log_printf ("cmd: set ambilight_mode_name[%d] = '%s', but it's readonly", var_idx, parameters);
+            break;
+        }
+
+        case 'D':                                                       // MD: Ambilight mode Deceleration
+        {
+            uint_fast8_t deceleration = htoi (parameters, 2);
+            parameters += 2;
+            display_set_ambilight_mode_deceleration (var_idx, deceleration);
+            debug_log_printf ("cmd: set ambilight_mode_deceleration[%d] = %d\r\n", var_idx, deceleration);
+            break;
+        }
+
+        case 'E':                                                       // ME: Ambilight mode default deceleration
+        {
+            debug_log_message ("cmd: set ambilight_mode_default_deceleration, but it's readonly\r\n");
+            break;
+        }
+
+        case 'F':                                                       // MF: Ambilight mode Flags
+        {
+            uint_fast8_t flags = htoi (parameters, 2);
+            parameters += 2;
+            display_set_ambilight_mode_flags (var_idx, flags);
+            debug_log_printf ("cmd: set ambilight_mode_flags[%d] = %d\r\n", var_idx, flags);
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_overlay () - schedule ESP8266 overlays
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_overlay (char * parameters)
+{
+    uint_fast8_t        cmd_code;
+    uint_fast8_t        var_idx;
+
+    cmd_code = *parameters++;
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+
+    switch (cmd_code)
+    {
+        case 'T':                                                       // OT: Overlay Type
+        {
+            uint_fast8_t type = htoi (parameters, 2);
+            parameters += 2;
+            overlay_set_type (var_idx, type);
+            debug_log_printf ("cmd: set overlay type[%d] = %d\r\n", var_idx, type);
+            break;
+        }
+
+        case 'I':                                                       // OI: Overlay Interval
+        {
+            uint_fast8_t interval = htoi (parameters, 2);
+            parameters += 2;
+            overlay_set_interval (var_idx, interval);
+            debug_log_printf ("cmd: set overlay interval[%d] = %d\r\n", var_idx, interval);
+            break;
+        }
+
+        case 'D':                                                       // OD: Overlay Duration
+        {
+            uint_fast8_t duration = htoi (parameters, 2);
+            parameters += 2;
+            overlay_set_duration (var_idx, duration);
+            debug_log_printf ("cmd: set overlay duration[%d] = %d\r\n", var_idx, duration);
+            break;
+        }
+
+        case 'C':                                                       // OD: Overlay Date Code
+        {
+            uint_fast8_t date_code = htoi (parameters, 2);
+            parameters += 2;
+            overlay_set_date_code (var_idx, date_code);
+            debug_log_printf ("cmd: set overlay date code[%d] = %d\r\n", var_idx, date_code);
+            break;
+        }
+
+        case 'S':                                                       // OS: Overlay date start
+        {
+            uint_fast16_t date_start = htoi (parameters, 4);
+            overlay_set_date_start (var_idx, date_start);
+            debug_log_printf ("cmd: set overlay date start[%d] = %02d-%02d\r\n", var_idx, date_start >> 8, date_start & 0xFF);
+            break;
+        }
+
+        case 'Y':                                                       // OY: Overlay days
+        {
+            uint_fast8_t days = htoi (parameters, 2);
+            overlay_set_days (var_idx, days);
+            debug_log_printf ("cmd: set overlay days[%d] = %d\r\n", var_idx, days);
+
+            break;
+        }
+
+        case 'N':                                                       // ON: Overlay name or text
+        {
+            overlay_set_text (var_idx, parameters);
+            debug_log_printf ("cmd: set overlay text[%d] = %s\r\n", var_idx, parameters);
+            break;
+        }
+
+        case 'F':                                                       // OF: Overlay flags
+        {
+            uint_fast8_t flags = htoi (parameters, 2);
+            parameters += 2;
+            overlay_set_flags (var_idx, flags);
+            overlay_calc_dates (var_idx, gmain.year);
+            debug_log_printf ("cmd: set overlay flags[%d] = %d\r\n", var_idx, flags);
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_night_tables () - schedule ESP8266 night tables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_night_tables (char * parameters)
+{
+    uint_fast8_t        var_idx;
+    uint_fast16_t       minutes;
+    uint_fast8_t        flags;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+    minutes = htoi (parameters, 2) + (htoi (parameters + 2, 2) << 8);
+    parameters += 4;
+    flags = htoi (parameters, 2);
+    parameters += 2;
+
+    night_time[var_idx].minutes = minutes;
+    night_time[var_idx].flags = flags;
+    night_write_data_to_eeprom ();
+    debug_log_printf ("cmd: set night_time[%d]: minutes = %d, flags = 0x%02x\r\n", var_idx, minutes, flags);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_ambilight_night_tables () - schedule ESP8266 ambilight night tables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_ambilight_night_tables (char * parameters)
+{
+    uint_fast8_t        var_idx;
+    uint_fast16_t       minutes;
+    uint_fast8_t        flags;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+    minutes = htoi (parameters, 2) + (htoi (parameters + 2, 2) << 8);
+    parameters += 4;
+    flags = htoi (parameters, 2);
+    parameters += 2;
+
+    ambilight_night_time[var_idx].minutes = minutes;
+    ambilight_night_time[var_idx].flags = flags;
+    night_write_data_to_eeprom ();
+    debug_log_printf ("cmd: set ambilight night_time[%d]: minutes = %d, flags = 0x%02x\r\n", var_idx, minutes, flags);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_alarm_tables () - schedule ESP8266 alarm tables
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_alarm_tables (char * parameters)
+{
+    uint_fast8_t        var_idx;
+    uint_fast16_t       minutes;
+    uint_fast8_t        flags;
+
+    var_idx = htoi (parameters, 2);
+    parameters += 2;
+    minutes = htoi (parameters, 2) + (htoi (parameters + 2, 2) << 8);
+    parameters += 4;
+    flags = htoi (parameters, 2);
+    parameters += 2;
+
+    alarm_time[var_idx].minutes = minutes;
+    alarm_time[var_idx].flags = flags;
+    alarm_write_data_to_eeprom ();
+    debug_log_printf ("cmd: set alarm_time[%d]: minutes = %d, flags = 0x%02x\r\n", var_idx, minutes, flags);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_games () - schedule ESP8266 games
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_games (char * parameters)
+{
+    switch (*parameters++)
+    {
+        case 'T':
+        {
+            if (*parameters == 's')
+            {
+                tetris ();                                              // GTs: Start Tetris
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            }
+            break;
+        }
+        case 'S':
+        {
+            if (*parameters == 's')
+            {
+                snake ();                                               // GSs: Start Snake
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            }
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_cmd () - schedule ESP8266 commands
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
+static void
+schedule_esp8266_cmd (void)
+{
+    char *              parameters;
+    uint_fast8_t        cmd_code;
+
+    parameters = esp8266.u.cmd;
+    cmd_code = *parameters++;
+
+    switch (cmd_code)
+    {
+        case 'R':                                                   // remote procedure call: Rii
+        {
+            schedule_esp8266_remote_procedure (parameters);
+            break;
+        }
+
+        case 'N':                                                   // numeric variable: Niillhh
+        {
+            schedule_esp8266_numeric_variable (parameters);
+            break;
+        }
+
+        case 'n':                                                   // numeric array: Niinnbb
+        {
+            schedule_esp8266_numeric_array (parameters);
+            break;
+        }
+
+        case 'S':                                                   // string variable: Siissssssss...
+        {
+            schedule_esp8266_string_variable (parameters);
+            break;
+        }
+
+        case 'T':
+        {
+            schedule_esp8266_time_variable (parameters);
+            break;
+        }
+
+        case 'D':                                                   // display Dxii...
+        {
+            schedule_esp8266_display_variable (parameters);
+            break;
+        }
+
+        case 'A':                                                   // animation
+        {
+            schedule_esp8266_animation_variable (parameters);
+            break;
+        }
+
+        case 'C':                                                   // color animation
+        {
+            schedule_esp8266_color_animation_variable (parameters);
+            break;
+        }
+
+        case 'M':                                                   // ambilight mode
+        {
+            schedule_esp8266_ambilight_mode (parameters);
+            break;
+        }
+
+        case 'O':                                                   // Overlay
+        {
+            schedule_esp8266_overlay (parameters);
+            break;
+        }
+
+        case 't':                                                   // tiimmff night table minutes + flags
+        {
+            schedule_esp8266_night_tables (parameters);
+            break;
+        }
+
+        case 'a':                                                   // aiimmff night table minutes + flags
+        {
+            schedule_esp8266_ambilight_night_tables (parameters);
+            break;
+        }
+
+        case 'l':                                                   // liimmff alarm table minutes + flags
+        {
+            schedule_esp8266_alarm_tables (parameters);
+            break;
+        }
+
+        case 'G':                                                   // Gx Games
+        {
+            schedule_esp8266_games (parameters);
+            break;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------
+ * schedule_esp8266_messages () - schedule messages of ESP8266
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ */
 uint_fast8_t
 schedule_esp8266_messages (void)
 {
@@ -952,1022 +2117,182 @@ schedule_esp8266_messages (void)
 
     msg_rtc = esp8266_get_message ();
 
-    if (msg_rtc == ESP8266_CMD)
+    switch (msg_rtc)
     {
-        char *              parameters;
-        uint_fast8_t        cmd_code;
-        uint_fast8_t        var_idx;
-
-        parameters = esp8266.u.cmd;
-        cmd_code = *parameters++;
-
-        switch (cmd_code)
+        case ESP8266_CMD:
         {
-            case 'R':                                                   // remote procedure call: Rii
-            {
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (var_idx)
-                {
-                    case LDR_MIN_VALUE_RPC_VAR:
-                    {
-                        debug_log_message ("rpc: set LDR value as minimum");
-                        ldr_set_min_value ();
-                        var_send_ldr_min_value ();
-                        break;
-                    }
-
-                    case LDR_MAX_VALUE_RPC_VAR:
-                    {
-                        debug_log_message ("rpc: set LDR value as maximum");
-                        ldr_set_max_value ();
-                        var_send_ldr_max_value ();
-                        break;
-                    }
-
-                    case LEARN_IR_RPC_VAR:
-                    {
-                        debug_log_message ("rpc: learn IR codes");
-
-                        if (remote_ir_learn ())
-                        {
-                            remote_ir_write_codes_to_eeprom ();
-                        }
-                        break;
-                    }
-
-                    case GET_NET_TIME_RPC_VAR:
-                    {
-                        net_time_flag = 1;
-                        debug_log_message ("rpc: start net time request");
-                        break;
-                    }
-
-                    case DISPLAY_TEMPERATURE_RPC_VAR:
-                    {
-                        show_temperature = 1;
-                        debug_log_message ("rpc: show temperature");
-                        break;
-                    }
-
-                    case TEST_DISPLAY_RPC_VAR:
-                    {
-                        debug_log_message ("rpc: start display test");
-                        display_test ();
-                        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        break;
-                    }
-
-                    case GET_WEATHER_RPC_VAR:
-                    {
-                        weather_query (0);
-                        debug_log_message ("rpc: get weather");
-                        break;
-                    }
-
-                    case DISPLAY_DATE_RPC_VAR:
-                    {
-                        show_date = 1;
-                        debug_log_message ("rpc: show date");
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'N':                                                   // numeric variable: Niillhh
-            {
-                uint_fast8_t    lo;
-                uint_fast8_t    hi;
-                uint_fast16_t   val;
-
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                lo      = htoi (parameters, 2);
-                parameters += 2;
-                hi      = htoi (parameters, 2);
-                parameters += 2;
-
-                val     = (hi << 8) | lo;
-
-                switch (var_idx)
-                {
-                    case EEPROM_IS_UP_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set eeprom_is_up = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case HARDWARE_CONFIGURATION_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set hardware_configuration = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case RTC_IS_UP_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set rtc_is_up = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case DISPLAY_POWER_NUM_VAR:
-                    {
-                        if (display.power_is_on != val)
-                        {
-                            display_clock_flag = set_power (val);
-                            debug_log_printf ("cmd: set power_is_on = %d\r\n", val);
-                        }
-                        break;
-                    }
-
-                    case DISPLAY_AMBILIGHT_POWER_NUM_VAR:
-                    {
-                        if (display.ambilight_power_is_on != val)
-                        {
-                            display_set_ambilight_power (val);
-                            debug_log_printf ("cmd: set power_is_on = %d\r\n", val);
-                        }
-                        break;
-                    }
-
-                    case DISPLAY_MODE_NUM_VAR:
-                    {
-                        if (display.display_mode != val)
-                        {
-                            display_set_display_mode (val, FALSE);
-                            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                            debug_log_printf ("cmd: set display_mode = %d\r\n", val);
-                        }
-                        break;
-                    }
-
-                    case MAX_DISPLAY_MODES_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set TABLE_MODDES_COUNT = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case DISPLAY_BRIGHTNESS_NUM_VAR:
-                    {
-                        if (display.automatic_brightness)
-                        {
-                            last_ldr_value = 0xFF;
-                            display_set_automatic_brightness (0, FALSE);
-                        }
-                        display_set_display_brightness (val, FALSE, TRUE);
-                        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
-                        debug_log_printf ("cmd: set display_brightness = %d, disable autmomatic brightness control per LDR\r\n", val);
-                        break;
-                    }
-
-                    case DISPLAY_FLAGS_NUM_VAR:
-                    {
-                        display_set_display_flags (val);
-                        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        debug_log_printf ("cmd: set display_flags = 0x%02x\r\n", val);
-                        break;
-                    }
-
-                    case DISPLAY_AUTOMATIC_BRIGHTNESS_ACTIVE_NUM_VAR:
-                    {
-                        last_ldr_value = 0xFF;
-
-                        if (val)
-                        {
-                            display_set_automatic_brightness (1, FALSE);
-                        }
-                        else
-                        {
-                            display_set_automatic_brightness (0, FALSE);
-                        }
-                        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
-
-                        debug_log_printf ("cmd: set automatic_brightness = %d\r\n", val);
-                        break;
-                    }
-
-                    case ANIMATION_MODE_NUM_VAR:
-                    {
-                        if (display.animation_mode != val)
-                        {
-                            display_set_animation_mode (val, FALSE);
-                            animation_flag = 0;
-                            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        }
-                        debug_log_printf ("cmd: set animation_mode = %d\r\n", val);
-                        break;
-                    }
-
-                    case AMBILIGHT_MODE_NUM_VAR:
-                    {
-                        if (display.ambilight_mode != val)
-                        {
-                            display_set_ambilight_mode (val, FALSE);
-                            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        }
-                        debug_log_printf ("cmd: set ambilight_mode = %d\r\n", val);
-                        break;
-                    }
-
-                    case AMBILIGHT_LEDS_NUM_VAR:
-                    {
-                        display_set_number_of_ambilight_leds (val);
-                        debug_log_printf ("cmd: set number of ambilight leds = %d\r\n", val);
-                        break;
-                    }
-
-                    case AMBILIGHT_OFFSET_NUM_VAR:
-                    {
-                        display_set_ambilight_led_offset (val);
-                        debug_log_printf ("cmd: set ambilight led offset = %d\r\n", val);
-                        break;
-                    }
-
-                    case AMBILIGHT_BRIGHTNESS_NUM_VAR:
-                    {
-                        display_set_ambilight_brightness (val, FALSE, TRUE);
-                        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
-                        debug_log_printf ("cmd: set ambilight brightness = %d\r\n", val);
-                        break;
-                    }
-
-                    case COLOR_ANIMATION_MODE_NUM_VAR:
-                    {
-                        if (display.color_animation_mode != val)
-                        {
-                            display_set_color_animation_mode (val, FALSE);
-                        }
-                        debug_log_printf ("cmd: set color animation_mode = %d\r\n", display.color_animation_mode);
-                        break;
-                    }
-
-                    case LDR_RAW_VALUE_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set ldr_raw_value = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case LDR_MIN_VALUE_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set ldr_min_value = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case LDR_MAX_VALUE_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set ldr_max_value = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case TIMEZONE_NUM_VAR:
-                    {
-                        int_fast16_t tz = val & 0xFF;
-
-                        if (val & 0x100)
-                        {
-                            tz = -tz;
-                        }
-
-                        debug_log_printf ("cmd: set timezone = %d\r\n", tz);
-                        timeserver_set_timezone (tz);
-                        break;
-                    }
-
-                    case DS18XX_IS_UP_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set ds18xx_is_up = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case RTC_TEMP_INDEX_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set rtc_temp_index = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case RTC_TEMP_CORRECTION_NUM_VAR:
-                    {
-                        rtc_set_temp_correction (val);
-                        read_rtc_temperature_flag = 1;
-                        debug_log_printf ("cmd: set rtc_temp_correction = %d\r\n", val);
-                        break;
-                    }
-
-                    case DS18XX_TEMP_INDEX_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set ds18xx_temp_index = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-
-                    case DS18XX_TEMP_CORRECTION_NUM_VAR:
-                    {
-                        temp_set_temp_correction (val);
-                        measure_temperature_flag = 1;                                           // measure & read
-                        read_temperature_flag = 1;
-                        debug_log_printf ("cmd: set ds18xx_temp_correction = %d\r\n", val);
-                        break;
-                    }
-
-                    case TICKER_DECELRATION_NUM_VAR:
-                    {
-                        display_set_ticker_deceleration (val);
-                        debug_log_printf ("cmd: set ticker_deceleration = %d\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_IS_UP_NUM_VAR:
-                    {
-                        debug_log_printf ("cmd: set TABLE_MODDES_COUNT = %d, but it's readonly\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_VOLUME_NUM_VAR:
-                    {
-                        dfplayer_set_new_volume (val);
-                        debug_log_printf ("cmd: set dfplayer volume = %d\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_SILENCE_START_NUM_VAR:
-                    {
-                        dfplayer_set_silence_start (val);
-                        debug_log_printf ("cmd: set dfplayer silence start = %d\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_SILENCE_STOP_NUM_VAR:
-                    {
-                        dfplayer_set_silence_stop (val);
-                        debug_log_printf ("cmd: set dfplayer silence stop = %d\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_MODE_NUM_VAR:
-                    {
-                        dfplayer_set_mode (val);
-                        debug_log_printf ("cmd: set dfplayer mode = %d\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_BELL_FLAGS_NUM_VAR:
-                    {
-                        dfplayer_set_bell_flags (val);
-                        debug_log_printf ("cmd: set dfplayer bell flags = %d\r\n", val);
-                        break;
-                    }
-                    case DFPLAYER_SPEAK_CYCLE_NUM_VAR:
-                    {
-                        dfplayer_set_speak_cycle (val);
-                        debug_log_printf ("cmd: set dfplayer speak cycle = %d\r\n", val);
-                        break;
-                    }
-                    default:
-                    {
-                        log_printf ("cmd: set unknown num var idx %d: %d\r\n", var_idx, val);
-                        break;
-                    }
-                    case DFPLAYER_PLAY_FOLDER_TRACK_NUM_VAR:
-                    {
-                        uint_fast8_t    folder;
-                        uint_fast8_t    track;
-                        folder = (val >> 8) & 0xFF;
-                        track  = val & 0xFF;
-
-                        dfplayer_play_folder (folder, track);
-                        debug_log_printf ("cmd: play folder %d track %d\r\n", folder, track);
-                        break;
-                    }
-                    case DISPLAY_OVERLAY_NUM_VAR:
-                    {
-                        show_overlay_idx = val;
-                        debug_log_printf ("cmd: display overlay %d\r\n", val);
-                        break;
-                    }
-                    case OVERLAY_N_OVERLAYS_NUM_VAR:
-                    {
-                        overlay_set_n_overlays (val);
-                        debug_log_printf ("cmd: set number of overlays %d\r\n", val);
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'n':                                                   // numeric array: Niinnbb
-            {
-                uint_fast8_t    n;
-                uint_fast8_t    val;
-
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                n = htoi (parameters, 2);
-                parameters += 2;
-
-                val = htoi (parameters, 2);
-
-                switch (var_idx)
-                {
-                    case DISPLAY_DIMMED_COLORS:
-                    {
-                        if (n < sizeof (display.dimmed_colors))
-                        {
-                            if (val <= MAX_BRIGHTNESS)
-                            {
-                                display_set_dimmed_color (n, val);
-                                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_NO_ANIMATION;
-                                debug_log_printf ("cmd: set dimmed_colors[%d] = %d\r\n", n, val);
-                            }
-                        }
-                        else
-                        {
-                            debug_log_printf ("cmd: set dimmed_colors[%d] = %d, but n exceeds array size %d\r\n",
-                                              sizeof (display.dimmed_colors), n, val);
-                        }
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'S':                                               // string variable: Siissssssss...
-            {
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (var_idx)
-                {
-                    case TICKER_TEXT_STR_VAR:
-                    {
-                        display_set_ticker ((unsigned char *) parameters, 1);
-                        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        debug_log_printf ("cmd: print ticker: '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case VERSION_STR_VAR:
-                    {
-                        debug_log_printf ("cmd: set VERSION = '%s', but it's readonly\r\n", parameters);
-                        break;
-                    }
-
-                    case EEPROM_VERSION_STR_VAR:
-                    {
-                        debug_log_printf ("cmd: set eeprom_version = '%s', but it's readonly\r\n", parameters);
-                        break;
-                    }
-
-                    case ESP8266_VERSION_STR_VAR:
-                    {
-                        debug_log_printf ("cmd: set esp8266_version = '%s', but it's readonly\r\n", parameters);
-                        break;
-                    }
-
-                    case TIMESERVER_STR_VAR:
-                    {
-                        timeserver_set_timeserver (parameters);
-                        debug_log_printf ("cmd: set timeserver = '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case WEATHER_APPID_STR_VAR:
-                    {
-                        weather_set_appid (parameters);
-                        debug_log_printf ("cmd: set weather appid = '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case WEATHER_CITY_STR_VAR:
-                    {
-                        weather_set_city (parameters);
-                        debug_log_printf ("cmd: set weather city = '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case WEATHER_LON_STR_VAR:
-                    {
-                        weather_set_lon (parameters);
-                        debug_log_printf ("cmd: set weather lon = '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case WEATHER_LAT_STR_VAR:
-                    {
-                        weather_set_lat (parameters);
-                        debug_log_printf ("cmd: set weather lat = '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case UPDATE_HOST_VAR:
-                    {
-                        strncpy (gmain.update_host, parameters, EEPROM_MAX_HOSTNAME_LEN - 1);
-                        write_update_host_to_eeprom ();
-                        debug_log_printf ("cmd: set update host = '%s'\r\n", parameters);
-                        break;
-                    }
-
-                    case UPDATE_PATH_VAR:
-                    {
-                        strncpy (gmain.update_path, parameters, EEPROM_MAX_UPDATE_PATH_LEN - 1);
-                        write_update_path_to_eeprom ();
-                        debug_log_printf ("cmd: set update path = '%s'\r\n", parameters);
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'T':
-            {
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (var_idx)
-                {
-                    case CURRENT_TM_VAR:
-                    {
-                        // struct tm tmtemp;
-                        gmain.tm.tm_year = 1000 * (parameters[0]  - '0') +
-                                            100 * (parameters[1]  - '0') +
-                                             10 * (parameters[2]  - '0') +
-                                              1 * (parameters[3]  - '0');
-                        gmain.tm.tm_mon  =   10 * (parameters[4]  - '0') +
-                                              1 * (parameters[5]  - '0');
-                        gmain.tm.tm_mday =   10 * (parameters[6]  - '0') +
-                                              1 * (parameters[7]  - '0');
-                        gmain.tm.tm_hour =   10 * (parameters[8]  - '0') +
-                                              1 * (parameters[9]  - '0');
-                        gmain.tm.tm_min  =   10 * (parameters[10] - '0') +
-                                              1 * (parameters[11] - '0');
-                        gmain.tm.tm_sec =    10 * (parameters[12] - '0') +
-                                              1 * (parameters[13] - '0');
-
-                        gmain.tm.tm_wday = dayofweek (gmain.tm.tm_mday, gmain.tm.tm_mon + 1, gmain.tm.tm_year + 1900);
-
-                        if (grtc.rtc_is_up)
-                        {
-                            rtc_set_date_time (&(gmain.tm));
-                        }
-
-                        if (hour != (uint_fast8_t) gmain.tm.tm_hour || minute != (uint_fast8_t) gmain.tm.tm_min)
-                        {
-                            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        }
-
-                        year    = gmain.tm.tm_year + 1900;
-                        month   = gmain.tm.tm_mon  + 1;
-                        mday    = gmain.tm.tm_mday;
-                        wday    = gmain.tm.tm_wday;
-                        hour    = gmain.tm.tm_hour;
-                        minute  = gmain.tm.tm_min;
-                        second  = gmain.tm.tm_sec;
-
-                        debug_log_printf ("cmd: set time = %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
-                                            wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
-                                            gmain.tm.tm_hour, gmain.tm.tm_min, gmain.tm.tm_sec);
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'D':                                               // display Dxii...
-            {
-                cmd_code = *parameters++;
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (cmd_code)
-                {
-                    case 'N':                                       // DN: Display mode Name
-                    {
-                        debug_log_printf ("cmd: set display_mode_name[%d] = '%s', but it's readonly\r\n", var_idx, parameters);
-                        break;
-                    }
-
-                    case 'C':                                       // DC: Display Color
-                    {
-                        DSP_COLORS rgb;
-
-                        rgb.red = htoi (parameters, 2);
-                        parameters += 2;
-                        rgb.green = htoi (parameters, 2);
-                        parameters += 2;
-                        rgb.blue = htoi (parameters, 2);
-                        parameters += 2;
-#if DSP_USE_SK6812_RGBW == 1
-                        rgb.white = htoi (parameters, 2);
-                        parameters += 2;
-#endif
-
-                        if (var_idx == DISPLAY_DSP_COLOR_VAR)
-                        {
-                            display_set_display_colors (&(rgb));
-#if DSP_USE_SK6812_RGBW == 1
-                            debug_log_printf ("cmd: set display_colors = %d %d %d %d\r\n", rgb.red, rgb.green, rgb.blue, rgb.white);
-#else
-                            debug_log_printf ("cmd: set display_colors = %d %d %d\r\n", rgb.red, rgb.green, rgb.blue);
-#endif
-                        }
-                        else if (var_idx == AMBILIGHT_DSP_COLOR_VAR)
-                        {
-                            display_set_ambilight_colors (&(rgb));
-#if DSP_USE_SK6812_RGBW == 1
-                            debug_log_printf ("cmd: set ambilight_colors = %d %d %d %d\r\n", rgb.red, rgb.green, rgb.blue, rgb.white);
-#else
-                            debug_log_printf ("cmd: set ambilight_colors = %d %d %d\r\n", rgb.red, rgb.green, rgb.blue);
-#endif
-                        }
-                        else
-                        {
-                            debug_log_printf ("DC: invalid var_idx: %d\r\n", var_idx);
-                        }
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'A':                                                               // animation
-            {
-                cmd_code = *parameters++;
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (cmd_code)
-                {
-                    case 'N':                                                       // AN: Animation mode Name
-                    {
-                        debug_log_printf ("cmd: set animation_mode_name[%d] = '%s', but it's readonly\r\n", var_idx, parameters);
-                        break;
-                    }
-
-                    case 'D':                                                       // AD: Animation Deceleration
-                    {
-                        uint_fast8_t deceleration = htoi (parameters, 2);
-                        parameters += 2;
-                        display_set_animation_deceleration (var_idx, deceleration);
-                        debug_log_printf ("cmd: set animation_deceleration[%d] = %d\r\n", var_idx, deceleration);
-                        break;
-                    }
-
-                    case 'E':                                                       // AE: Animation default deceleration
-                    {
-                        debug_log_message ("cmd: set animation_default_deceleration, but it's readonly\r\n");
-                        break;
-                    }
-
-                    case 'F':                                                       // AF: Animation Flags
-                    {
-                        uint_fast8_t flags = htoi (parameters, 2);
-                        parameters += 2;
-                        display_set_animation_flags (var_idx, flags);
-                        debug_log_printf ("cmd: set animation_flags[%d] = 0x%02x\r\n", var_idx, flags);
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'C':                                                               // Color animation
-            {
-                cmd_code = *parameters++;
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (cmd_code)
-                {
-                    case 'N':                                                       // CNiis: Color animation Name
-                    {
-                        debug_log_printf ("cmd: set color_animation_name[%d] = '%s', but it's readonly\r\n", var_idx, parameters);
-                        break;
-                    }
-
-                    case 'D':                                                       // CDiid: Color animation Deceleration
-                    {
-                        uint_fast8_t deceleration = htoi (parameters, 2);
-                        parameters += 2;
-                        display_set_color_animation_deceleration (var_idx, deceleration);
-                        debug_log_printf ("cmd: set color_animation_deceleration[%d] = %d\r\n", var_idx, deceleration);
-                        break;
-                    }
-
-                    case 'E':                                                       // CEiid: Color animation default deceleration
-                    {
-                        debug_log_message ("cmd: set color_animation_default_deceleration, but it's readonly\r\n");
-                        break;
-                    }
-
-                    case 'F':                                                       // CFiif: Color animation Flags
-                    {
-                        debug_log_message ("cmd: set color_animation_flags, but it's readonly");
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'M':                                                               // Ambilight mode
-            {
-                cmd_code = *parameters++;
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (cmd_code)
-                {
-                    case 'N':                                                       // MN: Ambilight mode Name
-                    {
-                        debug_log_printf ("cmd: set ambilight_mode_name[%d] = '%s', but it's readonly", var_idx, parameters);
-                        break;
-                    }
-
-                    case 'D':                                                       // MD: Ambilight mode Deceleration
-                    {
-                        uint_fast8_t deceleration = htoi (parameters, 2);
-                        parameters += 2;
-                        display_set_ambilight_mode_deceleration (var_idx, deceleration);
-                        debug_log_printf ("cmd: set ambilight_mode_deceleration[%d] = %d\r\n", var_idx, deceleration);
-                        break;
-                    }
-
-                    case 'E':                                                       // ME: Ambilight mode default deceleration
-                    {
-                        debug_log_message ("cmd: set ambilight_mode_default_deceleration, but it's readonly\r\n");
-                        break;
-                    }
-
-                    case 'F':                                                       // MF: Ambilight mode Flags
-                    {
-                        uint_fast8_t flags = htoi (parameters, 2);
-                        parameters += 2;
-                        display_set_ambilight_mode_flags (var_idx, flags);
-                        debug_log_printf ("cmd: set ambilight_mode_flags[%d] = %d\r\n", var_idx, flags);
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 'O':                                                               // Overlay
-            {
-                cmd_code = *parameters++;
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-
-                switch (cmd_code)
-                {
-                    case 'T':                                                       // OT: Overlay Type
-                    {
-                        uint_fast8_t type = htoi (parameters, 2);
-                        parameters += 2;
-                        overlay_set_type (var_idx, type);
-                        debug_log_printf ("cmd: set overlay type[%d] = %d\r\n", var_idx, type);
-                        break;
-                    }
-
-                    case 'I':                                                       // OI: Overlay Interval
-                    {
-                        uint_fast8_t interval = htoi (parameters, 2);
-                        parameters += 2;
-                        overlay_set_interval (var_idx, interval);
-                        debug_log_printf ("cmd: set overlay interval[%d] = %d\r\n", var_idx, interval);
-                        break;
-                    }
-
-                    case 'D':                                                       // OD: Overlay Duration
-                    {
-                        uint_fast8_t duration = htoi (parameters, 2);
-                        parameters += 2;
-                        overlay_set_duration (var_idx, duration);
-                        debug_log_printf ("cmd: set overlay duration[%d] = %d\r\n", var_idx, duration);
-                        break;
-                    }
-
-                    case 'C':                                                       // OD: Overlay Date Code
-                    {
-                        uint_fast8_t date_code = htoi (parameters, 2);
-                        parameters += 2;
-                        overlay_set_date_code (var_idx, date_code);
-                        debug_log_printf ("cmd: set overlay date code[%d] = %d\r\n", var_idx, date_code);
-                        break;
-                    }
-
-                    case 'S':                                                       // OS: Overlay date start
-                    {
-                        uint_fast16_t date_start = htoi (parameters, 4);
-                        overlay_set_date_start (var_idx, date_start);
-                        debug_log_printf ("cmd: set overlay date start[%d] = %02d-%02d\r\n", var_idx, date_start >> 8, date_start & 0xFF);
-                        break;
-                    }
-
-                    case 'Y':                                                       // OY: Overlay days
-                    {
-                        uint_fast8_t days = htoi (parameters, 2);
-                        overlay_set_days (var_idx, days);
-                        debug_log_printf ("cmd: set overlay days[%d] = %d\r\n", var_idx, days);
-
-                        break;
-                    }
-
-                    case 'N':                                                       // ON: Overlay name or text
-                    {
-                        overlay_set_text (var_idx, parameters);
-                        debug_log_printf ("cmd: set overlay text[%d] = %s\r\n", var_idx, parameters);
-                        break;
-                    }
-
-                    case 'F':                                                       // OF: Overlay flags
-                    {
-                        uint_fast8_t flags = htoi (parameters, 2);
-                        parameters += 2;
-                        overlay_set_flags (var_idx, flags);
-                        overlay_calc_dates (var_idx, year);
-                        debug_log_printf ("cmd: set overlay flags[%d] = %d\r\n", var_idx, flags);
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 't':                                                               // tiimmff night table minutes + flags
-            {
-                uint_fast16_t minutes;
-                uint_fast8_t flags;
-
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-                minutes = htoi (parameters, 2) + (htoi (parameters + 2, 2) << 8);
-                parameters += 4;
-                flags = htoi (parameters, 2);
-                parameters += 2;
-
-                night_time[var_idx].minutes = minutes;
-                night_time[var_idx].flags = flags;
-                night_write_data_to_eeprom ();
-                debug_log_printf ("cmd: set night_time[%d]: minutes = %d, flags = 0x%02x\r\n", var_idx, minutes, flags);
-                break;
-            }
-
-            case 'a':                                                               // aiimmff night table minutes + flags
-            {
-                uint_fast16_t minutes;
-                uint_fast8_t flags;
-
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-                minutes = htoi (parameters, 2) + (htoi (parameters + 2, 2) << 8);
-                parameters += 4;
-                flags = htoi (parameters, 2);
-                parameters += 2;
-
-                ambilight_night_time[var_idx].minutes = minutes;
-                ambilight_night_time[var_idx].flags = flags;
-                night_write_data_to_eeprom ();
-                debug_log_printf ("cmd: set ambilight night_time[%d]: minutes = %d, flags = 0x%02x\r\n", var_idx, minutes, flags);
-                break;
-            }
-
-            case 'l':                                                               // liimmff alarm table minutes + flags
-            {
-                uint_fast16_t minutes;
-                uint_fast8_t flags;
-
-                var_idx = htoi (parameters, 2);
-                parameters += 2;
-                minutes = htoi (parameters, 2) + (htoi (parameters + 2, 2) << 8);
-                parameters += 4;
-                flags = htoi (parameters, 2);
-                parameters += 2;
-
-                alarm_time[var_idx].minutes = minutes;
-                alarm_time[var_idx].flags = flags;
-                alarm_write_data_to_eeprom ();
-                debug_log_printf ("cmd: set alarm_time[%d]: minutes = %d, flags = 0x%02x\r\n", var_idx, minutes, flags);
-                break;
-            }
-
-            case 'G':                                                               // Gx Games
-            {
-                switch (*parameters++)
-                {
-                    case 'T':
-                    {
-                        if (*parameters == 's')
-                        {
-                            tetris ();                                              // GTs: Start Tetris
-                            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-                        }
-                    }
-                }
-                break;
-            }
+            schedule_esp8266_cmd ();
+            break;
         }
-    }
-    else if (msg_rtc == ESP8266_TIME)
-    {
-        char *          endptr;
-        uint32_t        seconds_since_1900;
-
-        seconds_since_1900  = strtoul (esp8266.u.time, &endptr, 10);
-        timeserver_convert_time (&gmain.tm, seconds_since_1900);
-
-        if (grtc.rtc_is_up)
+        case ESP8266_TIME:
         {
-            rtc_set_date_time (&gmain.tm);
+            char *          endptr;
+            uint32_t        seconds_since_1900;
+
+            seconds_since_1900  = strtoul (esp8266.u.time, &endptr, 10);
+            timeserver_convert_time (&gmain.tm, seconds_since_1900);
+
+            if (grtc.rtc_is_up)
+            {
+                rtc_set_date_time (&gmain.tm);
+            }
+
+            if (gmain.hour != (uint_fast8_t) gmain.tm.tm_hour || gmain.minute != (uint_fast8_t) gmain.tm.tm_min)
+            {
+                var_send_tm ();
+                display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            }
+
+            gmain.year    = gmain.tm.tm_year + 1900;
+            gmain.month   = gmain.tm.tm_mon  + 1;
+            gmain.mday    = gmain.tm.tm_mday;
+            gmain.wday    = gmain.tm.tm_wday;
+            gmain.hour    = gmain.tm.tm_hour;
+            gmain.minute  = gmain.tm.tm_min;
+            gmain.second  = gmain.tm.tm_sec;
+
+            debug_log_printf ("cmd: set time to %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
+                                wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
+                                gmain.tm.tm_hour, gmain.tm.tm_min, gmain.tm.tm_sec);
+            net_time_countdown = 3600 + 180 + 40 - gmain.second;                // calc next timeserver call 1h3m later at hh:mm:40
+            break;
         }
-
-        if (hour != (uint_fast8_t) gmain.tm.tm_hour || minute != (uint_fast8_t) gmain.tm.tm_min)
+        case ESP8266_TABLES:                                                    // ESP8266 read layout tables
         {
-            var_send_tm ();
+            tables_init ();
+            debug_log_message ("info: layout tables received");
+            break;
+        }
+        case ESP8266_IPADDRESS:                                                 // ESP8266 got new ip address
+        {
+            unsigned char buf[32];
+
+            sprintf ((char *) buf, "IP %s", esp8266.ipaddress);
+            log_printf ("info: ip address = %s\r\n", esp8266.ipaddress);
+            log_flush ();
+            var_send_all_variables ();
+            debug_log_message ("info: configuration sent");
+            log_flush ();
+            display_set_ticker (buf, 1);
             display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            break;
         }
-
-        year    = gmain.tm.tm_year + 1900;
-        month   = gmain.tm.tm_mon  + 1;
-        mday    = gmain.tm.tm_mday;
-        wday    = gmain.tm.tm_wday;
-        hour    = gmain.tm.tm_hour;
-        minute  = gmain.tm.tm_min;
-        second  = gmain.tm.tm_sec;
-
-        debug_log_printf ("cmd: set time to %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
-                            wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
-                            gmain.tm.tm_hour, gmain.tm.tm_min, gmain.tm.tm_sec);
-        net_time_countdown = 3600 + 180 + 40 - second;                      // calc next timeserver call 1h3m later at hh:mm:40
-    }
-    else if (msg_rtc == ESP8266_IPADDRESS)                                  // ESP8266 got new ip address
-    {
-        unsigned char buf[32];
-
-        sprintf ((char *) buf, "IP %s", esp8266.ipaddress);
-        log_printf ("info: ip address = %s\r\n", esp8266.ipaddress);
-        log_flush ();
-        var_send_all_variables ();
-        debug_log_message ("info: configuration sent");
-        log_flush ();
-        display_set_ticker (buf, 1);
-        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-    }
-    else if (msg_rtc == ESP8266_ACCESSPOINT)
-    {
-        debug_log_message ("info: got ESP8266_ACCESSPOINT");
-    }
-    else if (msg_rtc == ESP8266_MODE)
-    {
-        if (esp8266.mode == ESP8266_AP_MODE)
+        case ESP8266_ACCESSPOINT:
         {
-            debug_log_message ("info: got ESP8266_AP_MODE");
+            debug_log_message ("info: got ESP8266_ACCESSPOINT");
+            break;
         }
-        else if (esp8266.mode == ESP8266_CLIENT_MODE)
+        case ESP8266_MODE:
         {
-            debug_log_message ("info: got ESP8266_CLIENT_MODE");
+            if (esp8266.mode == ESP8266_AP_MODE)
+            {
+                debug_log_message ("info: got ESP8266_AP_MODE");
+            }
+            else if (esp8266.mode == ESP8266_CLIENT_MODE)
+            {
+                debug_log_message ("info: got ESP8266_CLIENT_MODE");
+            }
+            else
+            {
+                debug_log_message ("info: got invalid ESP8266 mode");
+            }
+            break;
         }
-        else
+        case ESP8266_FIRMWARE:
         {
-            debug_log_message ("info: got invalid ESP8266 mode");
+            debug_log_message ("info: got ESP8266_FIRMWARE");
+            break;
         }
-    }
-    else if (msg_rtc == ESP8266_FIRMWARE)
-    {
-        debug_log_message ("info: got ESP8266_FIRMWARE");
-    }
-    else if (msg_rtc == ESP8266_WEATHER)
-    {
-        log_printf ("info: weather = %s\r\n", esp8266.u.weather);
-        display_set_ticker ((unsigned char *) esp8266.u.weather, 1);
-        display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
-    }
-    else if (msg_rtc == ESP8266_WEATHER_ICON)
-    {
-        char tmpbuf[3];         // we must copy esp8266.u.weather, because union is used by icon transfer
-        tmpbuf[0] = esp8266.u.weather[0];
-        tmpbuf[1] = esp8266.u.weather[1];
-        tmpbuf[2] = '\0';
-        log_printf ("info: weather icon %s\r\n", tmpbuf);
-        display_get_weather_icon (tmpbuf, icon_duration);
-    }
-    else if (msg_rtc == ESP8266_ICONDATA)
-    {
-        if (display_read_icon () == 2)                                                          // icon read succefully
+        case ESP8266_WEATHER:
         {
-            display.do_display_icon = 1;
-            show_icon_stop_time = local_uptime + icon_duration;                                 // stop in x seconds
+            log_printf ("info: weather = %s\r\n", esp8266.u.weather);
+            display_set_ticker ((unsigned char *) esp8266.u.weather, 1);
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            break;
         }
-    }
-    else if (msg_rtc == ESP8266_OK)
-    {
-        var_send_busy = 0;
-    }
-#if 0 // yet not used
-    else if (msg_rtc == ESP8266_FILEOPEN)
-    {
-        ;
-    }
-    else if (msg_rtc == ESP8266_FILEDATA)
-    {
-        ;
-    }
-    else if (msg_rtc == ESP8266_FILECLOSE)
-    {
-        ;
-    }
+        case ESP8266_WEATHER_FC:
+        {
+            log_printf ("info: weather forecast = %s\r\n", esp8266.u.weather);
+            display_set_ticker ((unsigned char *) esp8266.u.weather, 1);
+            display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
+            break;
+        }
+        case ESP8266_WEATHER_ICON:
+        {
+            char tmpbuf[3];         // we must copy esp8266.u.weather, because union is used by icon transfer
+            tmpbuf[0] = esp8266.u.weather[0];
+            tmpbuf[1] = esp8266.u.weather[1];
+            tmpbuf[2] = '\0';
+            log_printf ("info: weather icon %s\r\n", tmpbuf);
+            display_get_weather_icon (tmpbuf, icon_duration);
+            break;
+        }
+        case ESP8266_WEATHER_FC_ICON:
+        {
+            char tmpbuf[3];         // we must copy esp8266.u.weather, because union is used by icon transfer
+            tmpbuf[0] = esp8266.u.weather[0];
+            tmpbuf[1] = esp8266.u.weather[1];
+            tmpbuf[2] = '\0';
+            log_printf ("info: weather forecast icon %s\r\n", tmpbuf);
+            display_get_weather_icon (tmpbuf, icon_duration);
+            break;
+        }
+        case ESP8266_ICONDATA:
+        {
+            if (display_read_icon () == 2)                                                          // icon read succefully
+            {
+                display.do_display_icon = 1;
+                show_icon_stop_time = local_uptime + icon_duration;                                 // stop in x seconds
+            }
+            break;
+        }
+        case ESP8266_TABINFO:
+        {
+            tables_tabinfo (esp8266.u.tabinfo);
+            break;
+        }
+        case ESP8266_TABILLU:
+        {
+            tables_tabillu (esp8266.u.tabillu);
+            break;
+        }
+        case ESP8266_TABH:
+        {
+            tables_tabh (esp8266.u.tabh);
+            break;
+        }
+#if WCLOCK24H == 1
+        case ESP8266_TABT:
+        {
+            tables_tabt (esp8266.u.tabt);
+            break;
+        }
 #endif
+        case ESP8266_TABM:
+        {
+            tables_tabm (esp8266.u.tabm);
+            break;
+        }
+        case ESP8266_OK:
+        {
+            var_send_busy = 0;
+            break;
+        }
+#if 0 // yet not used
+        case ESP8266_FILEOPEN:
+        {
+            break;
+        }
+        case ESP8266_FILEDATA:
+        {
+            break;
+        }
+        case ESP8266_FILECLOSE:
+        {
+            break;
+        }
+#endif
+    }
 
     return msg_rtc;
 }
@@ -2008,8 +2333,10 @@ main (void)
 {
     static uint_fast16_t    last_ldr_raw_value          = 0xFFFF;
     uint_fast8_t            esp8266_is_up               = 0;
+#ifndef NOIR
     IRMP_DATA               irmp_data;
     uint32_t                stop_time;
+#endif
     uint_fast8_t            cmd;
     uint_fast8_t            status_led_cnt              = 0;
     uint_fast8_t            time_changed                = 0;
@@ -2066,26 +2393,86 @@ main (void)
     strcpy (gmain.update_path, DEFAULT_UPDATE_PATH);
 
     log_init (115200);                                                      // initilize logger on uart
+
+    log_message ("\r\nWelcome to WordClock Logger!");
+    log_message ("----------------------------");
+
+    log_message ("irmp_init...");
+    log_flush ();
     irmp_init ();                                                           // initialize IRMP
+    log_message ("power_init...");
+    log_flush ();
     power_init ();                                                          // initialize power port pin
-    power_on ();                                                            // switch power on
+//    log_message ("power_on...");
+//    log_flush ();
+//    power_on ();                                                            // switch power on
+    log_message ("delay_init...");
+    log_flush ();
     delay_init (DELAY_RESOLUTION_5_US);                                     // initialize delay functions with granularity of 5 us
+    log_message ("board_led_init...");
+    log_flush ();
     board_led_init ();                                                      // initialize GPIO for board LED
+    log_message ("button_init...");
+    log_flush ();
     button_init ();                                                         // initialize GPIO for user button
 
     if (button_pressed ())                                                  // set ESP8266 into flash mode
     {
-        board_led_on ();
-        esp8266_flash ();
+        ap_pressed = 0;
+        while(button_pressed() && ap_pressed++<10){
+            delay_msec(100);
+            if(ap_pressed==9){
+                board_led_on ();
+                esp8266_flash (); //will never return
+            }
+        }
     }
 
+    log_message ("timer2_init...");
+    log_flush ();
     timer2_init ();                                                         // initialize timer2 for IRMP, DCF77, EEPROM etc.
+    log_message ("wpsbutton_init...");
+    log_flush ();
     wpsbutton_init ();                                                      // initialize GPIO for WPS button
 
-    log_message ("\r\nWelcome to WordClock Logger!");
-    log_message ("----------------------------");
     log_puts ("Version: ");
+    log_flush ();
     log_message (VERSION);
+
+#if defined (STM32F103)
+    log_message ("Hardware: STM32F103");
+#elif defined (STM32F401RE)
+    log_message ("Hardware: STM32F401RE");
+#elif defined (STM32F411RE)
+    log_message ("Hardware: STM32F411RE");
+#elif defined (STM32F446RE)
+    log_message ("Hardware: STM32F446RE");
+#else
+# error unknown STM32 hardware
+#endif
+    log_flush ();
+
+#if WCLOCK24H == 1
+    log_message ("Display: WC24h");
+#else
+    log_message ("Display: WC12h");
+#endif
+    log_flush ();
+
+#if DSP_USE_WS2812_GRB == 1
+    log_message ("LEDs: WS2812 GRB");
+#elif DSP_USE_WS2812_RGB == 1
+    log_message ("LEDs: WS2812 RGB");
+#elif DSP_USE_APA102 == 1
+    log_message ("LEDs: APA102");
+#elif DSP_USE_SK6812_RGB == 1
+    log_message ("LEDs: SK6812 RGB");
+#elif DSP_USE_SK6812_RGBW == 1
+    log_message ("LEDs: SK6812 RGBW");
+#else
+# error unknown LED type
+#endif
+    log_flush ();
 
     rtc_init (clockspeed);                                                  // initialize I2C RTC
     eeprom_init (clockspeed);                                               // initialize I2C EEPROM
@@ -2137,22 +2524,42 @@ main (void)
 
     display_init ();                                                        // initialize display
     overlay_init ();                                                        // initialize overlays
-
-    read_configuration_from_eeprom ();
-
-    ldr_init ();                                                            // initialize LDR (ADC)
-    dcf77_init ();                                                          // initialize DCF77
     night_init ();                                                          // initialize night time routines
-    alarm_init ();                                                          // initialize alarm routines
-    temp_init ();                                                           // initialize DS18xx
-    dfplayer_init ();
 
+    log_message ("power_on...");
+    log_flush ();
+    power_on ();                                                            // switch power on
+
+
+    read_configuration_from_eeprom ();                                      // read configuration from EEPROM
     display_reset_led_states ();
 
-    upgrade_eeprom_version ();
+    uint_fast8_t startup_leds = 1;
+    LED_RGB col_black = DSP_BLACK_COLOR;
+    LED_RGB col = DSP_DARK_RED_COLOR;
+    display_set_display_led(0,&col,1);
+    for(int i=0,j=WC_ROWS-1; i<WC_ROWS; i++,j--){
+        display_set_display_led(i*WC_COLUMNS+i+1,&col,1);
+        display_set_display_led(i*WC_COLUMNS+(WC_COLUMNS-i-1),&col,1);
+    }
+
+    upgrade_eeprom_version ();                                              // upgrade EEPROM to current version
+
+    display_set_display_led(WC_COLUMNS,&col,1);
+    ldr_init ();                                                            // initialize LDR (ADC)
+    display_set_display_led(2*WC_COLUMNS,&col,1);
+    dcf77_init ();                                                          // initialize DCF77
+    display_set_display_led(3*WC_COLUMNS,&col,1);
+    alarm_init ();                                                          // initialize alarm routines
+    display_set_display_led(4*WC_COLUMNS,&col,1);
+    temp_init ();                                                           // initialize DS18xx
+    display_set_display_led(5*WC_COLUMNS,&col,1);
+    dfplayer_init ();                                                       // initialize DFPlayer
+    display_set_display_led(6*WC_COLUMNS,&col,1);
 
     ds3231_flag = 1;
 
+#ifndef NOIR
     stop_time = uptime + 3;                                                 // wait 3 seconds for IR signal...
     display_set_status_or_minute_leds (1, 1, 1);                            // show white status or minute LEDs
 
@@ -2175,18 +2582,45 @@ main (void)
     }
 
     display_set_status_or_minute_leds (0, 0, 0);                            // switch off status or minute LEDs
+#endif
 
     esp8266_init ();
+    display_set_display_led(7*WC_COLUMNS,&col,1);
 
     if (ds18xx.is_up)
     {
+        display_set_display_led(8*WC_COLUMNS,&col,1);
         temp_read_temp_index ();
     }
 
     if (grtc.rtc_is_up)
     {
+        display_set_display_led(9*WC_COLUMNS,&col,1);
         rtc_get_temperature_index ();
     }
+
+#if 0
+    nic_load ();
+    nic_main ();
+    nic_unload ();
+#endif
+
+    if (grtc.rtc_is_up && rtc_get_date_time (&gmain.tm))
+    {
+        gmain.year    = gmain.tm.tm_year + 1900;
+        gmain.month   = gmain.tm.tm_mon  + 1;
+        gmain.mday    = gmain.tm.tm_mday;
+        gmain.wday    = gmain.tm.tm_wday;
+        gmain.hour    = gmain.tm.tm_hour;
+        gmain.minute  = gmain.tm.tm_min;
+        gmain.second  = gmain.tm.tm_sec;
+
+        log_printf ("read rtc: %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
+                    wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
+                    gmain.tm.tm_hour, gmain.tm.tm_min, gmain.tm.tm_sec);
+    }
+
+    main_set_ambilight_clock_wait_cycles ();
 
     while (1)
     {
@@ -2200,7 +2634,7 @@ main (void)
                 log_message ("user button pressed: configuring esp8266 as access point");
                 esp8266.is_online = 0;
                 esp8266.ipaddress[0] = '\0';
-                esp8266_accesspoint ("wordclock", "1234567890");
+                esp8266_accesspoint ("wordclock_$$$$$$", "1234567890");
             }
             else if (local_uptime - wps_pressed > 5 && wpsbutton_pressed ())            // if user pressed wps button, send WPS command to ESP8266
             {
@@ -2258,6 +2692,22 @@ main (void)
                 esp8266_is_up = 1;
                 log_message ("esp8266 now up");
             }
+            else if(!tables.complete)
+            {
+                for(uint_fast8_t i=10;i<WC_ROWS;i++)
+                {
+                    if(i==startup_leds)
+                    {
+                        display_set_display_led(i*WC_COLUMNS,&col,1);
+                    }
+                    else
+                    {
+                        display_set_display_led(i*WC_COLUMNS,&col_black,1);
+                    }
+                }
+                startup_leds++;
+                if(startup_leds>=WC_ROWS) startup_leds = 10;
+            }
         }
         else
         {                                                                   // esp8266 is up...
@@ -2283,7 +2733,7 @@ main (void)
                 rtc_set_date_time (&gmain.tm);
             }
 
-            if (hour != (uint_fast8_t) gmain.tm.tm_hour || minute != (uint_fast8_t) gmain.tm.tm_min)
+            if (gmain.hour != (uint_fast8_t) gmain.tm.tm_hour || gmain.minute != (uint_fast8_t) gmain.tm.tm_min)
             {
                 if (esp8266.is_online)
                 {
@@ -2292,13 +2742,13 @@ main (void)
                 display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
             }
 
-            year    = gmain.tm.tm_year + 1900;
-            month   = gmain.tm.tm_mon  + 1;
-            mday    = gmain.tm.tm_mday;
-            wday    = gmain.tm.tm_wday;
-            hour    = gmain.tm.tm_hour;
-            minute  = gmain.tm.tm_min;
-            second  = gmain.tm.tm_sec;
+            gmain.year    = gmain.tm.tm_year + 1900;
+            gmain.month   = gmain.tm.tm_mon  + 1;
+            gmain.mday    = gmain.tm.tm_mday;
+            gmain.wday    = gmain.tm.tm_wday;
+            gmain.hour    = gmain.tm.tm_hour;
+            gmain.minute  = gmain.tm.tm_min;
+            gmain.second  = gmain.tm.tm_sec;
 
             log_printf ("dcf77: %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
                          wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
@@ -2309,18 +2759,18 @@ main (void)
         {
             if (grtc.rtc_is_up && rtc_get_date_time (&gmain.tm))
             {
-                if (hour != (uint_fast8_t) gmain.tm.tm_hour || minute != (uint_fast8_t) gmain.tm.tm_min)
+                if (gmain.hour != (uint_fast8_t) gmain.tm.tm_hour || gmain.minute != (uint_fast8_t) gmain.tm.tm_min)
                 {
                     display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
                 }
 
-                year    = gmain.tm.tm_year + 1900;
-                month   = gmain.tm.tm_mon  + 1;
-                mday    = gmain.tm.tm_mday;
-                wday    = gmain.tm.tm_wday;
-                hour    = gmain.tm.tm_hour;
-                minute  = gmain.tm.tm_min;
-                second  = gmain.tm.tm_sec;
+                gmain.year    = gmain.tm.tm_year + 1900;
+                gmain.month   = gmain.tm.tm_mon  + 1;
+                gmain.mday    = gmain.tm.tm_mday;
+                gmain.wday    = gmain.tm.tm_wday;
+                gmain.hour    = gmain.tm.tm_hour;
+                gmain.minute  = gmain.tm.tm_min;
+                gmain.second  = gmain.tm.tm_sec;
 
                 log_printf ("read rtc: %s %4d-%02d-%02d %02d:%02d:%02d\r\n",
                             wdays_en[gmain.tm.tm_wday], gmain.tm.tm_year + 1900, gmain.tm.tm_mon + 1, gmain.tm.tm_mday,
@@ -2353,13 +2803,13 @@ main (void)
         {
             show_time_flag = 0;
 
-            gmain.tm.tm_year = year - 1900;
-            gmain.tm.tm_mon  = month - 1;
-            gmain.tm.tm_mday = mday;
-            gmain.tm.tm_hour = hour;
-            gmain.tm.tm_min  = minute;
-            gmain.tm.tm_sec  = second;
-            gmain.tm.tm_wday = wday;
+            gmain.tm.tm_year = gmain.year - 1900;
+            gmain.tm.tm_mon  = gmain.month - 1;
+            gmain.tm.tm_mday = gmain.mday;
+            gmain.tm.tm_hour = gmain.hour;
+            gmain.tm.tm_min  = gmain.minute;
+            gmain.tm.tm_sec  = gmain.second;
+            gmain.tm.tm_wday = gmain.wday;
 
             if (esp8266.is_online)
             {
@@ -2368,24 +2818,32 @@ main (void)
 
             // display_clock_flag = 0;                                      // don't reset flag
 
-            if (night_check_night_times (0, display.power_is_on, wday, hour * 60 + minute))
+            if (night_check_night_times (0, display.display_power_is_on, gmain.wday, gmain.hour * 60 + gmain.minute))
             {
-                display_clock_flag = toggle_power (TRUE);
-                log_printf ("Found Timer: %s at %02d:%02d\r\n", display.power_is_on ? "on" : "off", hour, minute);
+                if (display.display_power_is_on)                            // display currently on
+                {                                                           // switch off display AND ambilight
+                    display_clock_flag = set_display_power (FALSE, TRUE);
+                }
+                else                                                        // display currently off
+                {                                                           // switch on display, but NOT ambilight
+                    display_clock_flag = set_display_power (TRUE, FALSE);
+                }
+
+                log_printf ("Found Timer: %s at %02d:%02d\r\n", display.display_power_is_on ? "on" : "off", gmain.hour, gmain.minute);
             }
 
-            if (night_check_night_times (1, display.ambilight_power_is_on, wday, hour * 60 + minute))
+            if (night_check_night_times (1, display.ambilight_power_is_on, gmain.wday, gmain.hour * 60 + gmain.minute))
             {
                 display_set_ambilight_power (! display.ambilight_power_is_on);
-                log_printf ("Found Timer: ambilight %s at %02d:%02d\r\n", display.ambilight_power_is_on ? "on" : "off", hour, minute);
+                log_printf ("Found Timer: ambilight %s at %02d:%02d\r\n", display.ambilight_power_is_on ? "on" : "off", gmain.hour, gmain.minute);
             }
 
-            if (display_clock_flag == 0)                                // no night time found
+            if (display_clock_flag == 0)                                    // no night time found
             {
 #if WCLOCK24H == 1
                 display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
 #else
-                if (minute % 5)
+                if (gmain.minute % 5)
                 {
                     display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_MINUTES; // only update minute LEDs
                 }
@@ -2401,56 +2859,58 @@ main (void)
         {
             half_minute_flag = 0;
 
-            if (net_time_countdown > 3800 - 30)         // waiting for timeserver response?
-            {                                           // no, else don't communicate with ESP8266 (icon vs. timeserver response)
-                log_printf ("net_time_countdown = %d, don't check overlays\r\n", net_time_countdown);
-            }
-            else
+            if (display.display_power_is_on)
             {
-                static uint_fast16_t    last_year;
-                uint_fast16_t           mmdd;
-                uint_fast8_t            overlay_idx;
-                uint_fast8_t            overlay_max_interval;
-
-                mmdd                    = (month << 8) + mday;
-                overlay_max_interval    = 0;
-
-                if (last_year != year)
-                {
-                    uint_fast8_t    i;
-
-                    last_year = year;
-
-                    for (i = 0; i < overlay.n_overlays; i++)
-                    {
-                        overlay_calc_dates (i, last_year);
-                    }
+                if (net_time_countdown > 3800 - 30)         // waiting for timeserver response?
+                {                                           // no, else don't communicate with ESP8266 (icon vs. timeserver response)
+                    log_printf ("net_time_countdown = %d, don't check overlays\r\n", net_time_countdown);
                 }
-
-                // overlay step 1: find maximum overlay interval which matches current minute
-                // overlays with matching dates have higher priority
-                for (overlay_idx = 0; overlay_idx < overlay.n_overlays; overlay_idx++)
+                else
                 {
-                    if (overlay.overlays[overlay_idx].flags & OVERLAY_FLAG_ACTIVE)
+                    static uint_fast16_t    last_year;
+                    uint_fast16_t           mmdd;
+                    uint_fast8_t            overlay_idx;
+                    uint_fast8_t            overlay_max_interval;
+
+                    mmdd                    = (gmain.month << 8) + gmain.mday;
+                    overlay_max_interval    = 0;
+
+                    if (last_year != gmain.year)
                     {
-                        if ((minute % overlay.overlays[overlay_idx].interval) == 0)
+                        uint_fast8_t    i;
+
+                        last_year = gmain.year;
+
+                        for (i = 0; i < overlay.n_overlays; i++)
                         {
-                            if (overlay.overlays[overlay_idx].date_start == 0 ||
-                                (mmdd >= overlay.overlays[overlay_idx].date_start && mmdd <= overlay.overlays[overlay_idx].date_end))
+                            overlay_calc_dates (i, last_year);
+                        }
+                    }
+
+                    // overlay step 1: find maximum overlay interval which matches current minute
+                    // overlays with matching dates have higher priority
+                    for (overlay_idx = 0; overlay_idx < overlay.n_overlays; overlay_idx++)
+                    {
+                        if (overlay.overlays[overlay_idx].flags & OVERLAY_FLAG_ACTIVE)
+                        {
+                            if ((gmain.minute % overlay.overlays[overlay_idx].interval) == 0)
                             {
-                                if (overlay.overlays[overlay_idx].interval > overlay_max_interval)
+                                if (overlay.overlays[overlay_idx].date_start == 0 ||
+                                    (mmdd >= overlay.overlays[overlay_idx].date_start && mmdd <= overlay.overlays[overlay_idx].date_end))
                                 {
-                                    overlay_max_interval = overlay.overlays[overlay_idx].interval;
-                                    show_overlay_idx = overlay_idx;
-                                }
-                                else if (overlay.overlays[overlay_idx].interval == overlay_max_interval)
-                                {
-                                    if (overlay.overlays[overlay_idx].date_start != 0)
+                                    if (overlay.overlays[overlay_idx].interval > overlay_max_interval)
                                     {
                                         overlay_max_interval = overlay.overlays[overlay_idx].interval;
                                         show_overlay_idx = overlay_idx;
                                     }
-
+                                    else if (overlay.overlays[overlay_idx].interval == overlay_max_interval)
+                                    {
+                                        if (overlay.overlays[overlay_idx].date_start != 0)
+                                        {
+                                            overlay_max_interval = overlay.overlays[overlay_idx].interval;
+                                            show_overlay_idx = overlay_idx;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -2509,7 +2969,7 @@ main (void)
             }
         }
 
-        if (show_overlay_idx != 0xFF)                                                                       // overlay to show?
+        if (show_overlay_idx < MAX_OVERLAYS)                                                                // overlay to show?
         {
             switch (overlay.overlays[show_overlay_idx].type)
             {
@@ -2534,15 +2994,28 @@ main (void)
                 }
                 case OVERLAY_TYPE_WEATHER_ICON:                                                             // weather icon
                 {
-                    weather_query (1);
+                    weather_query (WEATHER_QUERY_ID_ICON);
                     icon_duration = overlay.overlays[show_overlay_idx].duration;
                     log_message ("overlay weather icon");
                     break;
                 }
+                case OVERLAY_TYPE_WEATHER_FC_ICON:                                                          // weather icon
+                {
+                    weather_query (WEATHER_QUERY_ID_ICON_FC);
+                    icon_duration = overlay.overlays[show_overlay_idx].duration;
+                    log_message ("overlay weather forecast icon");
+                    break;
+                }
                 case OVERLAY_TYPE_WEATHER:                                                                  // weather
                 {
-                    weather_query (0);
+                    weather_query (WEATHER_QUERY_ID_TEXT);
                     log_message ("overlay weather");
+                    break;
+                }
+                case OVERLAY_TYPE_WEATHER_FC:                                                               // weather forecast
+                {
+                    weather_query (WEATHER_QUERY_ID_TEXT_FC);
+                    log_message ("overlay weather forecast");
                     break;
                 }
                 case OVERLAY_TYPE_TICKER:                                                                   // ticker
@@ -2562,7 +3035,7 @@ main (void)
 
                     if (p)
                     {
-                        uint_fast16_t   cur_minute = 60 * hour + minute;
+                        uint_fast16_t   cur_minute = 60 * gmain.hour + gmain.minute;
 
                         folder = atoi (overlay.overlays[show_overlay_idx].text);
                         track  = atoi (p + 1);
@@ -2581,7 +3054,7 @@ main (void)
                 }
             }
 
-            show_overlay_idx = 0xFF;
+            show_overlay_idx = MAX_OVERLAYS;
         }
         else if (show_icon_stop_time > 0)
         {
@@ -2615,22 +3088,62 @@ main (void)
             }
         }
 
+        if (show_cw_cnt)
+        {
+            display_cw_cnt(show_cw_cnt);
+            show_icon_stop_time = 0xFFFFFFFF;                                       // flag: wait for end of animation
+            show_cw_cnt = 0;
+        }
+
         if (show_date)
         {
-            char datebuf[11];
+            char        datebuf[MAX_DATE_TICKER_LEN + 1];
+            uint8_t *   p;
+            int         datebuflen = 0;
 
             show_date = 0;
-            sprintf (datebuf, "%02d.%02d.%d", gmain.tm.tm_mday, gmain.tm.tm_mon + 1, gmain.tm.tm_year + 1900);
+
+            for (p = display.date_ticker_format; *p && datebuflen < MAX_DATE_TICKER_LEN - 4; p++)
+            {
+                switch (*p)
+                {
+                    case 'd':
+                        sprintf (datebuf + datebuflen, "%d", gmain.tm.tm_mday);
+                        break;
+                    case 'D':
+                        sprintf (datebuf + datebuflen, "%02d", gmain.tm.tm_mday);
+                        break;
+                    case 'm':
+                        if (datebuflen < 16 - 2)
+                        sprintf (datebuf + datebuflen, "%d", gmain.tm.tm_mon + 1);
+                        break;
+                    case 'M':
+                        sprintf (datebuf + datebuflen, "%02d", gmain.tm.tm_mon + 1);
+                        break;
+                    case 'y':
+                        sprintf (datebuf + datebuflen, "%02d", gmain.tm.tm_year - 100);
+                        break;
+                    case 'Y':
+                        sprintf (datebuf + datebuflen, "%d", gmain.tm.tm_year + 1900);
+                        break;
+                    default:
+                        datebuf[datebuflen] = *p;
+                        datebuf[datebuflen + 1] = '\0';
+                        break;
+                }
+                datebuflen = strlen (datebuf);
+            }
+
             display_set_ticker ((unsigned char *) datebuf, 1);                          // display date and wait
             display_clock_flag = DISPLAY_CLOCK_FLAG_UPDATE_ALL;                         // update display after ticker
         }
 
-        if (display_clock_flag)                                                         // refresh display (time/mode changed)
+        if (display_clock_flag && tables.complete)                                                         // refresh display (time/mode changed)
         {
             debug_log_message ("update display");
 
 #if WCLOCK24H == 1
-            if (display.display_mode == MODES_COUNT - 1)                                // temperature
+            if (display.display_mode == tables.modes_count - 1)                         // temperature
             {
                 uint_fast8_t temperature_index;
 
@@ -2650,28 +3163,36 @@ main (void)
                     debug_log_message ("no temperature available");
                 }
 
-                display_clock (0, temperature_index - 20, display_clock_flag);          // show temperature
+                if (temperature_index >= 20)
+                {
+                    display_clock (0, temperature_index - 20, display_clock_flag);      // show temperature
+                }
             }
             else
             {
-                display_clock (hour, minute, display_clock_flag);                       // show new time
+                display_clock (gmain.hour, gmain.minute, display_clock_flag);           // show new time
             }
 #else
-            display_clock (hour, minute, display_clock_flag);                           // show new time
+            display_clock (gmain.hour, gmain.minute, display_clock_flag);               // show new time
 #endif
             display_clock_flag = DISPLAY_CLOCK_FLAG_NONE;
         }
 
-        if (animation_flag)
+        if (animation_flag && tables.complete)
         {
             animation_flag = 0;
             display_animation ();
         }
 
-        if (seconds_flag)
+        if (ambilight_clock_tick)                                                       // set 20 times per ambilight LED in clock mode
+        {
+            ambilight_clock_tick = 0;
+            display_seconds (ambilight_clock_led_idx);
+        }
+
+        if (seconds_flag)                                                               // currently not used
         {
             seconds_flag = 0;
-            display_seconds (second);
         }
 
         cmd = remote_ir_get_cmd ();                                                     // get IR command
@@ -2686,7 +3207,7 @@ main (void)
         {
             case REMOTE_IR_CMD_POWER:
             {
-                display_clock_flag = toggle_power (TRUE);
+                display_clock_flag = set_display_power (! display.display_power_is_on, TRUE);
                 debug_log_message ("IRMP: POWER key");
                 break;
             }
@@ -2731,16 +3252,16 @@ main (void)
 
             case REMOTE_IR_CMD_DECREMENT_HOUR:                                          // decrement hour
             {
-                if (hour > 0)
+                if (gmain.hour > 0)
                 {
-                    hour--;
+                    gmain.hour--;
                 }
                 else
                 {
-                    hour = 23;
+                    gmain.hour = 23;
                 }
 
-                second              = 0;
+                gmain.second        = 0;
                 display_clock_flag  = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
                 time_changed        = 1;
                 debug_log_message ("IRMP: decrement hour");
@@ -2749,16 +3270,16 @@ main (void)
 
             case REMOTE_IR_CMD_INCREMENT_HOUR:                                          // increment hour
             {
-                if (hour < 23)
+                if (gmain.hour < 23)
                 {
-                     hour++;
+                     gmain.hour++;
                 }
                 else
                 {
-                    hour =  0;
+                    gmain.hour =  0;
                 }
 
-                second              = 0;
+                gmain.second        = 0;
                 display_clock_flag  = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
                 time_changed        = 1;
                 debug_log_message ("IRMP: increment hour");
@@ -2767,16 +3288,16 @@ main (void)
 
             case REMOTE_IR_CMD_DECREMENT_MINUTE:                                        // decrement minute
             {
-                if (minute > 0)
+                if (gmain.minute > 0)
                 {
-                    minute--;
+                    gmain.minute--;
                 }
                 else
                 {
-                    minute = 59;
+                    gmain.minute = 59;
                 }
 
-                second              = 0;
+                gmain.second        = 0;
                 display_clock_flag  = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
                 time_changed        = 1;
                 debug_log_message ("IRMP: decrement minute");
@@ -2785,16 +3306,16 @@ main (void)
 
             case REMOTE_IR_CMD_INCREMENT_MINUTE:                                        // increment minute
             {
-                if (minute < 59)
+                if (gmain.minute < 59)
                 {
-                    minute++;
+                    gmain.minute++;
                 }
                 else
                 {
-                    minute = 0;
+                    gmain.minute = 0;
                 }
 
-                second              = 0;
+                gmain.second        = 0;
                 display_clock_flag  = DISPLAY_CLOCK_FLAG_UPDATE_ALL;
                 time_changed        = 1;
                 debug_log_message ("IRMP: increment minute");
@@ -2907,13 +3428,13 @@ main (void)
         {
             if (grtc.rtc_is_up)
             {
-                gmain.tm.tm_year = year - 1900;
-                gmain.tm.tm_mon  = month - 1;
-                gmain.tm.tm_mday = mday;
-                gmain.tm.tm_hour = hour;
-                gmain.tm.tm_min  = minute;
-                gmain.tm.tm_sec  = second;
-                gmain.tm.tm_wday = wday;
+                gmain.tm.tm_year = gmain.year - 1900;
+                gmain.tm.tm_mon  = gmain.month - 1;
+                gmain.tm.tm_mday = gmain.mday;
+                gmain.tm.tm_hour = gmain.hour;
+                gmain.tm.tm_min  = gmain.minute;
+                gmain.tm.tm_sec  = gmain.second;
+                gmain.tm.tm_wday = gmain.wday;
                 rtc_set_date_time (&gmain.tm);
             }
 
@@ -2933,16 +3454,16 @@ main (void)
                 log_message ("dfplayer is online");
             }
 
-            if (last_minute != minute)
+            if (last_minute != gmain.minute)
             {
-                uint_fast16_t   cur_minute = 60 * hour + minute;
+                uint_fast16_t   cur_minute = 60 * gmain.hour + gmain.minute;
                 uint_fast8_t    alarm_idx;
 
-                alarm_idx = alarm_check_alarm_times (wday, cur_minute);
+                alarm_idx = alarm_check_alarm_times (gmain.wday, cur_minute);
 
                 if (alarm_idx > 0)
                 {
-                    log_printf ("%d %02d:%02d alarm_idx = %d\r\n", wday, hour, minute, alarm_idx);
+                    log_printf ("%d %02d:%02d alarm_idx = %d\r\n", gmain.wday, gmain.hour, gmain.minute, alarm_idx);
                     dfplayer_play_folder (ALARM_FOLDER, alarm_idx);
                 }
                 else if (dfplayer.mode != DFPLAYER_MODE_NONE)
@@ -2953,39 +3474,39 @@ main (void)
                         {
                             uint_fast8_t track = 0xFF;
 
-                            if (minute == 0)
+                            if (gmain.minute == 0)
                             {
-                                if (hour >= 12)
+                                if (gmain.hour >= 12)
                                 {
-                                    if (hour == 12)
+                                    if (gmain.hour == 12)
                                     {
                                         track = DFPLAYER_TRACK_HOUR12;
                                     }
                                     else
                                     {
-                                        track = hour - 12;
+                                        track = gmain.hour - 12;
                                     }
                                 }
                                 else
                                 {
-                                    track = hour;
+                                    track = gmain.hour;
                                 }
                             }
-                            else if (minute == 15)
+                            else if (gmain.minute == 15)
                             {
                                 if (dfplayer.bell_flags & DFPLAYER_MODE_BELL_FLAG_15)
                                 {
                                     track = DFPLAYER_TRACK_HOUR_15M;
                                 }
                             }
-                            else if (minute == 30)
+                            else if (gmain.minute == 30)
                             {
                                 if (dfplayer.bell_flags & DFPLAYER_MODE_BELL_FLAG_30)
                                 {
                                     track = DFPLAYER_TRACK_HOUR_30M;
                                 }
                             }
-                            else if (minute == 45)
+                            else if (gmain.minute == 45)
                             {
                                 if (dfplayer.bell_flags & DFPLAYER_MODE_BELL_FLAG_45)
                                 {
@@ -3000,15 +3521,47 @@ main (void)
                         }
                         else if (dfplayer.mode == DFPLAYER_MODE_SPEAK)
                         {
-                            if (dfplayer.speak_cycle > 0 && minute % dfplayer.speak_cycle == 0)
+                            if (dfplayer.speak_cycle > 0 && gmain.minute % dfplayer.speak_cycle == 0)
                             {
-                                speak (hour, minute);
+#if WCLOCK24H == 1
+                                if (display.display_mode == tables.modes_count - 1)                     // temperature
+                                {
+                                    uint_fast8_t temperature_index;
+
+                                    if (ds18xx.is_up)
+                                    {
+                                        temperature_index = temp_read_temp_index ();
+                                        log_printf ("got temperature from DS18xxx: %d%s\r\n", temperature_index / 2, (temperature_index % 2) ? ".5" : "");
+                                    }
+                                    else if (grtc.rtc_is_up)
+                                    {
+                                        temperature_index = rtc_get_temperature_index ();
+                                        log_printf ("got temperature from RTC: %d%s\r\n", temperature_index / 2, (temperature_index % 2) ? ".5" : "");
+                                    }
+                                    else
+                                    {
+                                        temperature_index = 0x00;
+                                        debug_log_message ("no temperature available");
+                                    }
+
+                                    if (temperature_index >= 20)
+                                    {
+                                        speak (0, temperature_index - 20);                              // speak temperature
+                                    }
+                                }
+                                else
+                                {
+                                    speak (gmain.hour, gmain.minute);
+                                }
+#else
+                                speak (gmain.hour, gmain.minute);
+#endif
                             }
                         }
                     }
                 }
 
-                last_minute = minute;
+                last_minute = gmain.minute;
             }
         }
     }

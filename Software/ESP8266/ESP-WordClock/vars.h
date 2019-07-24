@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * vars.h - synchronization of variables between STM32 and ESP8266
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 
 #define COLOR_ANIMATION_MODE_NONE                   0                   // no color animation
 #define COLOR_ANIMATION_MODE_RAINBOW                1                   // rainbow
+#define COLOR_ANIMATION_MODE_DAYLIGHT               2                   // daylight
 
 #define DFPLAYER_MODE_NONE                          0                   // none
 #define DFPLAYER_MODE_BELL                          1                   // play tracks at xx:00, xx:15, xx:30, xx:45 o'clock
@@ -64,6 +65,9 @@ typedef enum
     TEST_DISPLAY_RPC_VAR,                                               // test display
     GET_WEATHER_RPC_VAR,                                                // get weather
     DISPLAY_DATE_RPC_VAR,                                               // display current date
+    GET_WEATHER_FC_RPC_VAR,                                             // get weather forecast
+    RESET_EEPROM_RPC_VAR,                                               // reset EEPROM contents
+    DISPLAY_CW_CNT_RPC_VAR,
     MAX_RPC_VARIABLES,                                                  // must be the last member
 } RPC_VARIABLE;
 
@@ -80,11 +84,11 @@ typedef enum
     RTC_IS_UP_NUM_VAR,
     DISPLAY_POWER_NUM_VAR,
     DISPLAY_MODE_NUM_VAR,
-    MAX_DISPLAY_MODES_NUM_VAR,
+    OBSOLETE_1_NUMVAR,                                                      // obsolete: MAX_DISPLAY_MODES_NUM_VAR
     DISPLAY_BRIGHTNESS_NUM_VAR,
     DISPLAY_FLAGS_NUM_VAR,
     DISPLAY_AUTOMATIC_BRIGHTNESS_ACTIVE_NUM_VAR,
-    DISPLAY_TEMPERATURE_INTERVAL_NUM_VAR,               // obsolete
+    OBSOLETE_2_NUMVAR,                                                      // obsolete: DISPLAY_TEMPERATURE_INTERVAL_NUM_VAR
     ANIMATION_MODE_NUM_VAR,
     AMBILIGHT_MODE_NUM_VAR,
     AMBILIGHT_LEDS_NUM_VAR,
@@ -100,10 +104,10 @@ typedef enum
     RTC_TEMP_CORRECTION_NUM_VAR,
     DS18XX_TEMP_INDEX_NUM_VAR,
     DS18XX_TEMP_CORRECTION_NUM_VAR,
-    DISPLAY_HEART_INTERVAL_NUM_VAR,                      // obsolete
-    DISPLAY_XMAS_TREE_INTERVAL_NUM_VAR,                  // obsolete
-    DISPLAY_DATE_INTERVAL_NUM_VAR,                  // obsolete
-    DISPLAY_FIREWORKS_INTERVAL_NUM_VAR,             // obsolete
+    OBSOLETE_3_NUMVAR,                                                      // obsolete: DISPLAY_HEART_INTERVAL_NUM_VAR,
+    OBSOLETE_4_NUMVAR,                                                      // obsolete: DISPLAY_XMAS_TREE_INTERVAL_NUM_VAR,
+    OBSOLETE_5_NUMVAR,                                                      // obsolete: DISPLAY_DATE_INTERVAL_NUM_VAR,
+    OBSOLETE_6_NUMVAR,                                                      // obsolete: DISPLAY_FIREWORKS_INTERVAL_NUM_VAR,
     HARDWARE_CONFIGURATION_NUM_VAR,
     DISPLAY_AMBILIGHT_POWER_NUM_VAR,
     TICKER_DECELRATION_NUM_VAR,
@@ -115,12 +119,12 @@ typedef enum
     DFPLAYER_MODE_NUM_VAR,
     DFPLAYER_BELL_FLAGS_NUM_VAR,
     DFPLAYER_SPEAK_CYCLE_NUM_VAR,
-    DISPLAY_ADVENT1_INTERVAL_NUM_VAR,                  // obsolete
-    DISPLAY_ADVENT2_INTERVAL_NUM_VAR,                  // obsolete
-    DISPLAY_ADVENT3_INTERVAL_NUM_VAR,                  // obsolete
-    DISPLAY_ADVENT4_INTERVAL_NUM_VAR,                  // obsolete
+    OBSOLETE_7_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT1_INTERVAL_NUM_VAR,
+    OBSOLETE_8_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT2_INTERVAL_NUM_VAR,
+    OBSOLETE_9_NUMVAR,                                                      // obsolete: DISPLAY_ADVENT3_INTERVAL_NUM_VAR,
+    OBSOLETE_10_NUMVAR,                                                     // obsolete: DISPLAY_ADVENT4_INTERVAL_NUM_VAR,
     DFPLAYER_PLAY_FOLDER_TRACK_NUM_VAR,
-    DISPLAY_OVERLAY_NUM_VAR,                           // TODO
+    DISPLAY_OVERLAY_NUM_VAR,
     OVERLAY_N_OVERLAYS_NUM_VAR,
     MAX_NUM_VARIABLES                                                       // must be the last member
 } NUM_VARIABLE;
@@ -136,10 +140,11 @@ extern void             vars_init (void);
  */
 typedef enum
 {
-    DISPLAY_DIMMED_COLORS,
+    DISPLAY_DIMMED_DISPLAY_COLORS,
+    DISPLAY_DIMMED_AMBILIGHT_COLORS,
 } NUM8_ARRAY;
 
-#define MAX_NUM8_ARRAYS     (DISPLAY_DIMMED_COLORS + 1)                   // must be the last member + 1
+#define MAX_NUM8_ARRAYS     (DISPLAY_DIMMED_AMBILIGHT_COLORS + 1)           // must be the last member + 1
 #define MAX_BRIGHTNESS      15
 
 extern uint8_t              dimmed_colors[MAX_BRIGHTNESS + 1];
@@ -163,9 +168,9 @@ extern uint_fast8_t         set_num16_array (NUM16_ARRAY, uint32_t, uint_fast16_
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 #define MAX_TICKER_TEXT_LEN             32
-#define MAX_VERSION_TEXT_LEN            8
+#define MAX_VERSION_TEXT_LEN            12
 #define MAX_EEPROM_VERSION_TEXT_LEN     8
-#define MAX_ESP8266_VERSION_TEXT_LEN    8
+#define MAX_ESP8266_VERSION_TEXT_LEN    12
 #define MAX_TIMESERVER_NAME_LEN         16
 #define MAX_WEATHER_APPID_LEN           32
 #define MAX_WEATHER_CITY_LEN            32
@@ -173,6 +178,7 @@ extern uint_fast8_t         set_num16_array (NUM16_ARRAY, uint32_t, uint_fast16_
 #define MAX_WEATHER_LAT_LEN             8
 #define MAX_UPDATE_HOST_LEN             (64 - 1)
 #define MAX_UPDATE_PATH_LEN             (64 - 1)
+#define MAX_DATE_TICKER_FORMAT_LEN      (6 - 1)
 
 typedef struct
 {
@@ -193,6 +199,7 @@ typedef enum
     WEATHER_LAT_STR_VAR,
     UPDATE_HOST_VAR,
     UPDATE_PATH_VAR,
+    DATE_TICKER_FORMAT_VAR,
     MAX_STR_VARIABLES                                                   // must be the last member
 } STR_VARIABLE;
 
@@ -217,50 +224,6 @@ extern TM *             get_tm_var (TM_VARIABLE);
 extern unsigned int     set_tm_var (TM_VARIABLE, TM *);
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
- * display mode variables:
- *-------------------------------------------------------------------------------------------------------------------------------------------
- */
-#define MAX_DISPLAY_MODE_NAME_LEN   32
-
-typedef struct
-{
-    char name[MAX_DISPLAY_MODE_NAME_LEN + 1];
-} DISPLAY_MODE;
-
-typedef enum
-{
-    DISPLAY_MODE_0_VAR,
-    DISPLAY_MODE_1_VAR,
-    DISPLAY_MODE_2_VAR,
-    DISPLAY_MODE_3_VAR,
-    DISPLAY_MODE_4_VAR,
-    DISPLAY_MODE_5_VAR,
-    DISPLAY_MODE_6_VAR,
-    DISPLAY_MODE_7_VAR,
-    DISPLAY_MODE_8_VAR,
-    DISPLAY_MODE_9_VAR,
-    DISPLAY_MODE_10_VAR,
-    DISPLAY_MODE_11_VAR,
-    DISPLAY_MODE_12_VAR,
-    DISPLAY_MODE_13_VAR,
-    DISPLAY_MODE_14_VAR,
-    DISPLAY_MODE_15_VAR,
-    DISPLAY_MODE_16_VAR,
-    DISPLAY_MODE_17_VAR,
-    DISPLAY_MODE_18_VAR,
-    DISPLAY_MODE_19_VAR,
-    DISPLAY_MODE_20_VAR,
-    DISPLAY_MODE_21_VAR,
-    DISPLAY_MODE_22_VAR,
-    DISPLAY_MODE_23_VAR,
-    MAX_DISPLAY_MODE_VARIABLES                                       // must be the last member
-} DISPLAY_MODE_VARIABLE;
-
-extern DISPLAY_MODE      displaymodevars[MAX_DISPLAY_MODE_VARIABLES];
-extern DISPLAY_MODE *    get_display_mode_var (DISPLAY_MODE_VARIABLE);
-extern unsigned int      set_display_mode_name (DISPLAY_MODE_VARIABLE, char *);
-
-/*-------------------------------------------------------------------------------------------------------------------------------------------
  * display color variables:
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
@@ -277,7 +240,8 @@ typedef enum
 {
     DISPLAY_DSP_COLOR_VAR,
     AMBILIGHT_DSP_COLOR_VAR,
-    MAX_DSP_COLOR_VARIABLES                                                   // must be the last member
+    AMBILIGHT_MARKER_DSP_COLOR_VAR,
+    MAX_DSP_COLOR_VARIABLES                                             // must be the last member
 } DSP_COLOR_VARIABLE;
 
 extern DSP_COLORS       dspcolorvars[MAX_DSP_COLOR_VARIABLES];
@@ -315,10 +279,12 @@ typedef enum
     SNAKE_DISPLAY_ANIMATION_VAR,
     TELETYPE_DISPLAY_ANIMATION_VAR,
     CUBE_DISPLAY_ANIMATION_VAR,
-    MATRIX_DISPLAY_ANIMATION_VAR,
+    GREEN_MATRIX_DISPLAY_ANIMATION_VAR,
     DROP_DISPLAY_ANIMATION_VAR,
     SQUEEZE_DISPLAY_ANIMATION_VAR,
     FLICKER_DISPLAY_ANIMATION_VAR,
+    MATRIX_DISPLAY_ANIMATION_VAR,
+    RED_MATRIX_DISPLAY_ANIMATION_VAR,
     MAX_DISPLAY_ANIMATION_VARIABLES                                       // must be the last member
 } DISPLAY_ANIMATION_VARIABLE;
 
@@ -353,6 +319,7 @@ typedef enum
 {
     NO_COLOR_ANIMATION_VAR,
     RAINBOW_COLOR_ANIMATION_VAR,
+    DAYLIGHT_COLOR_ANIMATION_VAR,
     MAX_COLOR_ANIMATION_VARIABLES                                       // must be the last member
 } COLOR_ANIMATION_VARIABLE;
 
@@ -389,6 +356,7 @@ typedef enum
     CLOCK_AMBILIGHT_MODE_VAR,
     CLOCK2_AMBILIGHT_MODE_VAR,
     RAINBOW_AMBILIGHT_MODE_VAR,
+    DAYLIGHT_AMBILIGHT_MODE_VAR,
     MAX_AMBILIGHT_MODE_VARIABLES                                       // must be the last member
 } AMBILIGHT_MODE_VARIABLE;
 
@@ -413,6 +381,8 @@ extern unsigned int         set_ambilight_mode_flags (AMBILIGHT_MODE_VARIABLE, u
 #define OVERLAY_TYPE_WEATHER                        5                   // weather
 #define OVERLAY_TYPE_TICKER                         6                   // ticker
 #define OVERLAY_TYPE_MP3                            7                   // mp3
+#define OVERLAY_TYPE_WEATHER_FC_ICON                8                   // weather forecast icon
+#define OVERLAY_TYPE_WEATHER_FC                     9                   // weather forecast
 
 #define OVERLAY_MAX_TEXT_LEN                        32                   // name of icon or content of ticker
 

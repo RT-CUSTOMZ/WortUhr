@@ -1,3 +1,52 @@
+STM32 Version 2.9.4:
+
+   - Neues Spiel: Snake
+   - Bugfix: Marker-Colors wurden nicht mehr berücksichtigt, wenn "Sync Display Colors" für Ambilight eingestellt war.
+   - Bugfix: Mitternachtsberechnung (nur relevant für französisches WC12-Layout)
+
+STM32 Version 2.9.3:
+
+   - Diverse Bugfixes in der Ambilight-Helligkeitsberechnung
+
+STM32 Version 2.9.2:
+
+   - Fading der Ambilight-LEDs im Clock- & Clock2-Modus ein- und ausschaltbar
+   - Marker Colors in der Clock-Animation: Zusätzliche Einstellung "Use Display Colors"
+   - Optimierung der SK6812-Timings für längere Zuleitungen
+   - WC12h: Fading der Minutenpunkte
+   - Umstellung der Wettervorhersage von Tages-Vorhersage ("daily forecast") auf 24h-Vorhersage ("hour forecast")
+   - Bugfix Timer: Display schaltet sich erst beim nächsten Overlay ein
+
+STM32 Version 2.9.1:
+
+   - Bugfix: Makefile: STM32F4xx-Varianten (2.9.0) waren nicht lauffähig.
+   - Bugfix: Berücksichtigung des Weiß-Kanals der SK6812 für Clock & Clock2
+   - Logging des Boot-Vorgangs ausführlicher
+   - Standard-Werte für Ambilight-Brightness auf lineare Werte 0-15 gesetzt.
+
+STM32 Version 2.9.0:
+
+   - Neu: Auslagerung der Display-Layouts in das SPIFFS des ESP8266.
+   - Neu: Hochladen eigener Display-Layouts über das Webinterface möglich.
+   - Neu: Ambilight Modes "CLOCK" und "CLOCK2": beliebige Anzahl von Ambilight-LEDs möglich.
+   - Neu: Ambilight Mode Clock: Farbe der 5-Sekunden-Marker einstellbar.
+   - Neu: Ambilight Mode Clock und Clock2: Fading der Ambilight-LEDs
+   - Neu: Ambilight-Helligkeitskurve.
+   - Neu: Icons in Overlays: Gezieltes Ausblenden von LEDs.
+   - Neu: Angabe eines Ausgabeformats für die Ticker-Datumsanzeige.
+   - Neu: Zusätzlicher Ambilight-Timer.
+   - Neu: Animation "Matrix" in aktueller Displayfarbe, bisherige Matrix-Animation: "GreenMatrix".
+   - Neu: Snake Animation: Schlange baut nun die neue Uhrzeit gleichzeitig wieder hinter sich auf.
+   - Neu: Display-Modus "Tirol": Anzeige von DREIVIERTEL um hh:45, jedoch VIERTEL NACH um hh:15 - wie Rhein/Ruhr.
+   - Neu: Display-Modus "Jester" (1. April): Unorthodoxe Anzeige für den 1. April oder andere Anlässe.
+   - Neu: Color- bzw. Ambilight-Animation "Daylight": gesteuert nach Uhrzeit (von morgens rot nach abends blau)
+   - Neu: Wetter: Unterscheidung aktuelles Wetter und Vorhersage - auch in den Overlays (FC = Forecast = Vorhersage).
+   - Neu: Wetterticker: Temperaturwerte werden nun gerundet.
+   - Neu: Webinterface: Neuer Button "Reset EEPROM" im Hauptmenü.
+   - Neu: Webinterface: Neuer Button "Reset STM32" im Hauptmenü - funktioniert nur mit ESP-12F.
+   - Bugfix: LDR-Startwerte für MIN und MAX auf sinnvolle Werte geändert.
+   - Bugfix: Ende-Kennung von DFPLayer mit Firmware 0008 statt 0005.
+
 STM32 Version 2.8.4:
 
    - Bugfix: Icons wurden bei aktivierter Helligkeitsanpassung teilweise nach sehr kurzer Zeit wieder ausgeblendet.

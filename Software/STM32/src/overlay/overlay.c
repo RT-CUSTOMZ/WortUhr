@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * overlay.c - handle overlays
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ overlay_read_config_from_eeprom (uint32_t eeprom_version)
 
         if (eeprom_version >= EEPROM_VERSION_2_8)
         {
-            uint8_t         overlay_buffer8[EEPROM_DATA_SIZE_OVERLAY];
+            uint8_t         overlay_buffer8[EEPROM_OVERLAY_ENTRY_SIZE];
             uint8_t         n_overlays8 = 0;
             uint_fast8_t    bidx;
 
@@ -48,7 +48,7 @@ overlay_read_config_from_eeprom (uint32_t eeprom_version)
 
             for (idx = 0; idx < overlay.n_overlays; idx++)
             {
-                eeprom_read (EEPROM_DATA_OFFSET_OVERLAY + idx * EEPROM_DATA_SIZE_OVERLAY, overlay_buffer8, EEPROM_DATA_SIZE_OVERLAY);
+                eeprom_read (EEPROM_DATA_OFFSET_OVERLAY + idx * EEPROM_OVERLAY_ENTRY_SIZE, overlay_buffer8, EEPROM_OVERLAY_ENTRY_SIZE);
 
                 bidx = 0;
                 overlay.overlays[idx].type = overlay_buffer8[bidx];
@@ -101,7 +101,7 @@ overlay_save_n_overlays (void)
 static void
 overlay_save_overlay (uint_fast8_t idx)
 {
-    uint8_t         overlay_buffer8[EEPROM_DATA_SIZE_OVERLAY];
+    uint8_t         overlay_buffer8[EEPROM_OVERLAY_ENTRY_SIZE];
     uint_fast8_t    bidx;
 
     bidx = 0;
@@ -130,7 +130,7 @@ overlay_save_overlay (uint_fast8_t idx)
     overlay_buffer8[bidx] = overlay.overlays[idx].flags;
     bidx += OVERLAY_FLAGS_LEN;
 
-    eeprom_write (EEPROM_DATA_OFFSET_OVERLAY + idx * EEPROM_DATA_SIZE_OVERLAY, overlay_buffer8, EEPROM_DATA_SIZE_OVERLAY);
+    eeprom_write (EEPROM_DATA_OFFSET_OVERLAY + idx * EEPROM_OVERLAY_ENTRY_SIZE, overlay_buffer8, EEPROM_OVERLAY_ENTRY_SIZE);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------

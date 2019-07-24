@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * base.h - extern declarations for base functions
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ extern bool             ipstr_to_ipno (int *, const char *);
 extern void             trim (char *);
 extern void             strsubst (char *, int, int);
 extern int              mystrnicmp (const char *, const char *, int);
-extern unsigned char *  convert_utf8_to_iso8859 (unsigned char *);
+extern unsigned char *  convert_utf8_to_iso8859 (const unsigned char *);
 extern void             statusmsg (const char *, const char *);
 extern void             debugmsg (String);
 extern void             debugmsg (const char *);

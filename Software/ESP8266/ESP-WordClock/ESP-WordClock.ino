@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------
  * ESP-WordClock.ino - some ESP8266 network routines with communication interface via UART to WordClock (STM32)
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@
 #include "ntp.h"
 #include "weather.h"
 #include "vars.h"
+#include "tables.h"
 #include "version.h"
 
 
@@ -80,7 +81,17 @@ setup()
     Serial.println ("");
     Serial.flush ();
     delay(1000);
-  
+
+#if 0
+    Serial.println ("- formatting SPIFFS");
+    Serial.flush ();
+    SPIFFS.begin ();
+    SPIFFS.format ();
+    SPIFFS.end ();
+    Serial.println ("- formatting ready");
+    Serial.flush ();
+#endif
+
     ntp_setup ();
     udp_server_setup ();
     Serial.print ("FIRMWARE ");
@@ -88,6 +99,7 @@ setup()
     Serial.flush ();
     vars_init ();
     stm32_flash_init ();
+    tables_init ();
 }
 
 #define MAX_ICON_SIZE   (20*20)
@@ -95,14 +107,17 @@ setup()
 static char           icon_name[32 + 1];
 static char           icon_colors[MAX_ICON_SIZE + 1];
 static uint_fast16_t  icon_colors_len;
-static char           icon_animations[MAX_ICON_SIZE + 1];
-static uint_fast16_t  icon_anim_len;
+static char           icon_animations_on[MAX_ICON_SIZE + 1];
+static char           icon_animations_off[MAX_ICON_SIZE + 1];
+static uint_fast16_t  icon_anim_on_len;
+static uint_fast16_t  icon_anim_off_len;
 static uint_fast8_t   icon_rows;
 static uint_fast8_t   icon_cols;
 static uint_fast8_t   icon_found;
 
 static uint_fast16_t  colors_pos;
-static uint_fast16_t  anim_pos;
+static uint_fast16_t  anim_on_pos;
+static uint_fast16_t  anim_off_pos;
 
 static void
 icon_info (const char * fname, const char * name)
@@ -115,7 +130,8 @@ icon_info (const char * fname, const char * name)
     icon_rows = 0;
     icon_cols = 0;
     icon_colors_len = 0;
-    icon_anim_len = 0;
+    icon_anim_on_len = 0;
+    icon_anim_off_len = 0;
     icon_found = 0;
 
     SPIFFS.begin ();
@@ -146,12 +162,13 @@ icon_info (const char * fname, const char * name)
             icon_name[i] = '\0';
             trim (icon_name);
 
-            i               = 0;
-            icon_cols       = 0;
-            icon_rows       = 0;
-            icon_colors_len = 0;
-            icon_anim_len   = 0;
-            len             = 0;
+            i                   = 0;
+            icon_cols           = 0;
+            icon_rows           = 0;
+            icon_colors_len     = 0;
+            icon_anim_on_len    = 0;
+            icon_anim_off_len   = 0;
+            len                 = 0;
 
             while ((ch = fp.read()) >= 0)
             {
@@ -188,6 +205,7 @@ icon_info (const char * fname, const char * name)
 
             icon_rows = len / icon_cols;
 
+            // animations on section
             if (ch == '-')
             {
                 i = 0;
@@ -205,18 +223,50 @@ icon_info (const char * fname, const char * name)
                         {
                             if (i < MAX_ICON_SIZE)
                             {
-                                icon_animations[i++] = ch;
+                                icon_animations_on[i++] = ch;
                             }
                         }
                     }
                 }
 
-                icon_animations[i] = '\0';
-                icon_anim_len = i;
+                icon_animations_on[i] = '\0';
+                icon_anim_on_len = i;
+
+                // animations on section
+                if (ch == '-')
+                {
+                    i = 0;
+
+                    while ((ch = fp.read ()) != EOF)
+                    {
+                        if (ch != '\r' && ch != '\n')
+                        {
+                            if (ch == '*' || ch == '-')
+                            {
+                                break;
+                            }
+
+                            if (ch != ' ' && ch != '\t')
+                            {
+                                if (i < MAX_ICON_SIZE)
+                                {
+                                    icon_animations_off[i++] = ch;
+                                }
+                            }
+                        }
+                    }
+
+                    icon_animations_off[i] = '\0';
+                    icon_anim_off_len = i;
+                }
+                else
+                {
+                    icon_animations_off[0] = '\0';
+                }
             }
             else
             {
-                icon_animations[0] = '\0';
+                icon_animations_on[0] = '\0';
             }
 
             if (! strcmp (icon_name, name))
@@ -316,6 +366,11 @@ loop()
                     {
                         *pp = '\0';
                         ssid = p + 1;
+
+                        if((pp-6)>p && strcmp(pp-6,"$$$$$$")==0){
+                          snprintf((pp-6),7,"%06X", ESP.getChipId());                    
+                        }
+                        
                         p = pp + 1;
 
                         if (*p == ',' && *(p + 1) == '"')
@@ -445,6 +500,72 @@ loop()
                     }
                 }
             }
+            else if (! strncmp (cmd_buffer, "weather_fc ", 11))
+            {
+                if (! wifi_ap_mode)
+                {
+                    int     syntax_ok = false;
+                    char *  appid;
+                    char *  city;
+                    char *  lon;
+                    char *  lat;
+                    char *  p = cmd_buffer + 11;
+                    char *  pp;
+
+                    if (*p == '"')
+                    {
+                        pp = strchr (p + 1, '"');
+
+                        if (pp)
+                        {
+                            *pp = '\0';
+                            appid = p + 1;
+                            p = pp + 1;
+
+                            if (*p == ',' && *(p + 1) == '"')
+                            {
+                                pp = strchr (p + 2, '"');
+
+                                if (pp)
+                                {
+                                    *pp = '\0';
+
+                                    if (*(pp + 1))                                       // "appid","lon","lat"
+                                    {
+                                        lon = p + 2;
+                                        p = pp + 1;
+
+                                        if (*p == ',' && *(p + 1) == '"')
+                                        {
+                                            pp = strchr (p + 2, '"');
+
+                                            if (pp)
+                                            {
+                                                *pp = '\0';
+                                                lat = p + 2;
+                                                syntax_ok = true;
+                                                get_weather_fc (appid, lon, lat);
+                                            }
+                                        }
+                                    }
+                                    else                                                // "appid","city"
+                                    {
+                                        city = p + 2;
+                                        syntax_ok = true;
+                                        get_weather_fc (appid, city);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (! syntax_ok)
+                    {
+                        Serial.println ("ERROR syntax error");
+                        Serial.flush ();
+                    }
+                }
+            }
             else if (! strncmp (cmd_buffer, "wicon ", 6))
             {
                 if (! wifi_ap_mode)
@@ -511,9 +632,187 @@ loop()
                     }
                 }
             }
+            else if (! strncmp (cmd_buffer, "wicon_fc ", 9))
+            {
+                if (! wifi_ap_mode)
+                {
+                    int     syntax_ok = false;
+                    char *  appid;
+                    char *  city;
+                    char *  lon;
+                    char *  lat;
+                    char *  p = cmd_buffer + 9;
+                    char *  pp;
+
+                    if (*p == '"')
+                    {
+                        pp = strchr (p + 1, '"');
+
+                        if (pp)
+                        {
+                            *pp = '\0';
+                            appid = p + 1;
+                            p = pp + 1;
+
+                            if (*p == ',' && *(p + 1) == '"')
+                            {
+                                pp = strchr (p + 2, '"');
+
+                                if (pp)
+                                {
+                                    *pp = '\0';
+
+                                    if (*(pp + 1))                                       // "appid","lon","lat"
+                                    {
+                                        lon = p + 2;
+                                        p = pp + 1;
+
+                                        if (*p == ',' && *(p + 1) == '"')
+                                        {
+                                            pp = strchr (p + 2, '"');
+
+                                            if (pp)
+                                            {
+                                                *pp = '\0';
+                                                lat = p + 2;
+                                                syntax_ok = true;
+                                                get_weather_icon_fc (appid, lon, lat);
+                                            }
+                                        }
+                                    }
+                                    else                                                // "appid","city"
+                                    {
+                                        city = p + 2;
+                                        syntax_ok = true;
+                                        get_weather_icon_fc (appid, city);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (! syntax_ok)
+                    {
+                        Serial.println ("ERROR syntax error");
+                        Serial.flush ();
+                    }
+                }
+            }
             else if (! strcmp (cmd_buffer, "wps"))
             {
                 wifi_wps ();
+            }
+            else if (! strcmp (cmd_buffer, "tabinfo"))
+            {
+                tables_info ();
+            }
+            else if (! strncmp (cmd_buffer, "tabillu ", 8))
+            {
+                int     syntax_ok = false;
+                char *  p = cmd_buffer + 8;
+                char *  pp;
+
+                if (*p == '"')
+                {
+                    pp = strchr (p + 1, '"');
+
+                    if (pp)
+                    {
+                        *pp = '\0';
+                        tables_illumination (atoi (p + 1));
+                        syntax_ok = true;
+                    }
+                }
+                if (! syntax_ok)
+                {
+                    Serial.println ("ERROR syntax error");
+                    Serial.flush ();
+                }
+            }
+            else if (! strncmp (cmd_buffer, "tabh ", 5))
+            {
+                int     syntax_ok = false;
+                char *  modep;
+                char *  idxp;
+                char *  p = cmd_buffer + 5;
+                char *  pp;
+
+                if (*p == '"')
+                {
+                    pp = strchr (p + 1, '"');
+
+                    if (pp)
+                    {
+                        *pp = '\0';
+                        modep = p + 1;
+                        p = pp + 1;
+                        if (*p == ',' && *(p + 1) == '"')
+                        {
+                            pp = strchr (p + 2, '"');
+
+                            if (pp)
+                            {
+                                syntax_ok = true;
+                                *pp = '\0';
+                                idxp = p + 2;
+
+                                tables_hours (atoi (modep), atoi (idxp));
+                            }
+                        }
+                    }
+                }
+
+                if (! syntax_ok)
+                {
+                    Serial.println ("ERROR syntax error");
+                    Serial.flush ();
+                }
+            }
+            else if (! strncmp (cmd_buffer, "tabm ", 5) || ! strncmp (cmd_buffer, "tabt ", 5))
+            {
+                int     syntax_ok = false;
+                char *  modep;
+                char *  idxp;
+                char *  p = cmd_buffer + 5;
+                char *  pp;
+
+                if (*p == '"')
+                {
+                    pp = strchr (p + 1, '"');
+
+                    if (pp)
+                    {
+                        *pp = '\0';
+                        modep = p + 1;
+                        p = pp + 1;
+                        if (*p == ',' && *(p + 1) == '"')
+                        {
+                            pp = strchr (p + 2, '"');
+
+                            if (pp)
+                            {
+                                syntax_ok = true;
+                                *pp = '\0';
+                                idxp = p + 2;
+
+                                if (! strncmp (cmd_buffer, "tabm ", 5))
+                                {
+                                    tables_minutes (atoi (modep), atoi (idxp), "TABM");
+                                }
+                                else
+                                {
+                                    tables_minutes (atoi (modep), atoi (idxp), "TABT");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (! syntax_ok)
+                {
+                    Serial.println ("ERROR syntax error");
+                    Serial.flush ();
+                }
             }
 #if 0 // yet not used
             else if (! strncmp (cmd_buffer, "file-open ", 10))
@@ -627,10 +926,11 @@ loop()
                                 icon_name = p + 2;
 
                                 icon_info (fname, icon_name);
-                                sprintf (answer, "ICON %02x%02x%04x%04x", icon_rows, icon_cols, icon_colors_len, icon_anim_len);
+                                sprintf (answer, "ICON %02x%02x%04x%04x%04x", icon_rows, icon_cols, icon_colors_len, icon_anim_on_len, icon_anim_off_len);
 
                                 colors_pos = 0;
-                                anim_pos = 0;
+                                anim_on_pos = 0;
+                                anim_off_pos = 0;
                                 Serial.println (answer);
                             }
                         }
@@ -660,10 +960,15 @@ loop()
                             ch = icon_colors[colors_pos];
                             colors_pos++;
                         }
-                        else if (anim_pos < icon_anim_len)
+                        else if (anim_on_pos < icon_anim_on_len)
                         {
-                            ch = icon_animations[anim_pos];
-                            anim_pos++;
+                            ch = icon_animations_on[anim_on_pos];
+                            anim_on_pos++;
+                        }
+                        else if (anim_off_pos < icon_anim_off_len)
+                        {
+                            ch = icon_animations_off[anim_off_pos];
+                            anim_off_pos++;
                         }
                         else
                         {

@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * display.h - interface declaration of LED display routines
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,14 +13,11 @@
 #define DISPLAY_H
 
 #include "display-config.h"
-
-#if WCLOCK24H == 1
 #include "tables.h"
-#else
-#include "tables12h.h"
-#endif
 
 #define MAX_BRIGHTNESS                          15
+#define BRIGHTNESS_66                           10
+#define BRIGHTNESS_33                           5
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * display flags:
@@ -29,6 +26,8 @@
 #define DISPLAY_FLAGS_NONE                      0x00                    // no display flag
 #define DISPLAY_FLAGS_PERMANENT_IT_IS           0x01                    // show "ES IST" permanently
 #define DISPLAY_FLAGS_SYNC_AMBILIGHT            0x02                    // synchronize display and ambilight
+#define DISPLAY_FLAGS_SYNC_CLOCK_MARKERS        0x04                    // synchronize display and clock markers
+#define DISPLAY_FLAGS_FADE_CLOCK_SECONDS        0x08                    // fade clock seconds
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * clock display flags:
@@ -102,64 +101,73 @@ typedef struct                                                          // displ
 #define CALC_LED_RGB(t,s)               \
 do                                      \
 {                                       \
-    t.red     = pwmtable8[s.red];       \
-    t.green   = pwmtable8[s.green];     \
-    t.blue    = pwmtable8[s.blue];      \
-    t.white   = pwmtable8[s.white];     \
+    (t).red     = pwmtable8[(s).red];   \
+    (t).green   = pwmtable8[(s).green]; \
+    (t).blue    = pwmtable8[(s).blue];  \
+    (t).white   = pwmtable8[(s).white]; \
 } while (0)
 
 #define COPY_LED_RGB(t,s)               \
 do                                      \
 {                                       \
-    t.red     = s.red;                  \
-    t.green   = s.green;                \
-    t.blue    = s.blue;                 \
-    t.white   = s.white;                \
+    (t).red     = (s).red;              \
+    (t).green   = (s).green;            \
+    (t).blue    = (s).blue;             \
+    (t).white   = (s).white;            \
 } while (0)
 
 #define RESET_LED_RGB(t)                \
 do                                      \
 {                                       \
-    t.red     = 0;                      \
-    t.green   = 0;                      \
-    t.blue    = 0;                      \
-    t.white   = 0;                      \
+    (t).red     = 0;                    \
+    (t).green   = 0;                    \
+    (t).blue    = 0;                    \
+    (t).white   = 0;                    \
 } while (0)
 
 #define SET_DSP_RGB(t,r,g,b,w)          \
 do                                      \
 {                                       \
-    t.red     = r;                      \
-    t.green   = g;                      \
-    t.blue    = b;                      \
-    t.white   = w;                      \
+    (t).red     = (r);                  \
+    (t).green   = (g);                  \
+    (t).blue    = (b);                  \
+    (t).white   = (w);                  \
+} while (0)
+
+#define SET_DSP_RGB_SAVE(t,r,g,b,w)                                     \
+do                                                                      \
+{                                                                       \
+    (t).red     = (r) < MAX_COLOR_STEPS ? (r) : MAX_COLOR_STEPS - 1;    \
+    (t).green   = (g) < MAX_COLOR_STEPS ? (g) : MAX_COLOR_STEPS - 1;    \
+    (t).blue    = (b) < MAX_COLOR_STEPS ? (b) : MAX_COLOR_STEPS - 1;    \
+    (t).white   = (w) < MAX_COLOR_STEPS ? (w) : MAX_COLOR_STEPS - 1;    \
 } while (0)
 
 #define COPY_DSP_RGB(t,s)               \
 do                                      \
 {                                       \
-    t.red     = s.red;                  \
-    t.green   = s.green;                \
-    t.blue    = s.blue;                 \
-    t.white   = s.white;                \
+    (t).red     = (s).red;              \
+    (t).green   = (s).green;            \
+    (t).blue    = (s).blue;             \
+    (t).white   = (s).white;            \
 } while (0)
 
 #define COPY_DSP_RGB_TO_PTR(tp,s)       \
 do                                      \
 {                                       \
-    tp->red     = s.red;                \
-    tp->green   = s.green;              \
-    tp->blue    = s.blue;               \
-    tp->white   = s.white;              \
+    (tp)->red     = (s).red;            \
+    (tp)->green   = (s).green;          \
+    (tp)->blue    = (s).blue;           \
+    (tp)->white   = (s).white;          \
 } while (0)
 
 #define COPY_DSP_RGB_SAFE(t,sp)         \
 do                                      \
 {                                       \
-    t.red   = (sp->red   < MAX_COLOR_STEPS) ? sp->red   : MAX_COLOR_STEPS - 1;      \
-    t.green = (sp->green < MAX_COLOR_STEPS) ? sp->green : MAX_COLOR_STEPS - 1;      \
-    t.blue  = (sp->blue  < MAX_COLOR_STEPS) ? sp->blue  : MAX_COLOR_STEPS - 1;      \
-    t.white = (sp->white < MAX_COLOR_STEPS) ? sp->white : MAX_COLOR_STEPS - 1;      \
+    (t).red   = ((sp)->red   < MAX_COLOR_STEPS) ? (sp)->red   : MAX_COLOR_STEPS - 1;      \
+    (t).green = ((sp)->green < MAX_COLOR_STEPS) ? (sp)->green : MAX_COLOR_STEPS - 1;      \
+    (t).blue  = ((sp)->blue  < MAX_COLOR_STEPS) ? (sp)->blue  : MAX_COLOR_STEPS - 1;      \
+    (t).white = ((sp)->white < MAX_COLOR_STEPS) ? (sp)->white : MAX_COLOR_STEPS - 1;      \
 } while (0)
 
 #else
@@ -167,65 +175,73 @@ do                                      \
 #define CALC_LED_RGB(t,s)               \
 do                                      \
 {                                       \
-    t.red     = pwmtable8[s.red];       \
-    t.green   = pwmtable8[s.green];     \
-    t.blue    = pwmtable8[s.blue];      \
+    (t).red     = pwmtable8[(s).red];   \
+    (t).green   = pwmtable8[(s).green]; \
+    (t).blue    = pwmtable8[(s).blue];  \
 } while (0)
 
 #define SET_LED_RGB(t,r,g,b,w)          \
 do                                      \
 {                                       \
-    t.red     = r;                      \
-    t.green   = g;                      \
-    t.blue    = b;                      \
+    (t).red     = (r);                  \
+    (t).green   = (g);                  \
+    (t).blue    = (b);                  \
 } while (0)
 
 #define COPY_LED_RGB(t,s)               \
 do                                      \
 {                                       \
-    t.red     = s.red;                  \
-    t.green   = s.green;                \
-    t.blue    = s.blue;                 \
+    (t).red     = (s).red;              \
+    (t).green   = (s).green;            \
+    (t).blue    = (s).blue;             \
 } while (0)
 
 #define RESET_LED_RGB(t)                \
 do                                      \
 {                                       \
-    t.red     = 0;                      \
-    t.green   = 0;                      \
-    t.blue    = 0;                      \
+    (t).red     = 0;                    \
+    (t).green   = 0;                    \
+    (t).blue    = 0;                    \
 } while (0)
 
 #define SET_DSP_RGB(t,r,g,b,w)          \
 do                                      \
 {                                       \
-    t.red     = r;                      \
-    t.green   = g;                      \
-    t.blue    = b;                      \
+    (t).red     = (r);                  \
+    (t).green   = (g);                  \
+    (t).blue    = (b);                  \
+} while (0)
+
+#define SET_DSP_RGB_SAVE(t,r,g,b,w)                                     \
+do                                                                      \
+{                                                                       \
+    (t).red     = (r) < MAX_COLOR_STEPS ? (r) : MAX_COLOR_STEPS - 1;    \
+    (t).green   = (g) < MAX_COLOR_STEPS ? (g) : MAX_COLOR_STEPS - 1;    \
+    (t).blue    = (b) < MAX_COLOR_STEPS ? (b) : MAX_COLOR_STEPS - 1;    \
 } while (0)
 
 #define COPY_DSP_RGB(t,s)               \
 do                                      \
 {                                       \
-    t.red     = s.red;                  \
-    t.green   = s.green;                \
-    t.blue    = s.blue;                 \
+    (t).red     = (s).red;              \
+    (t).green   = (s).green;            \
+    (t).blue    = (s).blue;             \
 } while (0)
 
 #define COPY_DSP_RGB_TO_PTR(t,s)        \
 do                                      \
 {                                       \
-    t->red     = s.red;                 \
-    t->green   = s.green;               \
-    t->blue    = s.blue;                \
+    (t)->red     = (s).red;             \
+    (t)->green   = (s).green;           \
+    (t)->blue    = (s).blue;            \
 } while (0)
 
 #define COPY_DSP_RGB_SAFE(t,sp)         \
 do                                      \
 {                                       \
-    t.red   = (sp->red   < MAX_COLOR_STEPS) ? sp->red   : MAX_COLOR_STEPS - 1;      \
-    t.green = (sp->green < MAX_COLOR_STEPS) ? sp->green : MAX_COLOR_STEPS - 1;      \
-    t.blue  = (sp->blue  < MAX_COLOR_STEPS) ? sp->blue  : MAX_COLOR_STEPS - 1;      \
+    (t).red   = ((sp)->red   < MAX_COLOR_STEPS) ? (sp)->red   : MAX_COLOR_STEPS - 1;      \
+    (t).green = ((sp)->green < MAX_COLOR_STEPS) ? (sp)->green : MAX_COLOR_STEPS - 1;      \
+    (t).blue  = ((sp)->blue  < MAX_COLOR_STEPS) ? (sp)->blue  : MAX_COLOR_STEPS - 1;      \
 } while (0)
 
 #endif
@@ -238,7 +254,8 @@ do                                      \
 #define AMBILIGHT_MODE_CLOCK                    1                       // show clock seconds (20/30/60 LEDs)
 #define AMBILIGHT_MODE_CLOCK2                   2                       // show clock seconds (20/30/60 LEDs) - increasing/decreasing ring
 #define AMBILIGHT_MODE_RAINBOW                  3                       // rainbow colors
-#define AMBILIGHT_MODES                         4                       // number of ambilight modes
+#define AMBILIGHT_MODE_DAYLIGHT                 4                       // daylight colors
+#define AMBILIGHT_MODES                         5                       // number of ambilight modes
 
 #define EEPROM_MAX_AMBILIGHT_MODES              16                      // maximum number of ambilight modes stored in EEPROM
 #define EEPROM_AMBILIGHT_DECELERATION_MASK      0x0F                    // lower 4 bits (0...3) = deceleration
@@ -248,6 +265,8 @@ do                                      \
 #define AMBILIGHT_FLAG_NONE                     0x00                    // no animation flag
 #define AMBILIGHT_FLAG_CONFIGURABLE             0x01                    // ambilight mode is configurable
 #define AMBILIGHT_FLAG_SECONDS_MARKER           0x02                    // only for CLOCK ambilight mode: five-seconds-marker
+
+#define AMBILIGHT_CLOCK_TICK_COUNT_PER_LED      20                      // fade ambilight leds over 32 steps in clock mode
 
 typedef struct
 {
@@ -269,11 +288,13 @@ typedef struct
 #define ANIMATION_MODE_SNAKE                     5                      // snake
 #define ANIMATION_MODE_TELETYPE                  6                      // teletype
 #define ANIMATION_MODE_CUBE                      7                      // cube
-#define ANIMATION_MODE_MATRIX                    8                      // matrix
+#define ANIMATION_MODE_GREEN_MATRIX              8                      // green matrix
 #define ANIMATION_MODE_DROP                      9                      // drop letters
 #define ANIMATION_MODE_SQUEEZE                  10                      // squeeze letters
 #define ANIMATION_MODE_FLICKER                  11                      // flicker LEDs
-#define ANIMATION_MODES                         12                      // number of animation modes
+#define ANIMATION_MODE_MATRIX                   12                      // matrix in current display colors
+#define ANIMATION_MODE_RED_MATRIX               13                      // green matrix
+#define ANIMATION_MODES                         14                      // number of animation modes
 
 #define EEPROM_MAX_ANIMATION_MODES              64                      // maximum number of animation modes stored in EEPROM
 #define EEPROM_ANIMATION_DECELERATION_MASK      0x0F                    // lower 4 bits (0...3) = deceleration
@@ -301,7 +322,8 @@ typedef struct
  */
 #define COLOR_ANIMATION_MODE_NONE                   0                   // no color animation
 #define COLOR_ANIMATION_MODE_RAINBOW                1                   // rainbow
-#define COLOR_ANIMATION_MODES                       2                   // number of color animations
+#define COLOR_ANIMATION_MODE_DAYLIGHT               2                   // daylight
+#define COLOR_ANIMATION_MODES                       3                   // number of color animations
 
 #define EEPROM_MAX_COLOR_ANIMATION_MODES            16                  // maximum number of color animation modes stored in EEPROM
 #define EEPROM_COLOR_ANIMATION_DECELERATION_MASK    0x0F                // lower 4 bits (0...3) = deceleration
@@ -328,7 +350,8 @@ typedef struct
     uint_fast8_t    rows;
     uint_fast8_t    cols;
     char            colors[WC_ROWS * WC_COLUMNS];
-    char            animation[WC_ROWS * WC_COLUMNS];
+    char            animation_on[WC_ROWS * WC_COLUMNS];
+    char            animation_off[WC_ROWS * WC_COLUMNS];
     uint_fast8_t    duration;
 } DISPLAY_ICON;
 
@@ -337,6 +360,8 @@ typedef struct
  * globals
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
+#define DATE_TICKER_FORMAT_LEN                  6
+
 typedef struct
 {
     uint_fast8_t    display_mode;
@@ -344,12 +369,13 @@ typedef struct
     uint_fast8_t    color_animation_mode;
     uint_fast8_t    display_brightness;
     uint_fast8_t    ambilight_brightness;
+    uint_fast8_t    saved_ambilight_brightness;
     uint_fast8_t    automatic_brightness;
     uint_fast8_t    display_flags;
     uint_fast8_t    animation_mode;
     uint_fast8_t    animation_start_flag;
     uint_fast8_t    animation_stop_flag;
-    uint_fast8_t    power_is_on;
+    uint_fast8_t    display_power_is_on;
     uint_fast8_t    ambilight_power_is_on;
     uint_fast8_t    do_display_icon;
     uint_fast8_t    n_icons;
@@ -357,11 +383,15 @@ typedef struct
     uint_fast8_t    ambilight_leds;
     DSP_COLORS      display_colors;
     DSP_COLORS      ambilight_colors;
+    DSP_COLORS      saved_ambilight_colors;
+    DSP_COLORS      ambilight_marker_colors;
     ANIMATION       animations[ANIMATION_MODES];
     COLOR_ANIMATION color_animations[COLOR_ANIMATION_MODES];
     AMBILIGHT_MODE  ambilight_modes[AMBILIGHT_MODES];
-    uint_fast8_t    dimmed_colors[MAX_BRIGHTNESS + 1];                          // 15 + 1 = 16
+    uint_fast8_t    dimmed_display_colors[MAX_BRIGHTNESS + 1];                  // 15 + 1 = 16
+    uint_fast8_t    dimmed_ambilight_colors[MAX_BRIGHTNESS + 1];                // 15 + 1 = 16
     uint_fast8_t    ticker_deceleration;
+    uint8_t         date_ticker_format[DATE_TICKER_FORMAT_LEN];                 // default: d-m-Y
 } DISPLAY_GLOBALS;
 
 extern DISPLAY_GLOBALS  display;
@@ -370,6 +400,7 @@ extern const uint16_t   pwmtable8[MAX_COLOR_STEPS];
 extern void             display_set_status_led (uint_fast8_t, uint_fast8_t, uint_fast8_t);
 extern void             display_set_status_or_minute_leds (uint_fast8_t, uint_fast8_t, uint_fast8_t);
 extern void             display_set_display_led (uint_fast16_t, LED_RGB *, uint_fast8_t);
+extern void             display_set_dimmed_display_led (uint_fast16_t, DSP_COLORS *);
 extern void             display_refresh_display_leds (void);
 extern void             display_reset_led_states (void);
 extern void             display_temperature (uint_fast8_t);
@@ -378,11 +409,14 @@ extern void             display_clock (uint_fast8_t, uint_fast8_t, uint_fast8_t)
 extern void             display_seconds (uint_fast8_t);
 extern void             display_animation (void);
 
-extern void             calc_dimmed_colors (DSP_COLORS *, const DSP_COLORS *, uint_fast8_t, uint_fast8_t);
+extern void             display_dim_display_dsp_colors (DSP_COLORS *, const DSP_COLORS *, uint_fast8_t, uint_fast8_t);
+extern void             display_dim_ambilight_dsp_colors (DSP_COLORS *, const DSP_COLORS *, uint_fast8_t, uint_fast8_t);
 
-extern uint_fast8_t     display_set_dimmed_color (uint_fast8_t, uint_fast8_t);
+extern uint_fast8_t     display_set_dimmed_display_color (uint_fast8_t, uint_fast8_t);
+extern uint_fast8_t     display_set_dimmed_ambilight_color (uint_fast8_t, uint_fast8_t);
 
 extern uint_fast8_t     display_set_ticker_deceleration (uint_fast8_t);
+extern void             display_set_date_ticker_format (char *);
 extern uint_fast8_t     display_set_display_flags (uint_fast8_t);
 
 extern void             display_set_ambilight_power (uint_fast8_t);
@@ -426,6 +460,7 @@ extern void             display_increment_ambilight_color_white (uint_fast8_t);
 extern void             display_decrement_ambilight_color_white (uint_fast8_t);
 #endif
 extern void             display_set_ambilight_colors (DSP_COLORS *);
+extern void             display_set_ambilight_marker_colors (DSP_COLORS *);
 
 extern void             display_set_display_brightness  (uint_fast8_t, uint_fast8_t, uint_fast8_t);
 extern void             display_decrement_display_brightness (uint_fast8_t);
@@ -449,6 +484,9 @@ extern void             display_get_weather_icon (const char *, uint_fast8_t);
 extern uint_fast8_t     display_read_icon (void);
 extern uint_fast8_t     display_read_config_from_eeprom (uint32_t);
 extern uint_fast8_t     display_write_config_to_eeprom (void);
+extern void             display_save_display_mode (void);
 extern void             display_init (void);
+
+extern void             display_cw_cnt (uint_fast8_t weeks);
 
 #endif

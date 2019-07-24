@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * overlay.h - handle overlays
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #define OVERLAY_TYPE_WEATHER                        5                   // weather
 #define OVERLAY_TYPE_TICKER                         6                   // ticker
 #define OVERLAY_TYPE_MP3                            7                   // mp3
+#define OVERLAY_TYPE_WEATHER_FC_ICON                8                   // weather forecast icon
+#define OVERLAY_TYPE_WEATHER_FC                     9                   // weather forecast
 
 #define OVERLAY_TYPE_LEN                            1                   // 1 byte
 #define OVERLAY_INTERVAL_LEN                        1                   // 1 byte
@@ -31,6 +33,10 @@
 #define OVERLAY_DAYS_LEN                            1                   // 1 byte
 #define OVERLAY_MAX_TEXT_LEN                        32                  // name of icon or content of ticker
 #define OVERLAY_FLAGS_LEN                           1                   // 1 byte
+
+#define OVERLAY_ENTRY_SIZE                          (OVERLAY_TYPE_LEN + OVERLAY_INTERVAL_LEN + OVERLAY_DURATION_LEN + OVERLAY_DATE_CODE_LEN \
+                                                     + OVERLAY_DATE_START_LEN + OVERLAY_DAYS_LEN + OVERLAY_MAX_TEXT_LEN + OVERLAY_FLAGS_LEN)
+#define OVERLAY_ENTRIES_SIZE                        (MAX_OVERLAYS * OVERLAY_ENTRY_SIZE)
 
 #define OVERLAY_DATE_CODE_NONE                      0
 #define OVERLAY_DATE_CODE_CARNIVAL_MONDAY           1

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * dfplayer.c - DFPLAYER MINI routines
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * ------------------------------------------------------------------------------------------------------------------
  *
@@ -293,8 +293,24 @@ dfplayer_read_message (void)
                 {
                     cmd = buf[CMD_BYTE_POS];
 
-                    // finished message occurs 2 times, ignore 2nd
-                    if (cmd == DFPLAYER_FINISH_PB_SD_CARD && last_cmd == cmd && last_par == par)
+                    int finished = 0;
+
+                    if (cmd == DFPLAYER_FINISH_PB_SD_CARD)
+                    {
+                        if (dfplayer.version == 0x0005)                 // in version 0x0005 finished message occurs 2 times, ignore 2nd
+                        {
+                            if (last_cmd == DFPLAYER_FINISH_PB_SD_CARD && last_par == par)
+                            {
+                                finished = 1;
+                            }
+                        }
+                        else
+                        {
+                            finished = 1;
+                        }
+                    }
+
+                    if (finished)
                     {
                         last_cmd = 0xFF;
                         last_par = 0xFFFF;

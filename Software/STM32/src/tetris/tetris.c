@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * tetris.c - play tetris on wclock24h
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,13 +17,11 @@
 #include "wclock24h-config.h"
 
 #if WCLOCK24H == 1
-#include "tables.h"
 #define TETRIS_ROWS     WC_ROWS
 #define TETRIS_COLS     12
 #define ROW_OFFSET      0
 #define COL_OFFSET      2
 #else
-#include "tables12h.h"
 #define TETRIS_ROWS     WC_ROWS
 #define TETRIS_COLS     11
 #define ROW_OFFSET      0
@@ -603,11 +601,11 @@ tetris (void)
 
     for (idx = 0; idx < N_TETROMINOS; idx++)
     {
-        calc_dimmed_colors (&dsp_rgb_dimmed, &(tetromino_colors[idx]), display.display_brightness, 1);
+        display_dim_display_dsp_colors (&dsp_rgb_dimmed, &(tetromino_colors[idx]), display.display_brightness, 1);
         CALC_LED_RGB(rgb[idx], dsp_rgb_dimmed);
     }
 
-    calc_dimmed_colors (&dsp_rgb_dimmed, &dsp_color1, display.display_brightness, 1);
+    display_dim_display_dsp_colors (&dsp_rgb_dimmed, &dsp_color1, display.display_brightness, 1);
     CALC_LED_RGB(rgb1, dsp_rgb_dimmed);
     RESET_LED_RGB(rgb0);
 

@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * wpsbutton.c - read WPS button of STM32F4xx Nucleo and STM32F103
  *
- * Copyright (c) 2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2017-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #define WPSBUTTON_PERIPH_CLOCK_CMD     RCC_APB2PeriphClockCmd
 #define WPSBUTTON_PERIPH               RCC_APB2Periph_GPIOA
-#define WPSBUTTON_PORT                 GPIOA                            // PA7
+#define WPSBUTTON_PORT                 GPIOA                            // PA12
 #define WPSBUTTON_PIN                  GPIO_Pin_12
 #define WPSBUTTON_PRESSED              Bit_RESET                        // pressed if low
 

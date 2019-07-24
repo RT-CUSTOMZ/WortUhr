@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * weather.c - functions using openweathermap.org
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -192,7 +192,7 @@ weather_set_lat (char * new_lat)
  *-------------------------------------------------------------------------------------------------------------------------------------------
  */
 void
-weather_query (uint_fast8_t query_icon)
+weather_query (uint_fast8_t query_id)
 {
     if (*weather.appid)
     {
@@ -206,13 +206,28 @@ weather_query (uint_fast8_t query_icon)
             strcat (args, "\",\"");
             strcat (args, weather.lat);
 
-            if (query_icon)
+            switch (query_id)
             {
-                esp8266_send_cmd ("wicon", args, 1);
-            }
-            else
-            {
-                esp8266_send_cmd ("weather", args, 1);
+                case WEATHER_QUERY_ID_ICON:
+                {
+                    esp8266_send_cmd ("wicon", args, 1);
+                    break;
+                }
+                case WEATHER_QUERY_ID_ICON_FC:
+                {
+                    esp8266_send_cmd ("wicon_fc", args, 1);
+                    break;
+                }
+                case WEATHER_QUERY_ID_TEXT:
+                {
+                    esp8266_send_cmd ("weather", args, 1);
+                    break;
+                }
+                case WEATHER_QUERY_ID_TEXT_FC:
+                {
+                    esp8266_send_cmd ("weather_fc", args, 1);
+                    break;
+                }
             }
         }
         else if (*weather.city)
@@ -223,13 +238,28 @@ weather_query (uint_fast8_t query_icon)
             strcat (args, "\",\"");
             strcat (args, weather.city);
 
-            if (query_icon)
+            switch (query_id)
             {
-                esp8266_send_cmd ("wicon", args, 1);
-            }
-            else
-            {
-                esp8266_send_cmd ("weather", args, 1);
+                case WEATHER_QUERY_ID_ICON:
+                {
+                    esp8266_send_cmd ("wicon", args, 1);
+                    break;
+                }
+                case WEATHER_QUERY_ID_ICON_FC:
+                {
+                    esp8266_send_cmd ("wicon_fc", args, 1);
+                    break;
+                }
+                case WEATHER_QUERY_ID_TEXT:
+                {
+                    esp8266_send_cmd ("weather", args, 1);
+                    break;
+               }
+                case WEATHER_QUERY_ID_TEXT_FC:
+                {
+                    esp8266_send_cmd ("weather_fc", args, 1);
+                    break;
+                }
             }
         }
     }

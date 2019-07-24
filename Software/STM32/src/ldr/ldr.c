@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------
  * ldr.c - ldr functions
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,17 @@
 #include "eeprom.h"
 #include "eeprom-data.h"
 
+#define MAX_LDR_BRIGHTNESS                      31                                          // maximal possible brightness value
+
+#define MIN_VALUE                               0                                           // minimal possible raw value
+#define MAX_VALUE                               4095                                        // maximal possible raw value
+
 LDR_GLOBALS      ldr =
 {
-    31,             // ldr_value
-     0,             // ldr_raw_value
-     0,             // ldr_min_value
-     0,             // ldr_max_value
+    MAX_LDR_BRIGHTNESS,                                                                     // ldr_value
+    0,                                                                                      // ldr_raw_value
+    MIN_VALUE,                                                                              // ldr_min_value
+    MAX_VALUE,                                                                              // ldr_max_value
 };
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -61,14 +66,14 @@ ldr_poll_brightness  (void)
         {
             uint_fast8_t ldr_value;
 
-            ldr_value = (32 * (ldr.ldr_raw_value - ldr.ldr_min_value)) / (ldr.ldr_max_value - ldr.ldr_min_value);
+            ldr_value = ((MAX_LDR_BRIGHTNESS + 1) * (ldr.ldr_raw_value - ldr.ldr_min_value)) / (ldr.ldr_max_value - ldr.ldr_min_value);
 
-            if (ldr_value > 31)                         // if (ldr_raw_value == ldr.ldr_max_value) then ldr.ldr_value is 32
+            if (ldr_value > MAX_LDR_BRIGHTNESS)                         // if (ldr_raw_value == ldr.ldr_max_value) then ldr.ldr_value is 32
             {
-                ldr_value = 31;
+                ldr_value = MAX_LDR_BRIGHTNESS;
             }
 
-            if (ldr_value > ldr.ldr_value)              // slightly change ldr.ldr_value
+            if (ldr_value > ldr.ldr_value)                              // slightly change ldr.ldr_value
             {
                 ldr.ldr_value++;
             }
@@ -79,7 +84,7 @@ ldr_poll_brightness  (void)
         }
         else
         {
-            ldr.ldr_value = 31;
+            ldr.ldr_value = MAX_LDR_BRIGHTNESS;
         }
     }
     return rtc;
@@ -92,8 +97,7 @@ ldr_poll_brightness  (void)
 void
 ldr_read_config_from_eeprom (uint32_t eeprom_version)
 {
-    ldr.ldr_min_value = 0;
-    ldr.ldr_max_value = 4095;
+    uint_fast8_t    values_changed = 0;
 
     if (eeprom_is_up)
     {
@@ -102,19 +106,31 @@ ldr_read_config_from_eeprom (uint32_t eeprom_version)
             eeprom_read (EEPROM_DATA_OFFSET_LDR_MIN_VALUE, (uint8_t *) &ldr.ldr_min_value, EEPROM_DATA_SIZE_LDR_MIN_VALUE);
             eeprom_read (EEPROM_DATA_OFFSET_LDR_MAX_VALUE, (uint8_t *) &ldr.ldr_max_value, EEPROM_DATA_SIZE_LDR_MAX_VALUE);
 
-            if (ldr.ldr_min_value == 0xFFFF)
+            if (ldr.ldr_min_value > MAX_VALUE)                                              // e.g. 0xFFFF
             {
-                ldr.ldr_min_value = 0;
+                ldr.ldr_min_value = MIN_VALUE;                                              // set to minimal possible value
+                values_changed = 1;
             }
 
-            if (ldr.ldr_max_value == 0xFFFF)
+            if (ldr.ldr_max_value > MAX_VALUE)                                              // e.g. 0xFFFF
             {
-                ldr.ldr_max_value = 1023;
+                ldr.ldr_max_value = MAX_VALUE;                                              // set to maximal possible value
+                values_changed = 1;
+            }
+
+            if (ldr.ldr_max_value <= ldr.ldr_min_value)                                     // both values identical or insane?
+            {
+                ldr.ldr_min_value = MIN_VALUE;                                              // set to minimal possible value
+                ldr.ldr_max_value = MAX_VALUE;                                              // set to maximal possible value
+                values_changed = 1;
+            }
+
+            if (values_changed)                                                             // any values corrected?
+            {
+                ldr_write_config_to_eeprom ();                                              // yes, save them
             }
         }
     }
-
-    return;
 }
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -130,7 +146,6 @@ ldr_write_config_to_eeprom (void)
     {
         if (eeprom_write (EEPROM_DATA_OFFSET_LDR_MIN_VALUE, (uint8_t *) &ldr.ldr_min_value, EEPROM_DATA_SIZE_LDR_MIN_VALUE) &&
             eeprom_write (EEPROM_DATA_OFFSET_LDR_MAX_VALUE, (uint8_t *) &ldr.ldr_max_value, EEPROM_DATA_SIZE_LDR_MAX_VALUE))
-
         {
             rtc = 1;
         }

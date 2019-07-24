@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * esp8266-uart.c - definitions of uart driver routines
  *
- * Copyright (c) 2015-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2015-2018 Frank Meyer - frank(at)fli4l.de
  *
  * Possible UARTs of STM32F10x:
  *           ALTERNATE=0    ALTERNATE=1    ALTERNATE=2

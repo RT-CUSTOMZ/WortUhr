@@ -1,7 +1,7 @@
  /*----------------------------------------------------------------------------------------------------------------------------------------
  * version.h - Firmware version
  *
- * Copyright (c) 2016-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2016-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,6 +12,6 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define ESP_VERSION                "2.8.3a"
+#define ESP_VERSION                "2.9.5-cw1"
 
 #endif

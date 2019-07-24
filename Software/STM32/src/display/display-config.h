@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * display-config.h - configuration of display driver
  *
- * Copyright (c) 2014-2017 Frank Meyer - frank(at)fli4l.de
+ * Copyright (c) 2014-2018 Frank Meyer - frank(at)fli4l.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #define DSP_USE_LED                 WS2812_GRB_LED                      // set exactly one of the values above here, default is WS2812_GRB_LED
 #endif
 
-#define DSP_LED_DIRECTION_VERTICAL 1                                    //if you align the leds vertically instead of horizontally
+#define DSP_LED_DIRECTION_VERTICAL 1
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * configuration settings, don't change below!
@@ -70,22 +70,36 @@
 #error invalid LED type
 #endif
 
-#if WCLOCK24H == 1
-#  define DSP_STATUS_LEDS           0                                       // 1 status LED
-#  define DSP_MINUTE_LEDS           0                                       // 0 minute LEDs
-#  define DSP_DISPLAY_LEDS          342                                     // 342 display LEDs
-#else // WC12H
-#  define DSP_STATUS_LEDS           0                                       // no status LED
-#  define DSP_MINUTE_LEDS           4                                       // 4 minute LEDs
-#  define DSP_DISPLAY_LEDS          110                                     // 110 display LEDs
+#define DSP_AMBILIGHT_EMULATION     0                                       // don't change: this is only for ambilight test!
+
+#if DSP_AMBILIGHT_EMULATION == 1
+#  if WCLOCK24H == 1
+#    define DSP_STATUS_LEDS         1                                       // emulation: 1 status LED
+#    define DSP_MINUTE_LEDS         0                                       // emulation: 0 minute LEDs
+#    define DSP_DISPLAY_LEDS        0                                       // emulation: 16 display LEDs
+#  else // WC12H
+#    define DSP_STATUS_LEDS         0                                       // emulation: no status LED
+#    define DSP_MINUTE_LEDS         4                                       // emulation: 4 minute LEDs
+#    define DSP_DISPLAY_LEDS        0                                       // emulation: display LEDs
+#  endif
+#else
+#  if WCLOCK24H == 1
+#    define DSP_STATUS_LEDS         0                                       // 1 status LED
+#    define DSP_MINUTE_LEDS         0                                       // 0 minute LEDs
+#    define DSP_DISPLAY_LEDS        342                                     // 288 display LEDs
+#  else // WC12H
+#    define DSP_STATUS_LEDS         0                                       // no status LED
+#    define DSP_MINUTE_LEDS         4                                       // 4 minute LEDs
+#    define DSP_DISPLAY_LEDS        110                                     // 110 display LEDs
+#  endif
 #endif
 
 #define DSP_AMBILIGHT_LEDS          120                                     // max. 120 ambilight LEDs
 
-#define DSP_STATUS_LED_OFFSET       0                                                                           // offset in LED chain
-#define DSP_MINUTE_LED_OFFSET       (DSP_STATUS_LED_OFFSET + DSP_STATUS_LEDS)                                   // offset of minute LEDs
-#define DSP_DISPLAY_LED_OFFSET      (DSP_MINUTE_LED_OFFSET + DSP_MINUTE_LEDS)                                   // offset of display LEDs
-#define DSP_AMBILIGHT_LED_OFFSET    (DSP_DISPLAY_LED_OFFSET + DSP_DISPLAY_LEDS)                                 // offset of ambilight LEDs
+#define DSP_STATUS_LED_OFFSET       0                                               // offset in LED chain
+#define DSP_MINUTE_LED_OFFSET       (DSP_STATUS_LED_OFFSET + DSP_STATUS_LEDS)       // offset of minute LEDs
+#define DSP_DISPLAY_LED_OFFSET      (DSP_MINUTE_LED_OFFSET + DSP_MINUTE_LEDS)       // offset of display LEDs
+#define DSP_AMBILIGHT_LED_OFFSET    (DSP_DISPLAY_LED_OFFSET + DSP_DISPLAY_LEDS)     // offset of ambilight LEDs
 #define DSP_MAX_LEDS                (DSP_STATUS_LEDS + DSP_MINUTE_LEDS + DSP_DISPLAY_LEDS + DSP_AMBILIGHT_LEDS) // maximum number of LEDs
 
 #endif
