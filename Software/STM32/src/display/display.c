@@ -910,12 +910,19 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
     {
         uint_fast8_t y;
         uint_fast8_t x;
+#ifdef DSP_LED_DIRECTION_BACKWARDS
+        n = DSP_DISPLAY_LEDS - n - 1;
+#endif
 
 #ifdef DSP_LED_DIRECTION_VERTICAL
         y = n / WC_COLUMNS;
 		x = n % WC_COLUMNS;
 
+#ifdef DSP_LED_DIRECTION_BACKWARDS
+        if (!(x & 0x01))
+#else
         if (x & 0x01)                                       // snake: odd column: count from bottom to top
+#endif
         {
             n = x * WC_ROWS + (WC_ROWS - 1 - y);
         }
@@ -934,7 +941,11 @@ display_set_display_led (uint_fast16_t n, LED_RGB * rgb, uint_fast8_t refresh)
 
         y = n / WC_COLUMNS;
 
+#ifdef DSP_LED_DIRECTION_BACKWARDS
+        if (!(y & 0x01))
+#else
         if (y & 0x01)                                       // snake: odd row: count from right to left
+#endif
         {
             x = n % WC_COLUMNS;
             n = y * WC_COLUMNS + (WC_COLUMNS - 1 - x);
